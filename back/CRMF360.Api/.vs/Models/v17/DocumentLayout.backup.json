@@ -1,0 +1,119 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{83A608BE-D4B4-442B-80C2-71FB26DF0EEE}|..\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.infrastructure\\services\\personaempresaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A190AEFC-1603-4BDA-9A2F-9DB0E6FC9532}|..\\CRMF360.Application\\CRMF360.Application.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.application\\personaempresa\\ipersonaempresaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.api\\controllers\\personasempresacontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|solutionrelative:controllers\\personasempresacontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|solutionrelative:controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A190AEFC-1603-4BDA-9A2F-9DB0E6FC9532}|..\\CRMF360.Application\\CRMF360.Application.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.application\\proyectos\\iproyectoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|c:\\users\\nahue\\desktop\\code\\crm-f360\\back\\crmf360.api\\controllers\\proyectoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{623C973F-EA48-0994-0EF4-C4A6513CC3CA}|CRMF360.Api.csproj|solutionrelative:controllers\\proyectoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 51,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PersonaEmpresaService.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Infrastructure\\Services\\PersonaEmpresaService.cs",
+              "RelativeDocumentMoniker": "..\\CRMF360.Infrastructure\\Services\\PersonaEmpresaService.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Infrastructure\\Services\\PersonaEmpresaService.cs",
+              "RelativeToolTip": "..\\CRMF360.Infrastructure\\Services\\PersonaEmpresaService.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAuwCMAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-10T00:15:48.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "IPersonaEmpresaService.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Application\\PersonaEmpresa\\IPersonaEmpresaService.cs",
+              "RelativeDocumentMoniker": "..\\CRMF360.Application\\PersonaEmpresa\\IPersonaEmpresaService.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Application\\PersonaEmpresa\\IPersonaEmpresaService.cs",
+              "RelativeToolTip": "..\\CRMF360.Application\\PersonaEmpresa\\IPersonaEmpresaService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-10T00:15:21.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PersonasEmpresaController.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\PersonasEmpresaController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PersonasEmpresaController.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\PersonasEmpresaController.cs",
+              "RelativeToolTip": "Controllers\\PersonasEmpresaController.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAswBwAAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-10T00:11:14.19Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "Controllers\\UsersController.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "Controllers\\UsersController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T23:50:02.156Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IProyectoService.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Application\\Proyectos\\IProyectoService.cs",
+              "RelativeDocumentMoniker": "..\\CRMF360.Application\\Proyectos\\IProyectoService.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Application\\Proyectos\\IProyectoService.cs",
+              "RelativeToolTip": "..\\CRMF360.Application\\Proyectos\\IProyectoService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T23:40:40.987Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ProyectosController.cs",
+              "DocumentMoniker": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\ProyectosController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ProyectosController.cs",
+              "ToolTip": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\back\\CRMF360.Api\\Controllers\\ProyectosController.cs",
+              "RelativeToolTip": "Controllers\\ProyectosController.cs",
+              "ViewState": "AgIAADcAAAAAAAAAAAAuwFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T23:35:34.639Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
