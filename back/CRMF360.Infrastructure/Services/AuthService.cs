@@ -10,11 +10,6 @@ using System.Text;
 
 namespace CRMF360.Infrastructure.Services;
 
-public interface IAuthService
-{
-    Task<LoginResponseDto?> LoginAsync(LoginRequestDto request);
-}
-
 public class AuthService : IAuthService
 {
     private readonly ApplicationDbContext _context;
@@ -28,7 +23,6 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
     {
-        // Buscamos por Email (podrías usar Username si querés)
         var user = await _context.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
@@ -39,8 +33,6 @@ public class AuthService : IAuthService
         if (user == null)
             return null;
 
-        // ⚠️ Acá asumimos que usás BCrypt para los hashes
-        // NuGet: BCrypt.Net-Next
         bool passwordOk = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if (!passwordOk)
             return null;
@@ -50,19 +42,55 @@ public class AuthService : IAuthService
 
         var token = GenerateJwtToken(user);
 
-        return new LoginResponseDto
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Phone = user.Phone,
-            Token = token
-        };
+        return MapToResponse(user, token);
     }
+
+    public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId)
+    {
+        var user = await _context.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
+
+        if (user == null)
+            return null;
+
+        var token = GenerateJwtToken(user);
+        return MapToResponse(user, token);
+    }
+
+    public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto request)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
+
+        if (user == null)
+            return false;
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            return false;
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    private static LoginResponseDto MapToResponse(User user, string token) => new()
+    {
+        Id = user.Id,
+        FullName = user.FullName,
+        Email = user.Email,
+        Phone = user.Phone,
+        Token = token,
+        Roles = user.UserRoles
+            .Where(ur => ur.Role != null)
+            .Select(ur => ur.Role.Name)
+            .ToList()
+    };
 
     private string GenerateJwtToken(User user)
     {
-        // ⚙️ Leemos los valores desde appsettings.json
         var jwtKey = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("Jwt:Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "CRMF360";
@@ -80,7 +108,6 @@ public class AuthService : IAuthService
             new Claim("id", user.Id.ToString())
         };
 
-        // Roles (opcional si ya tenés la tabla Role)
         foreach (var ur in user.UserRoles)
         {
             if (ur.Role != null)

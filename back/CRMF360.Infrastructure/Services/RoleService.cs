@@ -1,15 +1,15 @@
-﻿using CRMF360.Application.Roles;
+﻿using CRMF360.Application.Abstractions;
+using CRMF360.Application.Roles;
 using CRMF360.Domain.Entities;
-using CRMF360.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace CRMF360.Infrastructure.Services;
 
 public class RoleService : IRoleService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
 
-    public RoleService(ApplicationDbContext context)
+    public RoleService(IApplicationDbContext context)
     {
         _context = context;
     }

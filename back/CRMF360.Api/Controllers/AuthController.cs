@@ -1,34 +1,69 @@
 ﻿using CRMF360.Application.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace CRMF360.Api.Controllers
+namespace CRMF360.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
     {
-        private readonly IAuthService _authService;
+        _authService = authService;
+    }
 
-        public AuthController(IAuthService authService)
-        {
-            _authService = authService;
-        }
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+    {
+        var result = await _authService.LoginAsync(request);
 
-        public record LoginRequest(string UsernameOrEmail, string Password);
+        if (result is null)
+            return Unauthorized(new { message = "Usuario o contraseña incorrectos" });
 
-        public record LoginResponse(string Token, string FullName, string Email);
+        return Ok(result);
+    }
 
-        [HttpPost("login")]
-        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        {
-            var result = await _authService.LoginAsync(request.UsernameOrEmail, request.Password);
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Me()
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+            return Unauthorized();
 
-            if (result is null)
-                return Unauthorized(new { message = "Usuario o contraseña incorrectos" });
+        var result = await _authService.GetCurrentUserAsync(userId.Value);
+        return result is null ? Unauthorized() : Ok(result);
+    }
 
-            return Ok(new LoginResponse(result.Token, result.FullName, result.Email));
-        }
+    [HttpPut("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var success = await _authService.ChangePasswordAsync(userId.Value, request);
+        if (!success)
+            return BadRequest(new { message = "Contraseña actual incorrecta" });
+
+        return NoContent();
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var idClaim = User.FindFirstValue("id")
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return int.TryParse(idClaim, out var id) ? id : null;
     }
 }

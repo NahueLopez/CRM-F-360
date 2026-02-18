@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace CRMF360.Application.Auth
+namespace CRMF360.Application.Auth;
+
+public class LoginRequestDto
 {
-    public class LoginRequestDto
-    {
-        public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
-    }
+    [Required(ErrorMessage = "El email es obligatorio")]
+    [EmailAddress(ErrorMessage = "Email inválido")]
+    public string Email { get; set; } = null!;
+
+    [Required(ErrorMessage = "La contraseña es obligatoria")]
+    public string Password { get; set; } = null!;
 }

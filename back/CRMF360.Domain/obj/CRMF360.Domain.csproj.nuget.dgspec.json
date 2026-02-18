@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj": {}
+    "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj": {}
   },
   "projects": {
-    "c:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj": {
+    "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj",
+        "projectUniqueName": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj",
         "projectName": "CRMF360.Domain",
-        "projectPath": "c:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj",
-        "packagesPath": "C:\\Users\\Nahue\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\obj\\",
+        "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj",
+        "packagesPath": "C:\\Users\\nahuellopez\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Nahue\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nahuellopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -65,7 +61,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -1,4 +1,4 @@
-﻿using CRMF360.Domain.Entities;
+﻿namespace CRMF360.Domain.Entities;
 
 public class User
 {

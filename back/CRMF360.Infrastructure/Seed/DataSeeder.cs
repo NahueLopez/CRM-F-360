@@ -7,7 +7,7 @@ namespace CRMF360.Infrastructure.Seed;
 
 public static class DataSeeder
 {
-    public static async Task SeedAsync(IServiceProvider services)
+    public static async System.Threading.Tasks.Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -19,9 +19,10 @@ public static class DataSeeder
         if (!await context.Roles.AnyAsync())
         {
             var adminRole = new Role { Name = "Admin" };
+            var managerRole = new Role { Name = "Manager" };
             var userRole = new Role { Name = "User" };
 
-            context.Roles.AddRange(adminRole, userRole);
+            context.Roles.AddRange(adminRole, managerRole, userRole);
             await context.SaveChangesAsync();
         }
 
@@ -36,9 +37,8 @@ public static class DataSeeder
                 Email = adminEmail,
                 Phone = null,
                 Active = true,
-                // ⚠️ Solo para desarrollo: en texto plano.
-                // Después lo cambiamos por un hash real (BCrypt, etc).
-                PasswordHash = "Admin123!",
+                // Hash real con BCrypt
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
                 CreatedAt = DateTime.UtcNow
             };
 

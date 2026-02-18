@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Api\\CRMF360.Api.csproj": {}
+    "D:\\Code\\Crm\\back\\CRMF360.Api\\CRMF360.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Api\\CRMF360.Api.csproj": {
+    "D:\\Code\\Crm\\back\\CRMF360.Api\\CRMF360.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Api\\CRMF360.Api.csproj",
+        "projectUniqueName": "D:\\Code\\Crm\\back\\CRMF360.Api\\CRMF360.Api.csproj",
         "projectName": "CRMF360.Api",
-        "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Api\\CRMF360.Api.csproj",
-        "packagesPath": "C:\\Users\\Nahue\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Api\\obj\\",
+        "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Api\\CRMF360.Api.csproj",
+        "packagesPath": "C:\\Users\\nahuellopez\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\Crm\\back\\CRMF360.Api\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Nahue\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nahuellopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -32,11 +28,11 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj": {
-                "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj"
+              "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj": {
+                "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj"
               },
-              "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj"
+              "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj": {
+                "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj"
               }
             }
           }
@@ -95,25 +91,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj": {
+    "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj",
+        "projectUniqueName": "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj",
         "projectName": "CRMF360.Application",
-        "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj",
-        "packagesPath": "C:\\Users\\Nahue\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\obj\\",
+        "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj",
+        "packagesPath": "C:\\Users\\nahuellopez\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\Crm\\back\\CRMF360.Application\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Nahue\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nahuellopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -127,8 +119,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj": {
-                "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj"
+              "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj": {
+                "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj"
               }
             }
           }
@@ -170,25 +162,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj": {
+    "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj",
+        "projectUniqueName": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj",
         "projectName": "CRMF360.Domain",
-        "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj",
-        "packagesPath": "C:\\Users\\Nahue\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\obj\\",
+        "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj",
+        "packagesPath": "C:\\Users\\nahuellopez\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Nahue\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nahuellopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -235,25 +223,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj": {
+    "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj",
+        "projectUniqueName": "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj",
         "projectName": "CRMF360.Infrastructure",
-        "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Nahue\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Infrastructure\\obj\\",
+        "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\CRMF360.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\nahuellopez\\.nuget\\packages\\",
+        "outputPath": "D:\\Code\\Crm\\back\\CRMF360.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Nahue\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\nahuellopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -267,11 +251,11 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj": {
-                "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Application\\CRMF360.Application.csproj"
+              "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj": {
+                "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Application\\CRMF360.Application.csproj"
               },
-              "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj": {
-                "projectPath": "C:\\Users\\Nahue\\Desktop\\Code\\Crm-F360\\CRMF360.Domain\\CRMF360.Domain.csproj"
+              "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj": {
+                "projectPath": "D:\\Code\\Crm\\back\\CRMF360.Domain\\CRMF360.Domain.csproj"
               }
             }
           }
@@ -329,7 +313,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
