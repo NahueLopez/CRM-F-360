@@ -8,7 +8,7 @@ public enum ProjectStatus
     Done
 }
 
-public class Project
+public class Project : ISoftDeletable
 {
     public int Id { get; set; }
     public int CompanyId { get; set; }
@@ -19,9 +19,12 @@ public class Project
     public DateTime? EndDateEstimated { get; set; }
     public decimal? EstimatedHours { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     // Navigation
     public Company Company { get; set; } = null!;
     public ICollection<BoardColumn> BoardColumns { get; set; } = new List<BoardColumn>();
     public ICollection<Task> Tasks { get; set; } = new List<Task>();
+    public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
 }

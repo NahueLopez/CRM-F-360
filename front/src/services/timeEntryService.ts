@@ -1,5 +1,5 @@
 import { api } from "../lib/apiClient";
-import type { TimeEntry } from "../types/timeEntry";
+import type { TimeEntry, ProjectHoursSummary } from "../types/timeEntry";
 
 export const timeEntryService = {
     getAll: () => api.get<TimeEntry[]>("/time-entries"),
@@ -11,6 +11,9 @@ export const timeEntryService = {
         api.get<TimeEntry[]>(`/time-entries/by-user/${userId}`),
 
     getById: (id: number) => api.get<TimeEntry>(`/time-entries/${id}`),
+
+    getProjectSummary: () =>
+        api.get<ProjectHoursSummary[]>("/time-entries/project-summary"),
 
     create: (data: {
         taskId: number;

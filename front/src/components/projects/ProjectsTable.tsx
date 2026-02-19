@@ -6,8 +6,9 @@ import type { Company } from "../../types/company";
 interface Props {
   data: Project[];
   companies: Company[];
-  onEdit: (project: Project) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (id: number) => void;
+  onTeam?: (projectId: number) => void;
 }
 
 const statusLabel: Record<string, { text: string; color: string }> = {
@@ -17,7 +18,7 @@ const statusLabel: Record<string, { text: string; color: string }> = {
   Done: { text: "Finalizado", color: "text-emerald-400" },
 };
 
-const ProjectsTable: React.FC<Props> = ({ data, companies, onEdit, onDelete }) => {
+const ProjectsTable: React.FC<Props> = ({ data, companies, onEdit, onDelete, onTeam }) => {
   const navigate = useNavigate();
 
   const getCompanyName = (companyId: number) =>
@@ -58,18 +59,30 @@ const ProjectsTable: React.FC<Props> = ({ data, companies, onEdit, onDelete }) =
                 >
                   Tablero
                 </button>
-                <button
-                  onClick={() => onEdit(p)}
-                  className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-xs transition"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => onDelete(p.id)}
-                  className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-xs transition"
-                >
-                  Borrar
-                </button>
+                {onTeam && (
+                  <button
+                    onClick={() => onTeam(p.id)}
+                    className="px-3 py-1 rounded bg-violet-600 hover:bg-violet-500 text-xs transition"
+                  >
+                    Equipo
+                  </button>
+                )}
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(p)}
+                    className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-xs transition"
+                  >
+                    Editar
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(p.id)}
+                    className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-xs transition"
+                  >
+                    Borrar
+                  </button>
+                )}
               </td>
             </tr>
           );

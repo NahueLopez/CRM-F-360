@@ -26,4 +26,5 @@ public class Task
     public BoardColumn? Column { get; set; }
     public User? Assignee { get; set; }
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
 }

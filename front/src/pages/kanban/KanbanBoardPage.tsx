@@ -14,7 +14,7 @@ import type { BoardColumn as ColumnType } from "../../types/boardColumn";
 import type { User } from "../../types/user";
 import { taskService } from "../../services/taskService";
 import { boardColumnService } from "../../services/boardColumnService";
-import { userService } from "../../services/userService";
+import { projectMemberService } from "../../services/projectMemberService";
 import { projectService } from "../../services/projectService";
 import KanbanColumn from "../../components/kanban/KanbanColumn";
 import KanbanCard from "../../components/kanban/KanbanCard";
@@ -48,11 +48,11 @@ const KanbanBoardPage: React.FC = () => {
     const loadBoard = useCallback(async () => {
         try {
             setLoading(true);
-            const [proj, cols, boardTasks, teamUsers] = await Promise.all([
+            const [proj, cols, boardTasks, members] = await Promise.all([
                 projectService.getById(projectId),
                 boardColumnService.getByProject(projectId),
                 taskService.getByProject(projectId),
-                userService.getAll(),
+                projectMemberService.getByProject(projectId),
             ]);
             if (!proj) {
                 navigate("/projects", { replace: true });
@@ -61,7 +61,8 @@ const KanbanBoardPage: React.FC = () => {
             setProject(proj);
             setColumns(cols);
             setTasks(boardTasks);
-            setUsers(teamUsers);
+            // Map members to User-like objects for the task modal
+            setUsers(members.map(m => ({ id: m.userId, fullName: m.userName, email: m.userEmail, active: true })));
         } catch (err) {
             console.error("Error loading board", err);
         } finally {
@@ -143,6 +144,7 @@ const KanbanBoardPage: React.FC = () => {
         const taskId = active.id as number;
         const overId = over.id;
 
+        // Determine target column
         let targetColumnId: number | undefined;
         if (typeof overId === "string" && overId.startsWith("column-")) {
             targetColumnId = Number(overId.replace("column-", ""));
@@ -152,16 +154,27 @@ const KanbanBoardPage: React.FC = () => {
 
         if (!targetColumnId) return;
 
-        // Determine new sortOrder
-        const colTasks = tasksByColumn.get(targetColumnId) ?? [];
-        const overIndex = colTasks.findIndex((t) => t.id === (overId as number));
-        const newSortOrder = overIndex >= 0 ? overIndex : colTasks.length;
+        // Get tasks in target column (excluding the dragged task)
+        const colTasks = (tasksByColumn.get(targetColumnId) ?? [])
+            .filter((t) => t.id !== taskId);
+
+        let newSortOrder: number;
+
+        if (typeof overId === "string" && overId.startsWith("column-")) {
+            // Dropped on empty column area → put at end
+            newSortOrder = colTasks.length;
+        } else {
+            // Dropped on a specific task → insert at that position
+            const overIndex = colTasks.findIndex((t) => t.id === (overId as number));
+            newSortOrder = overIndex >= 0 ? overIndex : colTasks.length;
+        }
 
         try {
             await taskService.move(taskId, targetColumnId, newSortOrder);
+            await loadBoard(); // Reload to get consistent sortOrders
         } catch (err) {
             console.error("Error moving task", err);
-            loadBoard(); // Rollback on error
+            loadBoard();
         }
     };
 

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import type { Project, ProjectStatus } from "../../types/project";
 import type { Company } from "../../types/company";
+import type { User } from "../../types/user";
 
 interface Props {
   initial?: Partial<Project>;
   companies: Company[];
-  onSubmit: (values: Partial<Project>) => void;
+  users: User[];
+  onSubmit: (values: Partial<Project>, memberIds?: number[]) => void;
   onCancel?: () => void;
 }
 
@@ -19,9 +21,12 @@ const STATUSES: { value: ProjectStatus; label: string }[] = [
 const ProjectForm: React.FC<Props> = ({
   initial,
   companies,
+  users,
   onSubmit,
   onCancel,
 }) => {
+  const isEditing = !!(initial?.id);
+
   const [form, setForm] = useState<Partial<Project>>({
     name: initial?.name ?? "",
     description: initial?.description ?? "",
@@ -31,6 +36,8 @@ const ProjectForm: React.FC<Props> = ({
     startDate: initial?.startDate ?? undefined,
     endDateEstimated: initial?.endDateEstimated ?? undefined,
   });
+
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
 
   useEffect(() => {
     setForm({
@@ -42,6 +49,7 @@ const ProjectForm: React.FC<Props> = ({
       startDate: initial?.startDate ?? undefined,
       endDateEstimated: initial?.endDateEstimated ?? undefined,
     });
+    setSelectedMembers([]);
   }, [initial, companies]);
 
   const handleChange = (
@@ -69,6 +77,14 @@ const ProjectForm: React.FC<Props> = ({
     setForm({ ...form, [name]: value });
   };
 
+  const toggleMember = (userId: number) => {
+    setSelectedMembers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
   const handleSubmit = () => {
     if (!form.name || form.name.trim() === "") {
       alert("El nombre del proyecto es obligatorio");
@@ -78,7 +94,7 @@ const ProjectForm: React.FC<Props> = ({
       alert("Tenés que seleccionar una empresa");
       return;
     }
-    onSubmit(form);
+    onSubmit(form, isEditing ? undefined : selectedMembers);
   };
 
   return (
@@ -191,6 +207,43 @@ const ProjectForm: React.FC<Props> = ({
           className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 resize-none"
         />
       </div>
+
+      {/* Members (only on create) */}
+      {!isEditing && users.length > 0 && (
+        <div>
+          <label className="block text-xs text-slate-400 mb-2">
+            Asignar miembros al proyecto
+          </label>
+          <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 rounded-lg bg-slate-800/50 border border-slate-700">
+            {users.map((u) => (
+              <label
+                key={u.id}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition text-sm
+                  ${selectedMembers.includes(u.id)
+                    ? "bg-indigo-600/20 border border-indigo-500/40 text-indigo-300"
+                    : "bg-slate-800 border border-slate-700/50 text-slate-300 hover:bg-slate-700/50"
+                  }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedMembers.includes(u.id)}
+                  onChange={() => toggleMember(u.id)}
+                  className="accent-indigo-500"
+                />
+                <div>
+                  <span className="block text-xs font-medium">{u.fullName}</span>
+                  <span className="block text-[10px] text-slate-500">{u.email}</span>
+                </div>
+              </label>
+            ))}
+          </div>
+          {selectedMembers.length > 0 && (
+            <p className="text-[10px] text-indigo-400 mt-1">
+              {selectedMembers.length} miembro{selectedMembers.length > 1 ? "s" : ""} seleccionado{selectedMembers.length > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2 justify-end pt-2">
         {onCancel && (

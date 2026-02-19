@@ -2,9 +2,14 @@
 using CRMF360.Infrastructure;
 using CRMF360.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Threading.RateLimiting;
+
+// Npgsql 8+ requiere DateTimeKind.Utc; esto permite Unspecified también
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +34,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-// JWT
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "clave-super-secreta-dev";
+// JWT — fail hard if key missing in Production
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    if (builder.Environment.IsProduction())
+        throw new InvalidOperationException("Jwt:Key MUST be configured in production. Set it in appsettings.Production.json or environment variables.");
+    jwtKey = "clave-super-secreta-dev-min-32-chars!!";
+}
 var key = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services
@@ -58,6 +69,36 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ManagerOrAdmin", policy =>
         policy.RequireRole("Admin", "Manager"));
+});
+
+// ─── Rate Limiting ───
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Global: 100 requests per minute per IP
+    options.AddPolicy("global", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5,
+            }));
+
+    // Strict: 10 requests per minute (for login, password reset)
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 2,
+            }));
 });
 
 // Swagger con soporte de Bearer token
@@ -107,6 +148,8 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseCors();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

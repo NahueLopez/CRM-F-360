@@ -1,27 +1,39 @@
 import React, { useEffect, useState } from "react";
 import type { Project } from "../../types/project";
 import type { Company } from "../../types/company";
+import type { User } from "../../types/user";
 import { projectService } from "../../services/projectService";
 import { companyService } from "../../services/companyService";
+import { userService } from "../../services/userService";
+import { projectMemberService } from "../../services/projectMemberService";
+import { authStore } from "../../auth/authStore";
 import ProjectForm from "../../components/projects/ProjectForm";
 import ProjectsTable from "../../components/projects/ProjectsTable";
+import ProjectTeamModal from "../../components/projects/ProjectTeamModal";
 
 const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [teamProjectId, setTeamProjectId] = useState<number | null>(null);
+
+  const canManage = authStore.hasAnyRole("Admin", "Manager");
 
   const load = async () => {
     try {
       setLoading(true);
-      const [companiesData, projectsData] = await Promise.all([
-        companyService.getAll(),
+      const promises: [Promise<Company[]>, Promise<Project[]>, Promise<User[]>] = [
+        canManage ? companyService.getAll() : Promise.resolve([]),
         projectService.getAll(),
-      ]);
+        canManage ? userService.getAll() : Promise.resolve([]),
+      ];
+      const [companiesData, projectsData, usersData] = await Promise.all(promises);
       setCompanies(companiesData);
       setProjects(projectsData);
+      setUsers(usersData);
     } catch (err) {
       console.error("Error cargando proyectos/empresas", err);
     } finally {
@@ -38,8 +50,18 @@ const ProjectsPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleCreate = async (data: Partial<Project>) => {
+  const handleCreate = async (data: Partial<Project>, memberIds?: number[]) => {
     const newProject = await projectService.create(data);
+
+    // Add members if selected
+    if (memberIds && memberIds.length > 0) {
+      await Promise.all(
+        memberIds.map((userId) =>
+          projectMemberService.add(newProject.id, userId)
+        )
+      );
+    }
+
     setProjects((prev) => [...prev, newProject]);
     setShowForm(false);
   };
@@ -77,28 +99,32 @@ const ProjectsPage: React.FC = () => {
         <div>
           <h3 className="text-xl font-semibold">Proyectos</h3>
           <p className="text-sm text-slate-400">
-            Gestioná los proyectos y asociálos a cada empresa.
+            {canManage
+              ? "Gestioná los proyectos y asociálos a cada empresa."
+              : "Tus proyectos asignados."}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleNewClick}
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition"
-          disabled={companies.length === 0}
-        >
-          + Nuevo proyecto
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            onClick={handleNewClick}
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition"
+            disabled={companies.length === 0}
+          >
+            + Nuevo proyecto
+          </button>
+        )}
       </div>
 
-      {companies.length === 0 && (
+      {canManage && companies.length === 0 && (
         <div className="text-xs text-amber-400 bg-amber-950/40 border border-amber-700 rounded-lg px-3 py-2">
           Para crear proyectos primero necesitás cargar al menos una empresa.
         </div>
       )}
 
       {/* Panel formulario */}
-      {showForm && (
+      {showForm && canManage && (
         <div className="border border-slate-800 rounded-lg p-4 bg-slate-900/60">
           <h4 className="text-lg font-semibold mb-3">
             {editing ? "Editar proyecto" : "Crear nuevo proyecto"}
@@ -107,6 +133,7 @@ const ProjectsPage: React.FC = () => {
           <ProjectForm
             initial={editing ?? {}}
             companies={companies}
+            users={users}
             onSubmit={editing ? handleUpdate : handleCreate}
             onCancel={handleCancelForm}
           />
@@ -121,9 +148,18 @@ const ProjectsPage: React.FC = () => {
       <ProjectsTable
         data={projects}
         companies={companies}
-        onEdit={handleEditClick}
-        onDelete={handleDelete}
+        onEdit={canManage ? handleEditClick : undefined}
+        onDelete={canManage ? handleDelete : undefined}
+        onTeam={canManage ? (id) => setTeamProjectId(id) : undefined}
       />
+
+      {/* Team modal */}
+      {teamProjectId && (
+        <ProjectTeamModal
+          projectId={teamProjectId}
+          onClose={() => setTeamProjectId(null)}
+        />
+      )}
     </div>
   );
 };

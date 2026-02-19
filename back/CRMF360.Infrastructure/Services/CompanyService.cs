@@ -38,6 +38,7 @@ public class CompanyService : ICompanyService
             Email = dto.Email,
             Phone = dto.Phone,
             Notes = dto.Notes,
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.Companies.Add(entity);
@@ -67,7 +68,8 @@ public class CompanyService : ICompanyService
         var entity = await _db.Companies.FindAsync(new object[] { id }, ct);
         if (entity is null) return false;
 
-        _db.Companies.Remove(entity);
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return true;
     }

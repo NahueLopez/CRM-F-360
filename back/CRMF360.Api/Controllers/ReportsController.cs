@@ -6,7 +6,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Policy = "ManagerOrAdmin")]
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;

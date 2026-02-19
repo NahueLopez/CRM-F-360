@@ -5,9 +5,10 @@ interface Props {
   data: Company[];
   onEdit: (company: Company) => void;
   onDelete: (id: number) => void;
+  onRowClick?: (company: Company) => void;
 }
 
-const CompaniesTable: React.FC<Props> = ({ data, onEdit, onDelete }) => {
+const CompaniesTable: React.FC<Props> = ({ data, onEdit, onDelete, onRowClick }) => {
   return (
     <table className="w-full bg-slate-900 border border-slate-800 rounded-lg">
       <thead>
@@ -21,7 +22,8 @@ const CompaniesTable: React.FC<Props> = ({ data, onEdit, onDelete }) => {
 
       <tbody>
         {data.map((c) => (
-          <tr key={c.id} className="border-b border-slate-800">
+          <tr key={c.id} className={`border-b border-slate-800 ${onRowClick ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
+            onClick={() => onRowClick?.(c)}>
             <td className="p-3">{c.name}</td>
             <td className="p-3">{c.cuit}</td>
             <td className="p-3">{c.email}</td>

@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { timeEntryService } from "../../services/timeEntryService";
 import { taskService } from "../../services/taskService";
 import { authStore } from "../../auth/authStore";
-import type { TimeEntry } from "../../types/timeEntry";
+import type { TimeEntry, ProjectHoursSummary } from "../../types/timeEntry";
 import type { Task } from "../../types/task";
 
 const TimeEntriesPage: React.FC = () => {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projectSummary, setProjectSummary] = useState<ProjectHoursSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -18,22 +19,30 @@ const TimeEntriesPage: React.FC = () => {
   const [editing, setEditing] = useState<TimeEntry | null>(null);
 
   const userId = authStore.user?.id;
+  const isLeader = authStore.hasAnyRole("Admin", "Manager");
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [allEntries, allTasks] = await Promise.all([
-        userId ? timeEntryService.getByUser(userId) : timeEntryService.getAll(),
+      const promises: Promise<unknown>[] = [
+        timeEntryService.getAll(),
         taskService.getAll(),
-      ]);
-      setEntries(allEntries);
-      setTasks(allTasks);
+      ];
+      if (isLeader) {
+        promises.push(timeEntryService.getProjectSummary());
+      }
+      const results = await Promise.all(promises);
+      setEntries(results[0] as TimeEntry[]);
+      setTasks(results[1] as Task[]);
+      if (isLeader && results[2]) {
+        setProjectSummary(results[2] as ProjectHoursSummary[]);
+      }
     } catch (err) {
       console.error("Error loading entries", err);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, isLeader]);
 
   useEffect(() => {
     load();
@@ -94,15 +103,115 @@ const TimeEntriesPage: React.FC = () => {
 
   const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
 
+  const statusLabels: Record<string, { text: string; color: string }> = {
+    Planned: { text: "Planeado", color: "text-slate-400" },
+    InProgress: { text: "En curso", color: "text-sky-400" },
+    Paused: { text: "Pausado", color: "text-amber-400" },
+    Done: { text: "Finalizado", color: "text-emerald-400" },
+  };
+
   return (
     <div className="space-y-6">
-      {/* Form */}
+      {/* ─── Project Hours Summary (Managers/Admins) ─── */}
+      {isLeader && projectSummary.length > 0 && (
+        <div className="bg-gradient-to-br from-indigo-600/10 to-violet-600/5 border border-indigo-500/20 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            📊 Estimado vs Ejecutado por Proyecto
+            <span className="text-[10px] text-slate-500 font-normal">(solo visible para Team Leaders y Admins)</span>
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] text-slate-400 uppercase tracking-wider">
+                  <th className="pb-2">Proyecto</th>
+                  <th className="pb-2">Empresa</th>
+                  <th className="pb-2">Estado</th>
+                  <th className="pb-2 text-right">Estimado</th>
+                  <th className="pb-2 text-right">Ejecutado</th>
+                  <th className="pb-2 text-right">Diferencia</th>
+                  <th className="pb-2 text-right">Progreso</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {projectSummary.map((p) => {
+                  const st = statusLabels[p.status] ?? statusLabels.Planned;
+                  const overBudget = p.deltaHours > 0 && p.estimatedHours > 0;
+                  const burnColor = p.burnPercent > 100
+                    ? "bg-red-500"
+                    : p.burnPercent > 80
+                      ? "bg-amber-500"
+                      : "bg-emerald-500";
+
+                  return (
+                    <tr key={p.projectId} className="hover:bg-slate-800/30">
+                      <td className="py-2.5 font-medium">{p.projectName}</td>
+                      <td className="py-2.5 text-slate-500 text-xs">{p.companyName}</td>
+                      <td className="py-2.5">
+                        <span className={`text-xs ${st.color}`}>{st.text}</span>
+                      </td>
+                      <td className="py-2.5 text-right text-slate-300">
+                        {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
+                      </td>
+                      <td className="py-2.5 text-right font-semibold text-indigo-400">
+                        {p.loggedHours.toFixed(1)} hs
+                      </td>
+                      <td className={`py-2.5 text-right font-semibold ${overBudget ? "text-red-400" : p.estimatedHours > 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                        {p.estimatedHours > 0 ? (
+                          <>
+                            {overBudget ? "+" : ""}{p.deltaHours.toFixed(1)} hs
+                            {overBudget && <span className="ml-1 text-[10px]">⚠️</span>}
+                          </>
+                        ) : "—"}
+                      </td>
+                      <td className="py-2.5 text-right w-32">
+                        {p.estimatedHours > 0 ? (
+                          <div className="flex items-center gap-2 justify-end">
+                            <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${burnColor}`} style={{ width: `${Math.min(p.burnPercent, 100)}%` }} />
+                            </div>
+                            <span className={`text-[10px] ${overBudget ? "text-red-400" : "text-slate-400"}`}>
+                              {p.burnPercent.toFixed(0)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-600">{p.totalEntries} registros</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* Summary totals */}
+          <div className="mt-4 pt-3 border-t border-indigo-500/10 flex gap-6 text-xs">
+            <span className="text-slate-400">
+              Total estimado: <strong className="text-slate-200">{projectSummary.reduce((s, p) => s + p.estimatedHours, 0).toFixed(0)} hs</strong>
+            </span>
+            <span className="text-slate-400">
+              Total ejecutado: <strong className="text-indigo-400">{projectSummary.reduce((s, p) => s + p.loggedHours, 0).toFixed(1)} hs</strong>
+            </span>
+            {(() => {
+              const totalEst = projectSummary.reduce((s, p) => s + p.estimatedHours, 0);
+              const totalLog = projectSummary.reduce((s, p) => s + p.loggedHours, 0);
+              const delta = totalLog - totalEst;
+              return totalEst > 0 ? (
+                <span className={delta > 0 ? "text-red-400" : "text-emerald-400"}>
+                  Diferencia global: <strong>{delta > 0 ? "+" : ""}{delta.toFixed(1)} hs</strong>
+                </span>
+              ) : null;
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Log Hours Form ─── */}
       <form
         onSubmit={handleSubmit}
         className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 space-y-4"
       >
         <h3 className="text-sm font-semibold text-slate-200">
-          {editing ? "Editar entrada" : "Cargar horas"}
+          {editing ? "Editar entrada" : "⏱ Cargar horas"}
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -188,9 +297,11 @@ const TimeEntriesPage: React.FC = () => {
           <thead>
             <tr className="bg-slate-800 text-left">
               <th className="p-3">Fecha</th>
+              <th className="p-3">Proyecto</th>
               <th className="p-3">Tarea</th>
               <th className="p-3">Horas</th>
               <th className="p-3">Descripción</th>
+              {isLeader && <th className="p-3">Usuario</th>}
               <th className="p-3">Acciones</th>
             </tr>
           </thead>
@@ -200,11 +311,15 @@ const TimeEntriesPage: React.FC = () => {
                 <td className="p-3 text-slate-400">
                   {new Date(e.date).toLocaleDateString("es-AR")}
                 </td>
+                <td className="p-3 text-slate-500 text-xs">{e.projectName}</td>
                 <td className="p-3">{e.taskTitle}</td>
                 <td className="p-3 text-indigo-400 font-medium">
                   {e.hours} hs
                 </td>
                 <td className="p-3 text-slate-400">{e.description ?? "—"}</td>
+                {isLeader && (
+                  <td className="p-3 text-slate-300 text-xs">{e.userName}</td>
+                )}
                 <td className="p-3 space-x-2">
                   <button
                     onClick={() => startEdit(e)}
@@ -224,7 +339,7 @@ const TimeEntriesPage: React.FC = () => {
             {entries.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={isLeader ? 7 : 6}
                   className="p-3 text-center text-slate-500 italic"
                 >
                   No hay horas registradas.

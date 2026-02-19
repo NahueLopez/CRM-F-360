@@ -1,6 +1,6 @@
-﻿using CRMF360.Application.Auth;
+﻿using CRMF360.Application.Abstractions;
+using CRMF360.Application.Auth;
 using CRMF360.Domain.Entities;
-using CRMF360.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -12,18 +12,18 @@ namespace CRMF360.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _db;
     private readonly IConfiguration _configuration;
 
-    public AuthService(ApplicationDbContext context, IConfiguration configuration)
+    public AuthService(IApplicationDbContext db, IConfiguration configuration)
     {
-        _context = context;
+        _db = db;
         _configuration = configuration;
     }
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
     {
-        var user = await _context.Users
+        var user = await _db.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u =>
@@ -38,7 +38,7 @@ public class AuthService : IAuthService
             return null;
 
         user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
         var token = GenerateJwtToken(user);
 
@@ -47,7 +47,7 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = await _context.Users
+        var user = await _db.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
@@ -61,7 +61,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto request)
     {
-        var user = await _context.Users
+        var user = await _db.Users
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
 
         if (user == null)
@@ -71,7 +71,7 @@ public class AuthService : IAuthService
             return false;
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
         return true;
     }
@@ -94,7 +94,7 @@ public class AuthService : IAuthService
         var jwtKey = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("Jwt:Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "CRMF360";
-        var jwtAudience = _configuration["Jwt:Audience"] ?? "CRMF360-Clients";
+        var jwtAudience = _configuration["Jwt:Audience"] ?? "CRMF360-BackOffice";
         var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 60;
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

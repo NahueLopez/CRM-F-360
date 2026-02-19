@@ -39,4 +39,21 @@ public class CompaniesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _companyService.DeleteAsync(id, ct) ? NoContent() : NotFound();
+
+    [HttpGet("export")]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public async Task<IActionResult> ExportCsv(CancellationToken ct)
+    {
+        var companies = await _companyService.GetAllAsync(ct);
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Id,Name,CUIT,Email,Phone,Active,CreatedAt");
+        foreach (var c in companies)
+        {
+            csv.AppendLine($"{c.Id},\"{Escape(c.Name)}\",\"{Escape(c.Cuit)}\",\"{Escape(c.Email)}\",\"{Escape(c.Phone)}\",{c.Active},{c.CreatedAt:yyyy-MM-dd}");
+        }
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        return File(bytes, "text/csv", $"companies_{DateTime.UtcNow:yyyyMMdd}.csv");
+    }
+
+    private static string Escape(string? s) => s?.Replace("\"", "\"\"") ?? "";
 }

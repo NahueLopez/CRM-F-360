@@ -18,10 +18,24 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<BoardColumn> BoardColumns => Set<BoardColumn>();
     public DbSet<TaskEntity> Tasks => Set<TaskEntity>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+    public DbSet<TaskComment> TaskComments => Set<TaskComment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Reminder> Reminders => Set<Reminder>();
+    public DbSet<Deal> Deals => Set<Deal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // ──── Global Soft Delete Filters ────
+        modelBuilder.Entity<Company>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Contact>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Project>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Deal>().HasQueryFilter(e => !e.IsDeleted);
 
         // ──── User ────
         modelBuilder.Entity<User>(e =>
@@ -145,6 +159,150 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany()
                 .HasForeignKey(te => te.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ──── ProjectMember ────
+        modelBuilder.Entity<ProjectMember>(e =>
+        {
+            e.ToTable("ProjectMembers");
+            e.HasKey(pm => pm.Id);
+            e.Property(pm => pm.Role).HasMaxLength(50);
+
+            e.HasOne(pm => pm.Project)
+                .WithMany(p => p.Members)
+                .HasForeignKey(pm => pm.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(pm => pm.User)
+                .WithMany(u => u.ProjectMembers)
+                .HasForeignKey(pm => pm.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(pm => new { pm.ProjectId, pm.UserId }).IsUnique();
+        });
+
+        // ──── Contact ────
+        modelBuilder.Entity<Contact>(e =>
+        {
+            e.ToTable("Contacts");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.FullName).HasMaxLength(200).IsRequired();
+            e.Property(c => c.Email).HasMaxLength(200);
+            e.Property(c => c.Phone).HasMaxLength(50);
+            e.Property(c => c.Position).HasMaxLength(100);
+            e.Property(c => c.Notes).HasMaxLength(2000);
+
+            e.HasOne(c => c.Company)
+                .WithMany(co => co.Contacts)
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ──── ActivityLog ────
+        modelBuilder.Entity<ActivityLog>(e =>
+        {
+            e.ToTable("ActivityLogs");
+            e.HasKey(a => a.Id);
+            e.Property(a => a.Type).HasMaxLength(50).IsRequired();
+            e.Property(a => a.Description).HasMaxLength(4000).IsRequired();
+
+            e.HasOne(a => a.Company)
+                .WithMany(c => c.Activities)
+                .HasForeignKey(a => a.CompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(a => a.Contact)
+                .WithMany(c => c.Activities)
+                .HasForeignKey(a => a.ContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(a => a.Project)
+                .WithMany()
+                .HasForeignKey(a => a.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ──── TaskComment ────
+        modelBuilder.Entity<TaskComment>(e =>
+        {
+            e.ToTable("TaskComments");
+            e.HasKey(tc => tc.Id);
+            e.Property(tc => tc.Content).HasMaxLength(4000).IsRequired();
+
+            e.HasOne(tc => tc.Task)
+                .WithMany(t => t.Comments)
+                .HasForeignKey(tc => tc.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(tc => tc.User)
+                .WithMany()
+                .HasForeignKey(tc => tc.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ──── Notification ────
+        modelBuilder.Entity<Notification>(e =>
+        {
+            e.ToTable("Notifications");
+            e.HasKey(n => n.Id);
+            e.Property(n => n.Type).HasMaxLength(50).IsRequired();
+            e.Property(n => n.Title).HasMaxLength(300).IsRequired();
+            e.Property(n => n.Message).HasMaxLength(2000);
+            e.Property(n => n.RelatedEntityType).HasMaxLength(50);
+
+            e.HasOne(n => n.User).WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(n => new { n.UserId, n.IsRead });
+        });
+
+        // ──── AuditLog ────
+        modelBuilder.Entity<AuditLog>(e =>
+        {
+            e.ToTable("AuditLogs");
+            e.HasKey(a => a.Id);
+            e.Property(a => a.Action).HasMaxLength(50).IsRequired();
+            e.Property(a => a.EntityType).HasMaxLength(50).IsRequired();
+            e.Property(a => a.EntityName).HasMaxLength(300);
+            e.Property(a => a.Details).HasMaxLength(4000);
+
+            e.HasOne(a => a.User).WithMany().HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(a => a.CreatedAt);
+        });
+
+        // ──── Reminder ────
+        modelBuilder.Entity<Reminder>(e =>
+        {
+            e.ToTable("Reminders");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Title).HasMaxLength(200).IsRequired();
+            e.Property(r => r.Description).HasMaxLength(2000);
+
+            e.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(r => r.Contact).WithMany().HasForeignKey(r => r.ContactId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(r => r.Company).WithMany().HasForeignKey(r => r.CompanyId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(r => r.Project).WithMany().HasForeignKey(r => r.ProjectId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(r => new { r.UserId, r.IsCompleted });
+        });
+
+        // ──── Deal ────
+        modelBuilder.Entity<Deal>(e =>
+        {
+            e.ToTable("Deals");
+            e.HasKey(d => d.Id);
+            e.Property(d => d.Title).HasMaxLength(200).IsRequired();
+            e.Property(d => d.Notes).HasMaxLength(4000);
+            e.Property(d => d.Currency).HasMaxLength(10);
+            e.Property(d => d.Value).HasColumnType("decimal(18,2)");
+            e.Property(d => d.Stage).HasConversion<string>().HasMaxLength(20);
+
+            e.HasOne(d => d.Company).WithMany().HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(d => d.Contact).WithMany().HasForeignKey(d => d.ContactId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(d => d.AssignedTo).WithMany().HasForeignKey(d => d.AssignedToId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(d => d.Stage);
         });
     }
 }

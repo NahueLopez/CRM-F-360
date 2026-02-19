@@ -1,5 +1,6 @@
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.Projects;
+using CRMF360.Domain;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,9 +45,10 @@ public class ProjectService : IProjectService
             Name = dto.Name,
             Description = dto.Description,
             Status = status,
-            StartDate = dto.StartDate,
-            EndDateEstimated = dto.EndDateEstimated,
+            StartDate = ToUtc(dto.StartDate),
+            EndDateEstimated = ToUtc(dto.EndDateEstimated),
             EstimatedHours = dto.EstimatedHours,
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.Projects.Add(entity);
@@ -87,8 +89,8 @@ public class ProjectService : IProjectService
         entity.Name = dto.Name;
         entity.Description = dto.Description;
         entity.Status = status;
-        entity.StartDate = dto.StartDate;
-        entity.EndDateEstimated = dto.EndDateEstimated;
+        entity.StartDate = ToUtc(dto.StartDate);
+        entity.EndDateEstimated = ToUtc(dto.EndDateEstimated);
         entity.EstimatedHours = dto.EstimatedHours;
 
         await _db.SaveChangesAsync(ct);
@@ -100,7 +102,8 @@ public class ProjectService : IProjectService
         var entity = await _db.Projects.FindAsync(new object[] { id }, ct);
         if (entity is null) return false;
 
-        _db.Projects.Remove(entity);
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return true;
     }
@@ -119,4 +122,6 @@ public class ProjectService : IProjectService
         CreatedAt = p.CreatedAt,
         TaskCount = p.Tasks?.Count ?? 0,
     };
+
+    private static DateTime? ToUtc(DateTime? dt) => DateTimeHelper.ToUtc(dt);
 }

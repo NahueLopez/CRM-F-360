@@ -13,6 +13,14 @@ public interface IApplicationDbContext
     DbSet<BoardColumn> BoardColumns { get; }
     DbSet<Domain.Entities.Task> Tasks { get; }
     DbSet<TimeEntry> TimeEntries { get; }
+    DbSet<ProjectMember> ProjectMembers { get; }
+    DbSet<Contact> Contacts { get; }
+    DbSet<ActivityLog> ActivityLogs { get; }
+    DbSet<TaskComment> TaskComments { get; }
+    DbSet<Notification> Notifications { get; }
+    DbSet<AuditLog> AuditLogs { get; }
+    DbSet<Reminder> Reminders { get; }
+    DbSet<Deal> Deals { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

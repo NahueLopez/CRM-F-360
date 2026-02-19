@@ -5,16 +5,22 @@ import { authStore } from "../../auth/authStore";
 interface NavItem {
   to: string;
   label: string;
+  icon: string;
   roles: string[];
 }
 
 const allItems: NavItem[] = [
-  { to: "/", label: "Dashboard", roles: ["Admin", "Manager", "User"] },
-  { to: "/companies", label: "Empresas", roles: ["Admin", "Manager"] },
-  { to: "/projects", label: "Proyectos", roles: ["Admin", "Manager"] },
-  { to: "/time-entries", label: "Carga de horas", roles: ["Admin", "Manager", "User"] },
-  { to: "/reports", label: "Reportes", roles: ["Admin", "Manager"] },
-  { to: "/users", label: "Usuarios", roles: ["Admin"] },
+  { to: "/", label: "Dashboard", icon: "📊", roles: ["Admin", "Manager", "User"] },
+  { to: "/companies", label: "Empresas", icon: "🏢", roles: ["Admin", "Manager"] },
+  { to: "/contacts", label: "Contactos", icon: "👤", roles: ["Admin", "Manager"] },
+  { to: "/projects", label: "Proyectos", icon: "📁", roles: ["Admin", "Manager", "User"] },
+  { to: "/pipeline", label: "Pipeline", icon: "💰", roles: ["Admin", "Manager"] },
+  { to: "/calendar", label: "Calendario", icon: "📅", roles: ["Admin", "Manager", "User"] },
+  { to: "/time-entries", label: "Carga de horas", icon: "⏱", roles: ["Admin", "Manager", "User"] },
+  { to: "/reminders", label: "Recordatorios", icon: "⏰", roles: ["Admin", "Manager", "User"] },
+  { to: "/reports", label: "Reportes", icon: "📈", roles: ["Admin", "Manager"] },
+  { to: "/users", label: "Usuarios", icon: "👥", roles: ["Admin"] },
+  { to: "/audit-logs", label: "Auditoría", icon: "📋", roles: ["Admin"] },
 ];
 
 const Sidebar: React.FC = () => {
@@ -54,6 +60,7 @@ const Sidebar: React.FC = () => {
               }`
             }
           >
+            <span className="mr-2">{item.icon}</span>
             {item.label}
           </NavLink>
         ))}

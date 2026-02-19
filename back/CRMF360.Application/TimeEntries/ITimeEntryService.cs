@@ -9,4 +9,5 @@ public interface ITimeEntryService
     Task<TimeEntryDto> CreateAsync(CreateTimeEntryDto dto, CancellationToken ct = default);
     Task<bool> UpdateAsync(int id, UpdateTimeEntryDto dto, CancellationToken ct = default);
     Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+    Task<List<ProjectHoursSummaryDto>> GetProjectHoursSummaryAsync(CancellationToken ct = default);
 }

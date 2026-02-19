@@ -51,9 +51,10 @@ public class TimeEntryService : ITimeEntryService
         {
             TaskId = dto.TaskId,
             UserId = dto.UserId,
-            Date = dto.Date,
+            Date = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc),
             Hours = dto.Hours,
             Description = dto.Description,
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.TimeEntries.Add(entity);
@@ -68,7 +69,7 @@ public class TimeEntryService : ITimeEntryService
         var entity = await _db.TimeEntries.FindAsync(new object[] { id }, ct);
         if (entity is null) return false;
 
-        entity.Date = dto.Date;
+        entity.Date = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
         entity.Hours = dto.Hours;
         entity.Description = dto.Description;
 
@@ -91,6 +92,8 @@ public class TimeEntryService : ITimeEntryService
         return _db.TimeEntries
             .AsNoTracking()
             .Include(te => te.Task)
+                .ThenInclude(t => t.Project)
+                    .ThenInclude(p => p.Company)
             .Include(te => te.User);
     }
 
@@ -99,6 +102,7 @@ public class TimeEntryService : ITimeEntryService
         Id = te.Id,
         TaskId = te.TaskId,
         TaskTitle = te.Task?.Title ?? "—",
+        ProjectName = te.Task?.Project?.Name ?? "—",
         UserId = te.UserId,
         UserName = te.User?.FullName ?? "—",
         Date = te.Date,
@@ -106,4 +110,26 @@ public class TimeEntryService : ITimeEntryService
         Description = te.Description,
         CreatedAt = te.CreatedAt,
     };
+
+    public async Task<List<ProjectHoursSummaryDto>> GetProjectHoursSummaryAsync(CancellationToken ct = default)
+    {
+        return await _db.Projects.AsNoTracking()
+            .Include(p => p.Company)
+            .Select(p => new ProjectHoursSummaryDto
+            {
+                ProjectId = p.Id,
+                ProjectName = p.Name,
+                CompanyName = p.Company.Name,
+                Status = p.Status.ToString(),
+                EstimatedHours = p.EstimatedHours ?? 0,
+                LoggedHours = p.Tasks.SelectMany(t => t.TimeEntries).Sum(te => te.Hours),
+                DeltaHours = p.Tasks.SelectMany(t => t.TimeEntries).Sum(te => te.Hours) - (p.EstimatedHours ?? 0),
+                BurnPercent = (p.EstimatedHours ?? 0) > 0
+                    ? p.Tasks.SelectMany(t => t.TimeEntries).Sum(te => te.Hours) / (p.EstimatedHours ?? 1) * 100
+                    : 0,
+                TotalEntries = p.Tasks.SelectMany(t => t.TimeEntries).Count(),
+            })
+            .OrderByDescending(x => x.LoggedHours)
+            .ToListAsync(ct);
+    }
 }

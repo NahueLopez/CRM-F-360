@@ -1,5 +1,6 @@
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.Tasks;
+using CRMF360.Domain;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using TaskEntity = CRMF360.Domain.Entities.Task;
@@ -57,7 +58,8 @@ public class TaskService : ITaskService
             Description = dto.Description,
             Priority = priority,
             SortOrder = maxSort + 1,
-            DueDate = dto.DueDate,
+            DueDate = ToUtc(dto.DueDate),
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.Tasks.Add(entity);
@@ -81,7 +83,7 @@ public class TaskService : ITaskService
         entity.Title = dto.Title;
         entity.Description = dto.Description;
         entity.Priority = priority;
-        entity.DueDate = dto.DueDate;
+        entity.DueDate = ToUtc(dto.DueDate);
 
         await _db.SaveChangesAsync(ct);
         return true;
@@ -93,7 +95,22 @@ public class TaskService : ITaskService
         if (entity is null) return false;
 
         entity.ColumnId = dto.ColumnId;
-        entity.SortOrder = dto.SortOrder;
+
+        // Get all tasks in the target column, ordered by current SortOrder
+        var columnTasks = await _db.Tasks
+            .Where(t => t.ColumnId == dto.ColumnId && t.Id != id)
+            .OrderBy(t => t.SortOrder)
+            .ToListAsync(ct);
+
+        // Insert the moved task at the desired position
+        var insertAt = Math.Clamp(dto.SortOrder, 0, columnTasks.Count);
+        columnTasks.Insert(insertAt, entity);
+
+        // Reassign sequential SortOrders
+        for (int i = 0; i < columnTasks.Count; i++)
+        {
+            columnTasks[i].SortOrder = i;
+        }
 
         await _db.SaveChangesAsync(ct);
         return true;
@@ -134,4 +151,6 @@ public class TaskService : ITaskService
         DueDate = t.DueDate,
         CreatedAt = t.CreatedAt,
     };
+
+    private static DateTime? ToUtc(DateTime? dt) => DateTimeHelper.ToUtc(dt);
 }
