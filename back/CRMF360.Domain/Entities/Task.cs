@@ -8,7 +8,7 @@ public enum TaskPriority
     Urgent
 }
 
-public class Task
+public class Task : ISoftDeletable
 {
     public int Id { get; set; }
     public int ProjectId { get; set; }
@@ -20,6 +20,10 @@ public class Task
     public int SortOrder { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Soft delete
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     // Navigation
     public Project Project { get; set; } = null!;

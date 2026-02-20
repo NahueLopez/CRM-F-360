@@ -1,24 +1,28 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import DashboardLayout from "./components/layout/DashboardLayout";
-import { ThemeProvider } from "./context/ThemeContext";
-import { ToastProvider } from "./context/ToastContext";
-import LoginPage from "./pages/login/LoginPage";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import CompaniesPage from "./pages/companies/CompaniesPage";
-import ProjectsPage from "./pages/projects/ProjectsPage";
-import TasksPage from "./pages/tasks/TasksPage";
-import KanbanBoardPage from "./pages/kanban/KanbanBoardPage";
-import TimeEntriesPage from "./pages/time-entries/TimeEntriesPage";
-import ReportsPage from "./pages/reports/ReportsPage";
-import UsersPage from "./pages/users/UsersPage";
-import ProfilePage from "./pages/profile/ProfilePage";
-import CalendarPage from "./pages/calendar/CalendarPage";
-import ContactsPage from "./pages/contacts/ContactsPage";
-import PipelinePage from "./pages/pipeline/PipelinePage";
-import RemindersPage from "./pages/reminders/RemindersPage";
-import AuditLogsPage from "./pages/audit/AuditLogsPage";
-import { authStore } from "./auth/authStore";
+
+// ── Shared ──
+import ProtectedRoute from "./shared/auth/ProtectedRoute";
+import DashboardLayout from "./shared/layout/DashboardLayout";
+import { ThemeProvider } from "./shared/context/ThemeContext";
+import { ToastProvider } from "./shared/context/ToastContext";
+import { authStore } from "./shared/auth/authStore";
+
+// ── Feature pages (lazy-loadable in the future) ──
+import LoginPage from "./features/auth/LoginPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
+import CompaniesPage from "./features/companies/CompaniesPage";
+import ContactsPage from "./features/contacts/ContactsPage";
+import ProjectsPage from "./features/projects/ProjectsPage";
+import TasksPage from "./features/tasks/TasksPage";
+import KanbanBoardPage from "./features/kanban/KanbanBoardPage";
+import TimeEntriesPage from "./features/time-entries/TimeEntriesPage";
+import ReportsPage from "./features/reports/ReportsPage";
+import CalendarPage from "./features/calendar/CalendarPage";
+import PipelinePage from "./features/pipeline/PipelinePage";
+import RemindersPage from "./features/reminders/RemindersPage";
+import ProfilePage from "./features/profile/ProfilePage";
+import UsersPage from "./features/users/UsersPage";
+import AuditLogsPage from "./features/audit/AuditLogsPage";
 
 const App: React.FC = () => {
   return (

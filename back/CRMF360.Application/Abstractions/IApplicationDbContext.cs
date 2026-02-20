@@ -24,6 +24,7 @@ public interface IApplicationDbContext
     DbSet<ChatConversation> ChatConversations { get; }
     DbSet<ChatParticipant> ChatParticipants { get; }
     DbSet<ChatMessage> ChatMessages { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

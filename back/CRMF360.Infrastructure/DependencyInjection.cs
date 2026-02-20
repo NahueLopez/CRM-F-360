@@ -69,6 +69,7 @@ public static class DependencyInjection
 
         // Background jobs
         services.AddHostedService<Jobs.OverdueNotificationJob>();
+        services.AddHostedService<Jobs.RefreshTokenCleanupJob>();
 
         return services;
     }

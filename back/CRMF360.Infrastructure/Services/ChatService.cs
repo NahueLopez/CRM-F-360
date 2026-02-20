@@ -20,34 +20,86 @@ public class ChatService : IChatService
 
         if (convIds.Count == 0) return [];
 
+        // Single query: load conversations with participants
         var conversations = await _db.ChatConversations
             .Where(c => convIds.Contains(c.Id))
             .Include(c => c.Participants).ThenInclude(p => p.User)
             .OrderByDescending(c => c.LastMessageAt)
             .ToListAsync(ct);
 
-        var result = new List<ConversationDto>();
+        // Batch: get last message per conversation
+        var lastMessageIds = await _db.ChatMessages
+            .Where(m => convIds.Contains(m.ConversationId))
+            .GroupBy(m => m.ConversationId)
+            .Select(g => g.OrderByDescending(m => m.SentAt).Select(m => m.Id).First())
+            .ToListAsync(ct);
 
+        var lastMessages = lastMessageIds.Count > 0
+            ? await _db.ChatMessages
+                .Where(m => lastMessageIds.Contains(m.Id))
+                .Include(m => m.Sender)
+                .ToDictionaryAsync(m => m.ConversationId, ct)
+            : new Dictionary<int, ChatMessage>();
+
+        // Batch: get user's LastReadAt per conversation
+        var myParticipations = await _db.ChatParticipants
+            .Where(p => p.UserId == userId && convIds.Contains(p.ConversationId))
+            .ToDictionaryAsync(p => p.ConversationId, ct);
+
+        // Batch: get unread counts in ONE query
+        var unreadCounts = await _db.ChatMessages
+            .Where(m => convIds.Contains(m.ConversationId) && m.SenderId != userId)
+            .GroupBy(m => m.ConversationId)
+            .Select(g => new
+            {
+                ConversationId = g.Key,
+                Total = g.Count(),
+                // Count messages after LastReadAt (we'll filter in memory)
+            })
+            .ToDictionaryAsync(x => x.ConversationId, ct);
+
+        // Build per-conversation unread counts using SQL-level counting (no messages loaded into RAM)
+        var unreadAfterRead = new Dictionary<int, int>();
+
+        // Get LastReadAt map for the user
+        var lastReadMap = myParticipations.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value.LastReadAt);
+
+        // For conversations where user has a LastReadAt, count only messages after that time
+        var convsWithRead = lastReadMap.Where(kv => kv.Value is not null).Select(kv => kv.Key).ToList();
+        var convsWithoutRead = lastReadMap.Where(kv => kv.Value is null).Select(kv => kv.Key).ToList();
+
+        if (convsWithRead.Count > 0)
+        {
+            // Per-conversation unread count using SQL-level CountAsync
+            foreach (var convId in convsWithRead)
+            {
+                var readAt = lastReadMap[convId]!.Value;
+                var count = await _db.ChatMessages.CountAsync(
+                    m => m.ConversationId == convId && m.SenderId != userId && m.SentAt > readAt, ct);
+                unreadAfterRead[convId] = count;
+            }
+        }
+
+        if (convsWithoutRead.Count > 0)
+        {
+            // Never read — count all messages from others (SQL GroupBy)
+            var unreadNoRead = await _db.ChatMessages
+                .Where(m => convsWithoutRead.Contains(m.ConversationId) && m.SenderId != userId)
+                .GroupBy(m => m.ConversationId)
+                .Select(g => new { ConvId = g.Key, Count = g.Count() })
+                .ToListAsync(ct);
+
+            foreach (var item in unreadNoRead)
+                unreadAfterRead[item.ConvId] = item.Count;
+        }
+
+        var result = new List<ConversationDto>(conversations.Count);
         foreach (var conv in conversations)
         {
-            var lastMsg = await _db.ChatMessages
-                .Where(m => m.ConversationId == conv.Id)
-                .OrderByDescending(m => m.SentAt)
-                .Include(m => m.Sender)
-                .FirstOrDefaultAsync(ct);
-
-            var participant = conv.Participants.FirstOrDefault(p => p.UserId == userId);
-            var unread = 0;
-            if (participant?.LastReadAt is not null)
-            {
-                unread = await _db.ChatMessages.CountAsync(
-                    m => m.ConversationId == conv.Id && m.SentAt > participant.LastReadAt && m.SenderId != userId, ct);
-            }
-            else if (participant is not null)
-            {
-                unread = await _db.ChatMessages.CountAsync(
-                    m => m.ConversationId == conv.Id && m.SenderId != userId, ct);
-            }
+            lastMessages.TryGetValue(conv.Id, out var lastMsg);
+            unreadAfterRead.TryGetValue(conv.Id, out var unread);
 
             result.Add(new ConversationDto
             {
@@ -84,7 +136,31 @@ public class ChatService : IChatService
         if (existing > 0)
         {
             var convs = await GetConversationsAsync(currentUserId, ct);
-            return convs.First(c => c.Id == existing);
+            var found = convs.FirstOrDefault(c => c.Id == existing);
+            if (found is not null) return found;
+
+            // Fallback: conversation exists but wasn't in the user's list (edge case)
+            var conv2 = await _db.ChatConversations
+                .Include(c => c.Participants).ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(c => c.Id == existing, ct);
+
+            if (conv2 is not null)
+            {
+                return new ConversationDto
+                {
+                    Id = conv2.Id,
+                    Name = conv2.Participants.FirstOrDefault(p => p.UserId != currentUserId)?.User?.FullName,
+                    IsGroup = false,
+                    LastMessageAt = conv2.LastMessageAt,
+                    UnreadCount = 0,
+                    Participants = conv2.Participants.Select(p => new ParticipantDto
+                    {
+                        UserId = p.UserId,
+                        FullName = p.User?.FullName ?? "—",
+                        LastReadAt = p.LastReadAt,
+                    }).ToList(),
+                };
+            }
         }
 
         // Create new DM
@@ -229,26 +305,43 @@ public class ChatService : IChatService
 
     public async Task<int> GetTotalUnreadAsync(int userId, CancellationToken ct = default)
     {
+        // FIX #2: Single query instead of N+1 loop
         var participations = await _db.ChatParticipants
             .Where(p => p.UserId == userId)
             .Select(p => new { p.ConversationId, p.LastReadAt })
             .ToListAsync(ct);
 
+        if (participations.Count == 0) return 0;
+
+        var convIds = participations.Select(p => p.ConversationId).ToList();
+
+        // Single query: get all unread messages across all conversations
+        var allMessages = await _db.ChatMessages
+            .Where(m => convIds.Contains(m.ConversationId) && m.SenderId != userId)
+            .Select(m => new { m.ConversationId, m.SentAt })
+            .ToListAsync(ct);
+
+        var lastReadMap = participations.ToDictionary(p => p.ConversationId, p => p.LastReadAt);
+
         var total = 0;
-        foreach (var p in participations)
+        foreach (var msg in allMessages)
         {
-            if (p.LastReadAt is not null)
+            if (lastReadMap.TryGetValue(msg.ConversationId, out var lastRead))
             {
-                total += await _db.ChatMessages.CountAsync(
-                    m => m.ConversationId == p.ConversationId && m.SentAt > p.LastReadAt && m.SenderId != userId, ct);
-            }
-            else
-            {
-                total += await _db.ChatMessages.CountAsync(
-                    m => m.ConversationId == p.ConversationId && m.SenderId != userId, ct);
+                if (lastRead is null || msg.SentAt > lastRead)
+                    total++;
             }
         }
 
         return total;
+    }
+
+    /// <summary>Get participant user IDs for a specific conversation (lightweight query for ChatHub).</summary>
+    public async Task<List<int>> GetParticipantIdsAsync(int conversationId, CancellationToken ct = default)
+    {
+        return await _db.ChatParticipants
+            .Where(p => p.ConversationId == conversationId)
+            .Select(p => p.UserId)
+            .ToListAsync(ct);
     }
 }

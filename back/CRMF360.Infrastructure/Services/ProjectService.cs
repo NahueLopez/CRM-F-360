@@ -17,21 +17,45 @@ public class ProjectService : IProjectService
         return await _db.Projects
             .AsNoTracking()
             .Include(p => p.Company)
-            .Include(p => p.Tasks)
             .OrderByDescending(p => p.CreatedAt)
-            .Select(p => MapToDto(p))
+            .Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                CompanyId = p.CompanyId,
+                CompanyName = p.Company != null ? p.Company.Name : "—",
+                Name = p.Name,
+                Description = p.Description,
+                Status = p.Status.ToString(),
+                StartDate = p.StartDate,
+                EndDateEstimated = p.EndDateEstimated,
+                EstimatedHours = p.EstimatedHours,
+                CreatedAt = p.CreatedAt,
+                TaskCount = p.Tasks.Count, // Subquery count — no Include needed
+            })
             .ToListAsync(ct);
     }
 
     public async Task<ProjectDto?> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var entity = await _db.Projects
+        return await _db.Projects
             .AsNoTracking()
             .Include(p => p.Company)
-            .Include(p => p.Tasks)
-            .FirstOrDefaultAsync(p => p.Id == id, ct);
-
-        return entity is null ? null : MapToDto(entity);
+            .Where(p => p.Id == id)
+            .Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                CompanyId = p.CompanyId,
+                CompanyName = p.Company != null ? p.Company.Name : "—",
+                Name = p.Name,
+                Description = p.Description,
+                Status = p.Status.ToString(),
+                StartDate = p.StartDate,
+                EndDateEstimated = p.EndDateEstimated,
+                EstimatedHours = p.EstimatedHours,
+                CreatedAt = p.CreatedAt,
+                TaskCount = p.Tasks.Count,
+            })
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<ProjectDto> CreateAsync(CreateProjectDto dto, CancellationToken ct = default)

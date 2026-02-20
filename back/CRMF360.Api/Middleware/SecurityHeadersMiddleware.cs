@@ -12,7 +12,7 @@ public class SecurityHeadersMiddleware
         context.Response.Headers.Append("X-Frame-Options", "DENY");
         context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
         context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-        context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        context.Response.Headers.Append("Permissions-Policy", "camera=(self), microphone=(self), geolocation=()");
 
         await _next(context);
     }

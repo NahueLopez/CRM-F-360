@@ -31,6 +31,19 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request)
+    {
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+
+        if (result is null)
+            return Unauthorized(new { message = "Refresh token inválido o expirado" });
+
+        return Ok(result);
+    }
+
     [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]

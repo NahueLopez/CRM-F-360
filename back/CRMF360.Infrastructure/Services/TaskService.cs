@@ -153,7 +153,8 @@ public class TaskService : ITaskService
         var entity = await _db.Tasks.FindAsync(new object[] { id }, ct);
         if (entity is null) return false;
 
-        _db.Tasks.Remove(entity);
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return true;
     }

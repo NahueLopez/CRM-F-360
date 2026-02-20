@@ -14,11 +14,12 @@ public class SearchService : ISearchService
         if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
             return new();
 
-        var q = query.ToLower();
+        var pattern = $"%{query}%";
 
         // Execute all 5 searches in parallel — single round-trip of tasks
+        // FIX #7: Use EF.Functions.ILike() for PostgreSQL-native case-insensitive search
         var companiesTask = _db.Companies.AsNoTracking()
-            .Where(c => c.Name.ToLower().Contains(q) || (c.Cuit != null && c.Cuit.Contains(q)))
+            .Where(c => EF.Functions.ILike(c.Name, pattern) || (c.Cuit != null && c.Cuit.Contains(query)))
             .Take(5)
             .Select(c => new SearchResultDto
             {
@@ -28,9 +29,9 @@ public class SearchService : ISearchService
             .ToListAsync(ct);
 
         var contactsTask = _db.Contacts.AsNoTracking()
-            .Where(c => c.FullName.ToLower().Contains(q)
-                || (c.Email != null && c.Email.ToLower().Contains(q))
-                || (c.Phone != null && c.Phone.Contains(q)))
+            .Where(c => EF.Functions.ILike(c.FullName, pattern)
+                || (c.Email != null && EF.Functions.ILike(c.Email, pattern))
+                || (c.Phone != null && c.Phone.Contains(query)))
             .Take(5)
             .Select(c => new SearchResultDto
             {
@@ -40,7 +41,7 @@ public class SearchService : ISearchService
             .ToListAsync(ct);
 
         var projectsTask = _db.Projects.AsNoTracking()
-            .Where(p => p.Name.ToLower().Contains(q))
+            .Where(p => EF.Functions.ILike(p.Name, pattern))
             .Take(5)
             .Select(p => new SearchResultDto
             {
@@ -50,7 +51,7 @@ public class SearchService : ISearchService
             .ToListAsync(ct);
 
         var tasksTask = _db.Tasks.AsNoTracking()
-            .Where(t => t.Title.ToLower().Contains(q))
+            .Where(t => EF.Functions.ILike(t.Title, pattern))
             .Take(5)
             .Select(t => new SearchResultDto
             {
@@ -60,7 +61,7 @@ public class SearchService : ISearchService
             .ToListAsync(ct);
 
         var dealsTask = _db.Deals.AsNoTracking()
-            .Where(d => d.Title.ToLower().Contains(q))
+            .Where(d => EF.Functions.ILike(d.Title, pattern))
             .Take(5)
             .Select(d => new SearchResultDto
             {
@@ -81,3 +82,4 @@ public class SearchService : ISearchService
         return results;
     }
 }
+

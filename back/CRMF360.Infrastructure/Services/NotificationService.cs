@@ -30,9 +30,10 @@ public class NotificationService : INotificationService
 
     public async Task MarkAllAsReadAsync(int userId, CancellationToken ct = default)
     {
-        var unread = await _db.Notifications.Where(n => n.UserId == userId && !n.IsRead).ToListAsync(ct);
-        foreach (var n in unread) n.IsRead = true;
-        await _db.SaveChangesAsync(ct);
+        // Bulk update — single SQL UPDATE, no records loaded into memory
+        await _db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
     }
 
     public async Task<NotificationDto> CreateAsync(int userId, string type, string title, string? message,

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CRMF360.Infrastructure.Services;
@@ -41,8 +42,9 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         var token = GenerateJwtToken(user);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token);
+        return MapToResponse(user, token, refreshToken);
     }
 
     public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId)
@@ -56,7 +58,34 @@ public class AuthService : IAuthService
             return null;
 
         var token = GenerateJwtToken(user);
-        return MapToResponse(user, token);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id);
+
+        return MapToResponse(user, token, refreshToken);
+    }
+
+    public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshTokenValue)
+    {
+        var storedToken = await _db.RefreshTokens
+            .Include(rt => rt.User)
+                .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(rt => rt.Token == refreshTokenValue);
+
+        if (storedToken == null || !storedToken.IsActive)
+            return null;
+
+        var user = storedToken.User;
+        if (!user.Active)
+            return null;
+
+        // Revoke the old refresh token (rotation)
+        storedToken.RevokedAt = DateTime.UtcNow;
+
+        // Generate new tokens
+        var newJwt = GenerateJwtToken(user);
+        var newRefreshToken = await CreateRefreshTokenAsync(user.Id);
+
+        return MapToResponse(user, newJwt, newRefreshToken);
     }
 
     public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto request)
@@ -76,13 +105,40 @@ public class AuthService : IAuthService
         return true;
     }
 
-    private static LoginResponseDto MapToResponse(User user, string token) => new()
+    // ── Private helpers ─────────────────────────────────────
+
+    private async Task<string> CreateRefreshTokenAsync(int userId)
+    {
+        var expireDays = int.TryParse(_configuration["Jwt:RefreshExpireDays"], out var d) ? d : 7;
+
+        var token = new RefreshToken
+        {
+            UserId = userId,
+            Token = GenerateSecureToken(),
+            ExpiresAt = DateTime.UtcNow.AddDays(expireDays),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.RefreshTokens.Add(token);
+        await _db.SaveChangesAsync();
+
+        return token.Token;
+    }
+
+    private static string GenerateSecureToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(bytes);
+    }
+
+    private static LoginResponseDto MapToResponse(User user, string token, string refreshToken) => new()
     {
         Id = user.Id,
         FullName = user.FullName,
         Email = user.Email,
         Phone = user.Phone,
         Token = token,
+        RefreshToken = refreshToken,
         Roles = user.UserRoles
             .Where(ur => ur.Role != null)
             .Select(ur => ur.Role.Name)
@@ -95,7 +151,7 @@ public class AuthService : IAuthService
             ?? throw new InvalidOperationException("Jwt:Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "CRMF360";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "CRMF360-BackOffice";
-        var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 60;
+        var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 480;
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -55,4 +55,5 @@ public interface IChatService
     Task<ChatMessageDto> SendMessageAsync(int conversationId, int senderId, string content, CancellationToken ct = default);
     Task MarkReadAsync(int conversationId, int userId, CancellationToken ct = default);
     Task<int> GetTotalUnreadAsync(int userId, CancellationToken ct = default);
+    Task<List<int>> GetParticipantIdsAsync(int conversationId, CancellationToken ct = default);
 }

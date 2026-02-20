@@ -15,15 +15,13 @@ public class ReportService : IReportService
         var now = DateTime.UtcNow;
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // ─── Counts (single query each, no data loaded) ───
+        // Sequential queries — DbContext is NOT thread-safe, cannot use Task.WhenAll
         var totalCompanies = await _db.Companies.CountAsync(ct);
         var totalProjects = await _db.Projects.CountAsync(ct);
         var totalTasks = await _db.Tasks.CountAsync(ct);
         var totalUsers = await _db.Users.CountAsync(ct);
         var totalContacts = await _db.Contacts.CountAsync(ct);
         var overdueTasks = await _db.Tasks.CountAsync(t => t.DueDate < now, ct);
-
-        // ─── Hours aggregation — done fully in SQL, NO ToList() ───
         var totalHoursAllTime = await _db.TimeEntries.SumAsync(e => e.Hours, ct);
         var totalHoursThisMonth = await _db.TimeEntries
             .Where(e => e.Date >= monthStart)

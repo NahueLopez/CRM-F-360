@@ -70,24 +70,29 @@ public class ChatHub : Hub
         var userId = Context.User!.GetUserId();
         var msg = await _chat.SendMessageAsync(conversationId, userId, content);
 
-        // Ensure all online participants are in the SignalR group
-        var conversations = await _chat.GetConversationsAsync(userId);
-        var conv = conversations.FirstOrDefault(c => c.Id == conversationId);
-        if (conv != null)
+        // FIX #4: Use lightweight query instead of loading ALL conversations
+        var participantIds = await _chat.GetParticipantIdsAsync(conversationId);
+
+        // FIX #3: Collect connection IDs outside lock, then await AddToGroupAsync outside lock
+        var connectionsToAdd = new List<(string connId, string group)>();
+        lock (Lock)
         {
-            lock (Lock)
+            foreach (var pid in participantIds)
             {
-                foreach (var p in conv.Participants)
+                if (OnlineUsers.TryGetValue(pid, out var conns))
                 {
-                    if (OnlineUsers.TryGetValue(p.UserId, out var conns))
+                    foreach (var connId in conns)
                     {
-                        foreach (var connId in conns)
-                        {
-                            Groups.AddToGroupAsync(connId, $"conv_{conversationId}");
-                        }
+                        connectionsToAdd.Add((connId, $"conv_{conversationId}"));
                     }
                 }
             }
+        }
+
+        // Await async calls OUTSIDE the lock (fixes fire-and-forget + deadlock risk)
+        foreach (var (connId, group) in connectionsToAdd)
+        {
+            await Groups.AddToGroupAsync(connId, group);
         }
 
         await Clients.Group($"conv_{conversationId}").SendAsync("ReceiveMessage", msg);
