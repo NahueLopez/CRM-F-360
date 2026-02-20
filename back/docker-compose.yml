@@ -1,0 +1,30 @@
+services:
+  crmf360.api:
+    image: ${DOCKER_REGISTRY-}crmf360api
+    build:
+      context: .
+      dockerfile: CRMF360.Api/Dockerfile
+    depends_on:
+      - postgres
+    networks:
+      - crmf360-network
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=crmf360_user
+      - POSTGRES_PASSWORD=crmf360_password
+      - POSTGRES_DB=crmf360_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - crmf360-network
+
+volumes:
+  postgres-data:
+
+networks:
+  crmf360-network:
+    driver: bridge

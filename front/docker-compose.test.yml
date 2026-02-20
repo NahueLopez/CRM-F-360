@@ -1,0 +1,6 @@
+services:
+  crmf360.front:
+    image: 145.223.26.76:5000/crm-front:test
+    build:
+      context: .
+      dockerfile: Dockerfile

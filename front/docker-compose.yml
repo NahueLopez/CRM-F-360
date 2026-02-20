@@ -1,0 +1,14 @@
+services:
+  crmf360.front:
+    image: ${DOCKER_REGISTRY-}crmf360front
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    networks:
+      - crmf360-front-network
+
+networks:
+  crmf360-front-network:
+    driver: bridge
