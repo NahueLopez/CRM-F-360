@@ -74,13 +74,6 @@ const KanbanColumn: React.FC<Props> = ({
 
     const handleDelete = () => {
         setMenuOpen(false);
-        if (tasks.length > 0) {
-            if (!confirm(`La columna "${column.name}" tiene ${tasks.length} tarea(s). ¿Eliminar de todas formas?`)) {
-                return;
-            }
-        } else {
-            if (!confirm(`¿Eliminar la columna "${column.name}"?`)) return;
-        }
         onDeleteColumn(column.id);
     };
 

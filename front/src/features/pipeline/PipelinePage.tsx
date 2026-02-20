@@ -15,6 +15,8 @@ import type { Company } from "../companies/types";
 import PipelineStageColumn from "./components/PipelineStageColumn";
 import PipelineDealCard from "./components/PipelineDealCard";
 import { useToast } from "../../shared/context/ToastContext";
+import ConfirmModal from "../../shared/ui/ConfirmModal";
+import { useConfirm } from "../../shared/ui/useConfirm";
 
 const STAGES: { value: DealStage; label: string; color: string; bg: string }[] = [
     { value: "Lead", label: "Lead", color: "text-slate-300", bg: "bg-slate-700/50" },
@@ -32,6 +34,7 @@ const fmt = (v?: number, cur?: string) => {
 
 const PipelinePage: React.FC = () => {
     const { addToast } = useToast();
+    const { confirm, confirmProps } = useConfirm();
     const [deals, setDeals] = useState<Deal[]>([]);
     const [summary, setSummary] = useState<PipelineSummary[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
@@ -156,6 +159,13 @@ const PipelinePage: React.FC = () => {
     };
 
     const handleDelete = async (id: number) => {
+        const ok = await confirm({
+            title: "Eliminar oportunidad",
+            message: "Se eliminará esta oportunidad del pipeline. ¿Continuar?",
+            confirmLabel: "Sí, eliminar",
+            variant: "danger",
+        });
+        if (!ok) return;
         try {
             await dealService.remove(id);
             addToast("success", "Oportunidad eliminada");
@@ -273,18 +283,18 @@ const PipelinePage: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between pt-3 border-t border-slate-700">
-                            <button onClick={() => { if (confirm("¿Eliminar esta oportunidad?")) { handleDelete(editDeal.id); setEditDeal(null); } }}
+                            <button onClick={() => { handleDelete(editDeal.id); setEditDeal(null); }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                           bg-red-500/10 text-red-400 border border-red-500/20
-                                           hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/40
+                                           text-red-400/70 hover:text-red-400 hover:bg-red-500/10
                                            transition-all duration-200">
-                                🗑️ Eliminar
+                                Eliminar
                             </button>
-                            <button onClick={() => setEditDeal(null)} className="px-4 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700/50 text-sm transition">Cerrar</button>
+                            <button onClick={() => setEditDeal(null)} className="px-4 py-1.5 rounded-xl border border-slate-600/50 hover:bg-slate-700/50 text-sm transition">Cerrar</button>
                         </div>
                     </div>
                 </div>
             )}
+            <ConfirmModal {...confirmProps} />
         </div>
     );
 };

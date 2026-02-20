@@ -3,6 +3,8 @@ import type { ProjectMember } from "../memberTypes";
 import type { User } from "../../users/types";
 import { projectMemberService } from "../projectMemberService";
 import { userService } from "../../users/userService";
+import ConfirmModal from "../../../shared/ui/ConfirmModal";
+import { useConfirm } from "../../../shared/ui/useConfirm";
 
 interface Props {
     projectId: number;
@@ -15,6 +17,7 @@ const ProjectTeamModal: React.FC<Props> = ({ projectId, onClose }) => {
     const [loading, setLoading] = useState(true);
     const [addUserId, setAddUserId] = useState<number | "">("");
     const [addRole, setAddRole] = useState("Member");
+    const { confirm, confirmProps } = useConfirm();
 
     const loadData = async () => {
         try {
@@ -53,7 +56,14 @@ const ProjectTeamModal: React.FC<Props> = ({ projectId, onClose }) => {
     };
 
     const handleRemove = async (userId: number) => {
-        if (!confirm("¿Remover este miembro del proyecto?")) return;
+        const member = members.find(m => m.userId === userId);
+        const ok = await confirm({
+            title: "Remover miembro",
+            message: `¿Remover a ${member?.userName ?? "este miembro"} del proyecto?`,
+            confirmLabel: "Sí, remover",
+            variant: "warning",
+        });
+        if (!ok) return;
         try {
             await projectMemberService.remove(projectId, userId);
             await loadData();
@@ -188,6 +198,7 @@ const ProjectTeamModal: React.FC<Props> = ({ projectId, onClose }) => {
                     </button>
                 </div>
             </div>
+            <ConfirmModal {...confirmProps} />
         </div>
     );
 };

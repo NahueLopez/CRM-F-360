@@ -21,11 +21,14 @@ import KanbanCard from "./components/KanbanCard";
 import TaskModal from "./components/TaskModal";
 import type { Project } from "../projects/types";
 import { useToast } from "../../shared/context/ToastContext";
+import ConfirmModal from "../../shared/ui/ConfirmModal";
+import { useConfirm } from "../../shared/ui/useConfirm";
 
 const KanbanBoardPage: React.FC = () => {
     const { projectId: paramId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
     const { addToast } = useToast();
+    const { confirm, confirmProps } = useConfirm();
     const projectId = Number(paramId);
 
     const [project, setProject] = useState<Project | null>(null);
@@ -230,7 +233,13 @@ const KanbanBoardPage: React.FC = () => {
 
     const handleDeleteTask = async () => {
         if (!editingTask) return;
-        if (!confirm("¿Eliminar esta tarea?")) return;
+        const ok = await confirm({
+            title: "Eliminar tarea",
+            message: `Se eliminará la tarea "${editingTask.title}". Esta acción no se puede deshacer.`,
+            confirmLabel: "Sí, eliminar",
+            variant: "danger",
+        });
+        if (!ok) return;
         try {
             await taskService.remove(editingTask.id);
             addToast("success", "Tarea eliminada");
@@ -272,6 +281,17 @@ const KanbanBoardPage: React.FC = () => {
     };
 
     const handleDeleteColumn = async (columnId: number) => {
+        const col = columns.find(c => c.id === columnId);
+        const colTasks = tasksByColumn.get(columnId) ?? [];
+        const ok = await confirm({
+            title: "Eliminar columna",
+            message: colTasks.length > 0
+                ? `La columna "${col?.name}" tiene ${colTasks.length} tarea(s). ¿Eliminar de todas formas?`
+                : `¿Eliminar la columna "${col?.name}"?`,
+            confirmLabel: "Sí, eliminar",
+            variant: colTasks.length > 0 ? "danger" : "warning",
+        });
+        if (!ok) return;
         try {
             await boardColumnService.remove(projectId, columnId);
             addToast("success", "Columna eliminada");
@@ -424,6 +444,7 @@ const KanbanBoardPage: React.FC = () => {
                     onClose={() => setModalOpen(false)}
                 />
             )}
+            <ConfirmModal {...confirmProps} />
         </div>
     );
 };
