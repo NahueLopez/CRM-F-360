@@ -6,6 +6,7 @@ import { notificationService } from "../../services/notificationService";
 import { searchService } from "../../services/searchService";
 import type { Notification } from "../../types/notification";
 import type { SearchResult } from "../../types/searchResult";
+import { useSidebar } from "./Sidebar";
 
 interface TopbarProps {
   title: string;
@@ -23,13 +24,14 @@ const NOTIF_ICONS: Record<string, string> = {
 const Topbar: React.FC<TopbarProps> = ({ title }) => {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { setMobileOpen } = useSidebar();
 
   // ── Search ──
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const doSearch = useCallback(async (q: string) => {
     if (q.length < 2) { setSearchResults([]); return; }
@@ -85,11 +87,21 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
   }, []);
 
   return (
-    <header className="h-14 border-b border-slate-800 dark:border-slate-800 light:border-slate-200 flex items-center justify-between px-6 bg-slate-950/70 dark:bg-slate-950/70 backdrop-blur gap-4">
-      <h2 className="text-lg font-semibold shrink-0">{title}</h2>
+    <header className="h-14 border-b border-slate-800 dark:border-slate-800 light:border-slate-200 flex items-center justify-between px-3 sm:px-6 bg-slate-950/70 dark:bg-slate-950/70 backdrop-blur gap-2 sm:gap-4">
+      {/* Mobile hamburger */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition"
+        aria-label="Abrir menú"
+      >
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M3 6h14M3 10h14M3 14h14" />
+        </svg>
+      </button>
+      <h2 className="text-lg font-semibold shrink-0 truncate">{title}</h2>
 
       {/* Search bar */}
-      <div ref={searchRef} className="relative flex-1 max-w-md">
+      <div ref={searchRef} className="relative flex-1 max-w-md hidden sm:block">
         <div className="flex items-center bg-slate-800/60 rounded-lg border border-slate-700/50 px-3 py-1.5">
           <span className="text-slate-500 text-sm mr-2">🔍</span>
           <input

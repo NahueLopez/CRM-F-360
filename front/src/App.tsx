@@ -7,6 +7,7 @@ import LoginPage from "./pages/login/LoginPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import CompaniesPage from "./pages/companies/CompaniesPage";
 import ProjectsPage from "./pages/projects/ProjectsPage";
+import TasksPage from "./pages/tasks/TasksPage";
 import KanbanBoardPage from "./pages/kanban/KanbanBoardPage";
 import TimeEntriesPage from "./pages/time-entries/TimeEntriesPage";
 import ReportsPage from "./pages/reports/ReportsPage";
@@ -44,6 +45,7 @@ const App: React.FC = () => {
                 <Route path="companies" element={<CompaniesPage />} />
                 <Route path="contacts" element={<ContactsPage />} />
                 <Route path="projects" element={<ProjectsPage />} />
+                <Route path="tasks" element={<TasksPage />} />
                 <Route
                   path="projects/:projectId/board"
                   element={<KanbanBoardPage />}

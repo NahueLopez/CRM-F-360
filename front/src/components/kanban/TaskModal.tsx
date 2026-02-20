@@ -203,67 +203,97 @@ const TaskModal: React.FC<Props> = ({
                             </h4>
 
                             {/* Add comment */}
-                            <div className="flex gap-2 mb-4">
-                                <input
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    placeholder="Escribí un comentario..."
-                                    className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500"
-                                    onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleAddComment}
-                                    disabled={!newComment.trim()}
-                                    className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition disabled:opacity-40"
-                                >
-                                    Enviar
-                                </button>
+                            <div className="flex gap-3 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                                    Yo
+                                </div>
+                                <div className="flex-1">
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Escribí un comentario... (Ctrl+Enter para enviar)"
+                                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[38px]"
+                                        rows={1}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                                                e.preventDefault();
+                                                handleAddComment();
+                                            }
+                                        }}
+                                        onInput={(e) => {
+                                            const target = e.target as HTMLTextAreaElement;
+                                            target.style.height = "auto";
+                                            target.style.height = Math.min(target.scrollHeight, 120) + "px";
+                                        }}
+                                    />
+                                    <div className="flex items-center justify-between mt-1.5">
+                                        <span className="text-[10px] text-slate-600">Ctrl + Enter para enviar</span>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddComment}
+                                            disabled={!newComment.trim()}
+                                            className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-medium transition disabled:opacity-40"
+                                        >
+                                            Enviar
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Comment list */}
+                            {/* Comment list - timeline style */}
                             {loadingComments ? (
                                 <p className="text-xs text-slate-500">Cargando...</p>
                             ) : comments.length === 0 ? (
-                                <p className="text-xs text-slate-500 italic">
-                                    No hay comentarios todavía.
-                                </p>
+                                <div className="text-center py-6">
+                                    <span className="text-2xl block mb-2">💬</span>
+                                    <p className="text-xs text-slate-500 italic">
+                                        Todavía no hay comentarios. ¡Sé el primero!
+                                    </p>
+                                </div>
                             ) : (
-                                <div className="space-y-3 max-h-48 overflow-y-auto">
-                                    {comments.map((c) => (
-                                        <div
-                                            key={c.id}
-                                            className="flex gap-3 items-start group"
-                                        >
-                                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold shrink-0">
-                                                {c.userName.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-xs font-medium text-slate-200">
-                                                        {c.userName}
-                                                    </span>
-                                                    <span className="text-[10px] text-slate-600">
-                                                        {new Date(c.createdAt).toLocaleString("es-AR", {
-                                                            day: "2-digit",
-                                                            month: "short",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </span>
+                                <div className="space-y-0 max-h-64 overflow-y-auto pr-1">
+                                    {comments.map((c, idx) => {
+                                        // Relative time
+                                        const diff = Date.now() - new Date(c.createdAt).getTime();
+                                        const mins = Math.floor(diff / 60000);
+                                        const hrs = Math.floor(mins / 60);
+                                        const days = Math.floor(hrs / 24);
+                                        const relTime = mins < 1 ? "ahora" : mins < 60 ? `hace ${mins}m` : hrs < 24 ? `hace ${hrs}h` : days < 7 ? `hace ${days}d` : new Date(c.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+
+                                        return (
+                                            <div key={c.id} className="flex gap-3 group relative pb-4">
+                                                {/* Timeline connector */}
+                                                {idx < comments.length - 1 && (
+                                                    <div className="absolute left-[15px] top-8 bottom-0 w-px bg-slate-700/50" />
+                                                )}
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold shrink-0 z-10">
+                                                    {c.userName.charAt(0).toUpperCase()}
                                                 </div>
-                                                <p className="text-sm text-slate-300 mt-0.5">
-                                                    {c.content}
-                                                </p>
+                                                <div className="flex-1 min-w-0 bg-slate-800/40 rounded-lg p-3 border border-slate-700/30">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-semibold text-slate-200">
+                                                                {c.userName}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                {relTime}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeleteComment(c.id)}
+                                                            className="text-slate-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition"
+                                                            title="Eliminar"
+                                                        >
+                                                            🗑
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">
+                                                        {c.content}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteComment(c.id)}
-                                                className="text-slate-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

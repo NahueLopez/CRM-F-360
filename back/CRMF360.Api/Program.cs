@@ -17,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // CORS — permite llamadas desde el frontend
 builder.Services.AddCors(options =>
@@ -58,6 +59,21 @@ builder.Services
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "CRMF360-BackOffice",
             ClockSkew = TimeSpan.Zero,
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+        };
+
+        // Allow JWT via query string for SignalR WebSocket
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -155,5 +171,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CRMF360.Api.Hubs.ChatHub>("/hubs/chat");
 
 app.Run();

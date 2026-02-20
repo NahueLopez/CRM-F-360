@@ -3,6 +3,8 @@ import type { Company } from "../../types/company";
 import type { ActivityLog } from "../../types/activity";
 import { companyService } from "../../services/companyService";
 import { activityService } from "../../services/activityService";
+import { downloadCsvFromData } from "../../services/exportService";
+import { useToast } from "../../context/ToastContext";
 import CompanyForm from "../../components/companies/CompanyForm";
 import CompaniesTable from "../../components/companies/CompaniesTable";
 
@@ -20,6 +22,7 @@ const CompaniesPage: React.FC = () => {
   const [selected, setSelected] = useState<Company | null>(null);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [newActivity, setNewActivity] = useState({ type: "Note", description: "" });
+  const { addToast } = useToast();
 
   const load = async () => {
     try {
@@ -88,10 +91,28 @@ const CompaniesPage: React.FC = () => {
             <h3 className="text-xl font-semibold">Empresas</h3>
             <p className="text-sm text-slate-400">Gestioná tus clientes/empresas para asociarles proyectos.</p>
           </div>
-          <button type="button" onClick={handleNewClick}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition">
-            + Nueva empresa
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                downloadCsvFromData(companies, [
+                  { key: "name", header: "Nombre" },
+                  { key: "cuit", header: "CUIT" },
+                  { key: "email", header: "Email" },
+                  { key: "phone", header: "Teléfono" },
+                  { key: "notes", header: "Notas" },
+                ], `empresas_${new Date().toISOString().slice(0, 10)}.csv`);
+                addToast("success", `${companies.length} empresas exportadas`);
+              }}
+              disabled={companies.length === 0}
+              className="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800/60 text-sm text-slate-300 transition disabled:opacity-40"
+            >
+              📥 Exportar CSV
+            </button>
+            <button type="button" onClick={handleNewClick}
+              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition">
+              + Nueva empresa
+            </button>
+          </div>
         </div>
 
         {showForm && (

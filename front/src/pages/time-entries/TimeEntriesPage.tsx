@@ -1,15 +1,20 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { timeEntryService } from "../../services/timeEntryService";
 import { taskService } from "../../services/taskService";
 import { authStore } from "../../auth/authStore";
 import type { TimeEntry, ProjectHoursSummary } from "../../types/timeEntry";
 import type { Task } from "../../types/task";
+import { useToast } from "../../context/ToastContext";
 
 const TimeEntriesPage: React.FC = () => {
+  const { addToast } = useToast();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projectSummary, setProjectSummary] = useState<ProjectHoursSummary[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [filterProject, setFilterProject] = useState<string>("");
 
   // Form state
   const [taskId, setTaskId] = useState<number | "">("");
@@ -48,6 +53,32 @@ const TimeEntriesPage: React.FC = () => {
     load();
   }, [load]);
 
+  // ── Derived data ──
+  const projectNames = useMemo(() => {
+    const names = new Set<string>();
+    entries.forEach(e => names.add(e.projectName));
+    return Array.from(names).sort();
+  }, [entries]);
+
+  const filteredEntries = useMemo(() => {
+    if (!filterProject) return entries;
+    return entries.filter(e => e.projectName === filterProject);
+  }, [entries, filterProject]);
+
+  const filteredTasks = useMemo(() => {
+    if (!filterProject) return tasks;
+    return tasks.filter(t => t.projectName === filterProject);
+  }, [tasks, filterProject]);
+
+  const totalHours = filteredEntries.reduce((sum, e) => sum + e.hours, 0);
+
+  // Project summary for selected project (if filtering)
+  const selectedProjectSummary = useMemo(() => {
+    if (!filterProject) return null;
+    return projectSummary.find(p => p.projectName === filterProject) ?? null;
+  }, [filterProject, projectSummary]);
+
+  // ── Form handlers ──
   const resetForm = () => {
     setTaskId("");
     setDate(new Date().toISOString().slice(0, 10));
@@ -67,6 +98,7 @@ const TimeEntriesPage: React.FC = () => {
           hours: Number(hours),
           description: description || undefined,
         });
+        addToast("success", "Entrada actualizada");
       } else {
         await timeEntryService.create({
           taskId: Number(taskId),
@@ -75,11 +107,13 @@ const TimeEntriesPage: React.FC = () => {
           hours: Number(hours),
           description: description || undefined,
         });
+        addToast("success", `${hours} horas registradas`);
       }
       resetForm();
       load();
     } catch (err) {
       console.error("Error saving entry", err);
+      addToast("error", "Error al guardar");
     }
   };
 
@@ -95,115 +129,107 @@ const TimeEntriesPage: React.FC = () => {
     if (!confirm("¿Eliminar esta entrada?")) return;
     try {
       await timeEntryService.remove(id);
+      addToast("success", "Entrada eliminada");
       load();
     } catch (err) {
       console.error("Error deleting entry", err);
+      addToast("error", "Error al eliminar");
     }
-  };
-
-  const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
-
-  const statusLabels: Record<string, { text: string; color: string }> = {
-    Planned: { text: "Planeado", color: "text-slate-400" },
-    InProgress: { text: "En curso", color: "text-sky-400" },
-    Paused: { text: "Pausado", color: "text-amber-400" },
-    Done: { text: "Finalizado", color: "text-emerald-400" },
   };
 
   return (
     <div className="space-y-6">
-      {/* ─── Project Hours Summary (Managers/Admins) ─── */}
-      {isLeader && projectSummary.length > 0 && (
-        <div className="bg-gradient-to-br from-indigo-600/10 to-violet-600/5 border border-indigo-500/20 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-            📊 Estimado vs Ejecutado por Proyecto
-            <span className="text-[10px] text-slate-500 font-normal">(solo visible para Team Leaders y Admins)</span>
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[11px] text-slate-400 uppercase tracking-wider">
-                  <th className="pb-2">Proyecto</th>
-                  <th className="pb-2">Empresa</th>
-                  <th className="pb-2">Estado</th>
-                  <th className="pb-2 text-right">Estimado</th>
-                  <th className="pb-2 text-right">Ejecutado</th>
-                  <th className="pb-2 text-right">Diferencia</th>
-                  <th className="pb-2 text-right">Progreso</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {projectSummary.map((p) => {
-                  const st = statusLabels[p.status] ?? statusLabels.Planned;
-                  const overBudget = p.deltaHours > 0 && p.estimatedHours > 0;
-                  const burnColor = p.burnPercent > 100
-                    ? "bg-red-500"
-                    : p.burnPercent > 80
-                      ? "bg-amber-500"
-                      : "bg-emerald-500";
-
-                  return (
-                    <tr key={p.projectId} className="hover:bg-slate-800/30">
-                      <td className="py-2.5 font-medium">{p.projectName}</td>
-                      <td className="py-2.5 text-slate-500 text-xs">{p.companyName}</td>
-                      <td className="py-2.5">
-                        <span className={`text-xs ${st.color}`}>{st.text}</span>
-                      </td>
-                      <td className="py-2.5 text-right text-slate-300">
-                        {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
-                      </td>
-                      <td className="py-2.5 text-right font-semibold text-indigo-400">
-                        {p.loggedHours.toFixed(1)} hs
-                      </td>
-                      <td className={`py-2.5 text-right font-semibold ${overBudget ? "text-red-400" : p.estimatedHours > 0 ? "text-emerald-400" : "text-slate-500"}`}>
-                        {p.estimatedHours > 0 ? (
-                          <>
-                            {overBudget ? "+" : ""}{p.deltaHours.toFixed(1)} hs
-                            {overBudget && <span className="ml-1 text-[10px]">⚠️</span>}
-                          </>
-                        ) : "—"}
-                      </td>
-                      <td className="py-2.5 text-right w-32">
-                        {p.estimatedHours > 0 ? (
-                          <div className="flex items-center gap-2 justify-end">
-                            <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${burnColor}`} style={{ width: `${Math.min(p.burnPercent, 100)}%` }} />
-                            </div>
-                            <span className={`text-[10px] ${overBudget ? "text-red-400" : "text-slate-400"}`}>
-                              {p.burnPercent.toFixed(0)}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-600">{p.totalEntries} registros</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {/* Summary totals */}
-          <div className="mt-4 pt-3 border-t border-indigo-500/10 flex gap-6 text-xs">
-            <span className="text-slate-400">
-              Total estimado: <strong className="text-slate-200">{projectSummary.reduce((s, p) => s + p.estimatedHours, 0).toFixed(0)} hs</strong>
-            </span>
-            <span className="text-slate-400">
-              Total ejecutado: <strong className="text-indigo-400">{projectSummary.reduce((s, p) => s + p.loggedHours, 0).toFixed(1)} hs</strong>
-            </span>
-            {(() => {
-              const totalEst = projectSummary.reduce((s, p) => s + p.estimatedHours, 0);
-              const totalLog = projectSummary.reduce((s, p) => s + p.loggedHours, 0);
-              const delta = totalLog - totalEst;
-              return totalEst > 0 ? (
-                <span className={delta > 0 ? "text-red-400" : "text-emerald-400"}>
-                  Diferencia global: <strong>{delta > 0 ? "+" : ""}{delta.toFixed(1)} hs</strong>
-                </span>
-              ) : null;
-            })()}
-          </div>
+      {/* ─── Header with filter ─── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Carga de horas</h2>
+          <p className="text-xs text-slate-500">Registrá las horas trabajadas por tarea</p>
         </div>
-      )}
+        <div className="flex items-center gap-3">
+          <select
+            value={filterProject}
+            onChange={e => setFilterProject(e.target.value)}
+            className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white min-w-[200px]"
+          >
+            <option value="">Todos los proyectos</option>
+            {projectNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          {filterProject && (
+            <button
+              onClick={() => setFilterProject("")}
+              className="text-xs text-slate-500 hover:text-slate-300 transition"
+            >
+              ✕ Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Summary cards ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Entradas</p>
+          <p className="text-xl font-bold text-white mt-1">{filteredEntries.length}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Horas totales</p>
+          <p className="text-xl font-bold text-indigo-400 mt-1">{totalHours.toFixed(1)} hs</p>
+        </div>
+        {selectedProjectSummary && (
+          <>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Estimado</p>
+              <p className="text-xl font-bold text-slate-300 mt-1">
+                {selectedProjectSummary.estimatedHours > 0
+                  ? `${selectedProjectSummary.estimatedHours} hs`
+                  : "—"}
+              </p>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Progreso</p>
+              {selectedProjectSummary.estimatedHours > 0 ? (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${selectedProjectSummary.burnPercent > 100
+                          ? "bg-red-500"
+                          : selectedProjectSummary.burnPercent > 80
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                          }`}
+                        style={{ width: `${Math.min(selectedProjectSummary.burnPercent, 100)}%` }}
+                      />
+                    </div>
+                    <span className={`text-sm font-bold ${selectedProjectSummary.burnPercent > 100 ? "text-red-400" : "text-emerald-400"
+                      }`}>
+                      {selectedProjectSummary.burnPercent.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xl font-bold text-slate-600 mt-1">—</p>
+              )}
+            </div>
+          </>
+        )}
+        {!filterProject && isLeader && projectSummary.length > 0 && (
+          <>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Proyectos</p>
+              <p className="text-xl font-bold text-slate-300 mt-1">{projectSummary.length}</p>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Total estimado</p>
+              <p className="text-xl font-bold text-slate-300 mt-1">
+                {projectSummary.reduce((s, p) => s + p.estimatedHours, 0).toFixed(0)} hs
+              </p>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* ─── Log Hours Form ─── */}
       <form
@@ -224,7 +250,7 @@ const TimeEntriesPage: React.FC = () => {
             className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
           >
             <option value="">Seleccionar tarea</option>
-            {tasks.map((t) => (
+            {filteredTasks.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.projectName} — {t.title}
               </option>
@@ -278,76 +304,71 @@ const TimeEntriesPage: React.FC = () => {
         </div>
       </form>
 
-      {/* Summary */}
-      <div className="flex items-baseline gap-2">
-        <span className="text-sm text-slate-400">
-          {entries.length} entradas registradas
-        </span>
-        <span className="text-xs text-slate-600">·</span>
-        <span className="text-sm font-semibold text-indigo-400">
-          {totalHours.toFixed(2)} hs totales
-        </span>
-      </div>
-
-      {/* Table */}
+      {/* ─── Table ─── */}
       {loading ? (
         <div className="text-sm text-slate-500">Cargando...</div>
       ) : (
-        <table className="w-full bg-slate-900 border border-slate-800 rounded-lg text-sm">
-          <thead>
-            <tr className="bg-slate-800 text-left">
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Proyecto</th>
-              <th className="p-3">Tarea</th>
-              <th className="p-3">Horas</th>
-              <th className="p-3">Descripción</th>
-              {isLeader && <th className="p-3">Usuario</th>}
-              <th className="p-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((e) => (
-              <tr key={e.id} className="border-b border-slate-800">
-                <td className="p-3 text-slate-400">
-                  {new Date(e.date).toLocaleDateString("es-AR")}
-                </td>
-                <td className="p-3 text-slate-500 text-xs">{e.projectName}</td>
-                <td className="p-3">{e.taskTitle}</td>
-                <td className="p-3 text-indigo-400 font-medium">
-                  {e.hours} hs
-                </td>
-                <td className="p-3 text-slate-400">{e.description ?? "—"}</td>
-                {isLeader && (
-                  <td className="p-3 text-slate-300 text-xs">{e.userName}</td>
-                )}
-                <td className="p-3 space-x-2">
-                  <button
-                    onClick={() => startEdit(e)}
-                    className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-xs transition"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(e.id)}
-                    className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-xs transition"
-                  >
-                    Borrar
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full bg-slate-900 border border-slate-800 rounded-lg text-sm">
+            <thead>
+              <tr className="bg-slate-800 text-left">
+                <th className="p-3">Fecha</th>
+                <th className="p-3">Proyecto</th>
+                <th className="p-3">Tarea</th>
+                <th className="p-3">Horas</th>
+                <th className="p-3">Descripción</th>
+                {isLeader && <th className="p-3">Usuario</th>}
+                <th className="p-3">Acciones</th>
               </tr>
-            ))}
-            {entries.length === 0 && (
-              <tr>
-                <td
-                  colSpan={isLeader ? 7 : 6}
-                  className="p-3 text-center text-slate-500 italic"
-                >
-                  No hay horas registradas.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredEntries.map((e) => (
+                <tr key={e.id} className="border-b border-slate-800 hover:bg-slate-800/40 transition">
+                  <td className="p-3 text-slate-400">
+                    {new Date(e.date).toLocaleDateString("es-AR")}
+                  </td>
+                  <td className="p-3 text-slate-500 text-xs">{e.projectName}</td>
+                  <td className="p-3">{e.taskTitle}</td>
+                  <td className="p-3 text-indigo-400 font-medium">
+                    {e.hours} hs
+                  </td>
+                  <td className="p-3 text-slate-400">{e.description ?? "—"}</td>
+                  {isLeader && (
+                    <td className="p-3 text-slate-300 text-xs">{e.userName}</td>
+                  )}
+                  <td className="p-3 space-x-2">
+                    <button
+                      onClick={() => startEdit(e)}
+                      className="px-2.5 py-1 rounded-md bg-indigo-600/20 text-indigo-400 
+                                 border border-indigo-500/20 hover:bg-indigo-600/30 text-xs transition"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(e.id)}
+                      className="px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 
+                                 border border-red-500/20 hover:bg-red-500/20 text-xs transition"
+                    >
+                      🗑️ Borrar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredEntries.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={isLeader ? 7 : 6}
+                    className="p-6 text-center text-slate-500 italic"
+                  >
+                    {filterProject
+                      ? `No hay horas registradas para "${filterProject}"`
+                      : "No hay horas registradas."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

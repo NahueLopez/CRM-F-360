@@ -1,4 +1,5 @@
 using CRMF360.Application.Abstractions;
+using CRMF360.Application.Notifications;
 using CRMF360.Application.TaskComments;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,13 @@ namespace CRMF360.Infrastructure.Services;
 public class TaskCommentService : ITaskCommentService
 {
     private readonly IApplicationDbContext _db;
-    public TaskCommentService(IApplicationDbContext db) => _db = db;
+    private readonly INotificationService _notif;
+
+    public TaskCommentService(IApplicationDbContext db, INotificationService notif)
+    {
+        _db = db;
+        _notif = notif;
+    }
 
     public async Task<List<TaskCommentDto>> GetByTaskAsync(int taskId, CancellationToken ct = default)
         => await _db.TaskComments.AsNoTracking()
@@ -29,6 +36,26 @@ public class TaskCommentService : ITaskCommentService
         };
         _db.TaskComments.Add(entity);
         await _db.SaveChangesAsync(ct);
+
+        // Notify the task assignee (if different from the commenter)
+        var task = await _db.Tasks
+            .Include(t => t.Project)
+            .FirstOrDefaultAsync(t => t.Id == dto.TaskId, ct);
+
+        if (task?.AssigneeId is not null && task.AssigneeId != dto.UserId)
+        {
+            var commenterName = await _db.Users
+                .Where(u => u.Id == dto.UserId)
+                .Select(u => u.FullName)
+                .FirstOrDefaultAsync(ct) ?? "Alguien";
+
+            await _notif.CreateAsync(
+                task.AssigneeId.Value,
+                "TaskCommented",
+                $"Nuevo comentario en: {task.Title}",
+                $"{commenterName} comentó en la tarea \"{task.Title}\" ({task.Project?.Name ?? "—"}).",
+                "Task", task.Id, ct);
+        }
 
         var loaded = await _db.TaskComments.AsNoTracking().Include(tc => tc.User)
             .FirstAsync(tc => tc.Id == entity.Id, ct);

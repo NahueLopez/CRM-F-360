@@ -5,6 +5,8 @@ import type { ActivityLog } from "../../types/activity";
 import { contactService } from "../../services/contactService";
 import { companyService } from "../../services/companyService";
 import { activityService } from "../../services/activityService";
+import { downloadCsvFromData } from "../../services/exportService";
+import { useToast } from "../../context/ToastContext";
 
 const ACTIVITY_TYPES = [
     { value: "Call", label: "📞 Llamada", color: "text-sky-400" },
@@ -14,6 +16,7 @@ const ACTIVITY_TYPES = [
 ];
 
 const ContactsPage: React.FC = () => {
+    const { addToast } = useToast();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
@@ -150,12 +153,31 @@ const ContactsPage: React.FC = () => {
                             {filtered.length} contactos registrados
                         </p>
                     </div>
-                    <button
-                        onClick={() => { setShowForm(!showForm); setEditing(null); }}
-                        className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition"
-                    >
-                        + Nuevo contacto
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => {
+                                downloadCsvFromData(filtered, [
+                                    { key: "fullName", header: "Nombre" },
+                                    { key: "email", header: "Email" },
+                                    { key: "phone", header: "Teléfono" },
+                                    { key: "position", header: "Cargo" },
+                                    { key: "companyName", header: "Empresa" },
+                                    { key: "notes", header: "Notas" },
+                                ], `contactos_${new Date().toISOString().slice(0, 10)}.csv`);
+                                addToast("success", `${filtered.length} contactos exportados`);
+                            }}
+                            disabled={filtered.length === 0}
+                            className="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800/60 text-sm text-slate-300 transition disabled:opacity-40"
+                        >
+                            📥 CSV
+                        </button>
+                        <button
+                            onClick={() => { setShowForm(!showForm); setEditing(null); }}
+                            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition"
+                        >
+                            + Nuevo contacto
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}

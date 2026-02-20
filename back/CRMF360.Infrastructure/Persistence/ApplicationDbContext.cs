@@ -26,6 +26,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Reminder> Reminders => Set<Reminder>();
     public DbSet<Deal> Deals => Set<Deal>();
+    public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
+    public DbSet<ChatParticipant> ChatParticipants => Set<ChatParticipant>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -303,6 +306,38 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             e.HasOne(d => d.Contact).WithMany().HasForeignKey(d => d.ContactId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne(d => d.AssignedTo).WithMany().HasForeignKey(d => d.AssignedToId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(d => d.Stage);
+        });
+
+        // ──── ChatConversation ────
+        modelBuilder.Entity<ChatConversation>(e =>
+        {
+            e.ToTable("ChatConversations");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Name).HasMaxLength(100);
+            e.HasOne(c => c.CreatedBy).WithMany().HasForeignKey(c => c.CreatedById).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(c => c.LastMessageAt);
+        });
+
+        // ──── ChatParticipant ────
+        modelBuilder.Entity<ChatParticipant>(e =>
+        {
+            e.ToTable("ChatParticipants");
+            e.HasKey(p => p.Id);
+            e.HasOne(p => p.Conversation).WithMany(c => c.Participants).HasForeignKey(p => p.ConversationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(p => new { p.ConversationId, p.UserId }).IsUnique();
+            e.HasIndex(p => p.UserId);
+        });
+
+        // ──── ChatMessage ────
+        modelBuilder.Entity<ChatMessage>(e =>
+        {
+            e.ToTable("ChatMessages");
+            e.HasKey(m => m.Id);
+            e.Property(m => m.Content).HasMaxLength(4000).IsRequired();
+            e.HasOne(m => m.Conversation).WithMany(c => c.Messages).HasForeignKey(m => m.ConversationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(m => m.Sender).WithMany().HasForeignKey(m => m.SenderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(m => new { m.ConversationId, m.SentAt });
         });
     }
 }

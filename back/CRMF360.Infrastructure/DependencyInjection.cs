@@ -17,6 +17,7 @@ using CRMF360.Application.AuditLogs;
 using CRMF360.Application.Reminders;
 using CRMF360.Application.Deals;
 using CRMF360.Application.Search;
+using CRMF360.Application.Chat;
 using CRMF360.Infrastructure.Persistence;
 using CRMF360.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,10 @@ public static class DependencyInjection
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IDealService, DealService>();
         services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<IChatService, ChatService>();
+
+        // Background jobs
+        services.AddHostedService<Jobs.OverdueNotificationJob>();
 
         return services;
     }

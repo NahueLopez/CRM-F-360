@@ -12,8 +12,8 @@ public static class DataSeeder
         using var scope = services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // 🧱 Aplica migraciones pendientes (crea la DB/tablas si no existen)
-        await context.Database.MigrateAsync();
+        // 🧱 Crea la DB y schema si no existe (directo desde el modelo, sin migraciones)
+        await context.Database.EnsureCreatedAsync();
 
         // 1) Roles base
         if (!await context.Roles.AnyAsync())

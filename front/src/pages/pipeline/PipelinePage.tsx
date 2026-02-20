@@ -1,8 +1,20 @@
 import React, { useCallback, useEffect, useState } from "react";
+import {
+    DndContext,
+    DragOverlay,
+    closestCorners,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { dealService } from "../../services/dealService";
 import { companyService } from "../../services/companyService";
 import type { Deal, DealStage, PipelineSummary } from "../../types/deal";
 import type { Company } from "../../types/company";
+import PipelineStageColumn from "../../components/pipeline/PipelineStageColumn";
+import PipelineDealCard from "../../components/pipeline/PipelineDealCard";
+import { useToast } from "../../context/ToastContext";
 
 const STAGES: { value: DealStage; label: string; color: string; bg: string }[] = [
     { value: "Lead", label: "Lead", color: "text-slate-300", bg: "bg-slate-700/50" },
@@ -19,12 +31,20 @@ const fmt = (v?: number, cur?: string) => {
 };
 
 const PipelinePage: React.FC = () => {
+    const { addToast } = useToast();
     const [deals, setDeals] = useState<Deal[]>([]);
     const [summary, setSummary] = useState<PipelineSummary[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editDeal, setEditDeal] = useState<Deal | null>(null);
     const [form, setForm] = useState({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+
+    // Drag state
+    const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    );
 
     const load = useCallback(async () => {
         const [d, s, c] = await Promise.all([dealService.getAll(), dealService.getSummary(), companyService.getAll()]);
@@ -38,28 +58,111 @@ const PipelinePage: React.FC = () => {
     const dealsByStage = (stage: DealStage) => deals.filter(d => d.stage === stage);
     const stageTotal = (stage: string) => summary.find(s => s.stage === stage);
 
-    const handleCreate = async () => {
-        if (!form.title.trim()) return;
-        await dealService.create({
-            title: form.title,
-            companyId: form.companyId ? Number(form.companyId) : undefined,
-            value: form.value ? Number(form.value) : undefined,
-            notes: form.notes || undefined,
-            expectedCloseDate: form.expectedCloseDate || undefined,
-        });
-        setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
-        setShowCreate(false);
-        load();
+    // ── Drag & Drop ──
+    const handleDragStart = (event: DragStartEvent) => {
+        const deal = deals.find(d => d.id === event.active.id);
+        setActiveDeal(deal ?? null);
     };
 
-    const handleMove = async (deal: Deal, newStage: DealStage) => {
-        await dealService.move(deal.id, newStage, 0);
-        load();
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeId = active.id as number;
+        const overId = over.id;
+
+        // Determine target stage
+        let targetStage: DealStage | undefined;
+
+        if (typeof overId === "string" && overId.startsWith("stage-")) {
+            targetStage = overId.replace("stage-", "") as DealStage;
+        } else {
+            // Dropped on another deal card — find its stage
+            const overDeal = deals.find(d => d.id === overId);
+            targetStage = overDeal?.stage;
+        }
+
+        if (!targetStage) return;
+
+        const activeDeal = deals.find(d => d.id === activeId);
+        if (!activeDeal || activeDeal.stage === targetStage) return;
+
+        // Optimistic: move deal to new stage in local state
+        setDeals(prev =>
+            prev.map(d =>
+                d.id === activeId ? { ...d, stage: targetStage! } : d
+            )
+        );
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        setActiveDeal(null);
+        const { active, over } = event;
+        if (!over) return;
+
+        const dealId = active.id as number;
+        const overId = over.id;
+
+        // Determine target stage
+        let targetStage: DealStage | undefined;
+        if (typeof overId === "string" && overId.startsWith("stage-")) {
+            targetStage = overId.replace("stage-", "") as DealStage;
+        } else {
+            const overDeal = deals.find(d => d.id === overId);
+            targetStage = overDeal?.stage;
+        }
+
+        if (!targetStage) return;
+
+        const deal = deals.find(d => d.id === dealId);
+        if (!deal) return;
+
+        // Only call API if stage actually changed from original
+        try {
+            const stageName = STAGES.find(s => s.value === targetStage)?.label ?? targetStage;
+            await dealService.move(dealId, targetStage, 0);
+            addToast("success", `Deal movido a ${stageName}`);
+            await load();
+        } catch (err) {
+            console.error("Error moving deal", err);
+            addToast("error", "Error al mover el deal");
+            load();
+        }
+    };
+
+    const handleDragCancel = () => {
+        setActiveDeal(null);
+        load(); // Revert any optimistic changes
+    };
+
+    // ── CRUD ──
+    const handleCreate = async () => {
+        if (!form.title.trim()) return;
+        try {
+            await dealService.create({
+                title: form.title,
+                companyId: form.companyId ? Number(form.companyId) : undefined,
+                value: form.value ? Number(form.value) : undefined,
+                notes: form.notes || undefined,
+                expectedCloseDate: form.expectedCloseDate || undefined,
+            });
+            addToast("success", `Oportunidad "${form.title}" creada`);
+            setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+            setShowCreate(false);
+            load();
+        } catch {
+            addToast("error", "Error al crear la oportunidad");
+        }
     };
 
     const handleDelete = async (id: number) => {
-        await dealService.remove(id);
-        load();
+        try {
+            await dealService.remove(id);
+            addToast("success", "Oportunidad eliminada");
+            load();
+        } catch {
+            addToast("error", "Error al eliminar");
+        }
     };
 
     const totalPipeline = deals.filter(d => d.stage !== "ClosedLost").reduce((s, d) => s + (d.value ?? 0), 0);
@@ -87,56 +190,36 @@ const PipelinePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Pipeline columns */}
-            <div className="grid grid-cols-6 gap-3 min-h-[60vh]">
-                {STAGES.map(stg => {
-                    const stgDeals = dealsByStage(stg.value);
-                    const info = stageTotal(stg.value);
-                    return (
-                        <div key={stg.value} className={`${stg.bg} border border-slate-700/50 rounded-xl flex flex-col`}>
-                            <div className="p-3 border-b border-slate-700/30">
-                                <div className="flex items-center justify-between">
-                                    <h3 className={`text-xs font-bold ${stg.color}`}>{stg.label}</h3>
-                                    <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded-full">{stgDeals.length}</span>
-                                </div>
-                                {info && info.totalValue > 0 && (
-                                    <p className="text-[10px] text-slate-400 mt-1">{fmt(info.totalValue)}</p>
-                                )}
-                            </div>
-                            <div className="flex-1 p-2 space-y-2 overflow-y-auto">
-                                {stgDeals.map(deal => (
-                                    <div key={deal.id}
-                                        className="bg-slate-800/70 border border-slate-700/40 rounded-lg p-3 group hover:border-indigo-500/30 transition cursor-pointer"
-                                        onClick={() => setEditDeal(deal)}>
-                                        <p className="text-sm font-medium truncate">{deal.title}</p>
-                                        {deal.companyName && <p className="text-[10px] text-slate-500 mt-0.5">🏢 {deal.companyName}</p>}
-                                        {deal.value != null && deal.value > 0 && (
-                                            <p className="text-xs text-emerald-400 font-semibold mt-1">{fmt(deal.value, deal.currency)}</p>
-                                        )}
-                                        {deal.expectedCloseDate && (
-                                            <p className="text-[10px] text-slate-600 mt-1">
-                                                📅 {new Date(deal.expectedCloseDate).toLocaleDateString("es-AR")}
-                                            </p>
-                                        )}
-                                        <div className="flex items-center justify-between mt-2">
-                                            <span className="text-[10px] text-slate-500">{deal.assignedToName}</span>
-                                        </div>
-                                        {/* Quick move buttons */}
-                                        <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition">
-                                            {STAGES.filter(s => s.value !== deal.stage).slice(0, 3).map(s => (
-                                                <button key={s.value} onClick={e => { e.stopPropagation(); handleMove(deal, s.value); }}
-                                                    className={`text-[9px] px-1.5 py-0.5 rounded ${s.bg} ${s.color} hover:opacity-80`}>
-                                                    → {s.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+            {/* Pipeline columns with DnD */}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+            >
+                <div className="grid grid-cols-6 gap-3 min-h-[60vh]">
+                    {STAGES.map(stg => (
+                        <PipelineStageColumn
+                            key={stg.value}
+                            stage={stg}
+                            deals={dealsByStage(stg.value)}
+                            summary={stageTotal(stg.value)}
+                            onEditDeal={setEditDeal}
+                        />
+                    ))}
+                </div>
+
+                {/* Drag overlay — floating card while dragging */}
+                <DragOverlay>
+                    {activeDeal ? (
+                        <div className="rotate-1 scale-105 opacity-90">
+                            <PipelineDealCard deal={activeDeal} onEdit={() => { }} />
                         </div>
-                    );
-                })}
-            </div>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
 
             {/* Create modal */}
             {showCreate && (
@@ -188,18 +271,16 @@ const PipelinePage: React.FC = () => {
                             {editDeal.expectedCloseDate && <p><span className="text-slate-400">Cierre esperado:</span> {new Date(editDeal.expectedCloseDate).toLocaleDateString("es-AR")}</p>}
                             {editDeal.notes && <p className="text-slate-400 text-xs mt-2">{editDeal.notes}</p>}
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                            {STAGES.filter(s => s.value !== editDeal.stage).map(s => (
-                                <button key={s.value} onClick={() => { handleMove(editDeal, s.value); setEditDeal(null); }}
-                                    className={`text-xs px-2 py-1 rounded ${s.bg} ${s.color} hover:opacity-80 transition`}>
-                                    Mover a {s.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex justify-between pt-2 border-t border-slate-700">
-                            <button onClick={() => { handleDelete(editDeal.id); setEditDeal(null); }}
-                                className="text-xs text-red-400 hover:text-red-300">Eliminar</button>
-                            <button onClick={() => setEditDeal(null)} className="px-4 py-2 rounded-lg border border-slate-600 text-sm">Cerrar</button>
+
+                        <div className="flex justify-between pt-3 border-t border-slate-700">
+                            <button onClick={() => { if (confirm("¿Eliminar esta oportunidad?")) { handleDelete(editDeal.id); setEditDeal(null); } }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                           bg-red-500/10 text-red-400 border border-red-500/20
+                                           hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/40
+                                           transition-all duration-200">
+                                🗑️ Eliminar
+                            </button>
+                            <button onClick={() => setEditDeal(null)} className="px-4 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700/50 text-sm transition">Cerrar</button>
                         </div>
                     </div>
                 </div>

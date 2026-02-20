@@ -1,4 +1,5 @@
 using CRMF360.Application.Abstractions;
+using CRMF360.Application.Notifications;
 using CRMF360.Application.Tasks;
 using CRMF360.Domain;
 using CRMF360.Domain.Entities;
@@ -10,8 +11,13 @@ namespace CRMF360.Infrastructure.Services;
 public class TaskService : ITaskService
 {
     private readonly IApplicationDbContext _db;
+    private readonly INotificationService _notif;
 
-    public TaskService(IApplicationDbContext db) => _db = db;
+    public TaskService(IApplicationDbContext db, INotificationService notif)
+    {
+        _db = db;
+        _notif = notif;
+    }
 
     public async Task<List<TaskDto>> GetAllAsync(CancellationToken ct = default)
     {
@@ -65,6 +71,18 @@ public class TaskService : ITaskService
         _db.Tasks.Add(entity);
         await _db.SaveChangesAsync(ct);
 
+        // Notify assignee
+        if (entity.AssigneeId.HasValue)
+        {
+            var project = await _db.Projects.FindAsync(new object[] { dto.ProjectId }, ct);
+            await _notif.CreateAsync(
+                entity.AssigneeId.Value,
+                "TaskAssigned",
+                $"Nueva tarea asignada: {entity.Title}",
+                $"Se te asignó la tarea \"{entity.Title}\" en el proyecto {project?.Name ?? "—"}.",
+                "Task", entity.Id, ct);
+        }
+
         // Reload
         var loaded = await QueryBase().FirstAsync(t => t.Id == entity.Id, ct);
         return MapToDto(loaded);
@@ -72,8 +90,10 @@ public class TaskService : ITaskService
 
     public async Task<bool> UpdateAsync(int id, UpdateTaskDto dto, CancellationToken ct = default)
     {
-        var entity = await _db.Tasks.FindAsync(new object[] { id }, ct);
+        var entity = await _db.Tasks.Include(t => t.Project).FirstOrDefaultAsync(t => t.Id == id, ct);
         if (entity is null) return false;
+
+        var previousAssignee = entity.AssigneeId;
 
         if (!Enum.TryParse<TaskPriority>(dto.Priority, true, out var priority))
             priority = TaskPriority.Medium;
@@ -86,6 +106,18 @@ public class TaskService : ITaskService
         entity.DueDate = ToUtc(dto.DueDate);
 
         await _db.SaveChangesAsync(ct);
+
+        // Notify new assignee (only if changed)
+        if (dto.AssigneeId.HasValue && dto.AssigneeId != previousAssignee)
+        {
+            await _notif.CreateAsync(
+                dto.AssigneeId.Value,
+                "TaskAssigned",
+                $"Tarea asignada: {entity.Title}",
+                $"Se te asignó la tarea \"{entity.Title}\" en el proyecto {entity.Project?.Name ?? "—"}.",
+                "Task", entity.Id, ct);
+        }
+
         return true;
     }
 
