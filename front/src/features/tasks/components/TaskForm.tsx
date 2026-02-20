@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { Task, TaskPriority, TaskStatus } from "../types";
+import type { Task, TaskPriority } from "../types";
 import type { Project } from "../../projects/types";
 import type { User } from "../../users/types";
 
@@ -11,17 +11,11 @@ interface Props {
   onCancel: () => void;
 }
 
-const STATUSES: { value: TaskStatus; label: string }[] = [
-  { value: 1, label: "Pendiente" },
-  { value: 2, label: "En progreso" },
-  { value: 3, label: "Bloqueada" },
-  { value: 4, label: "Finalizada" },
-];
 
 const PRIORITIES: { value: TaskPriority; label: string }[] = [
-  { value: 1, label: "Baja" },
-  { value: 2, label: "Media" },
-  { value: 3, label: "Alta" },
+  { value: "Low", label: "Baja" },
+  { value: "Medium", label: "Media" },
+  { value: "High", label: "Alta" },
 ];
 
 const TaskForm: React.FC<Props> = ({
@@ -34,24 +28,22 @@ const TaskForm: React.FC<Props> = ({
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<Partial<Task>>({
-    proyectoId: initial.proyectoId ?? projects[0]?.id,
-    titulo: initial.titulo ?? "",
-    descripcion: initial.descripcion ?? "",
-    asignadoAId: initial.asignadoAId ?? undefined,
-    fechaVencimiento: initial.fechaVencimiento ?? null,
-    estado: initial.estado ?? 1,
-    prioridad: initial.prioridad ?? 2,
+    projectId: initial.projectId ?? projects[0]?.id,
+    title: initial.title ?? "",
+    description: initial.description ?? "",
+    assigneeId: initial.assigneeId ?? undefined,
+    dueDate: initial.dueDate ?? undefined,
+    priority: initial.priority ?? "Medium",
   });
 
   useEffect(() => {
     setForm({
-      proyectoId: initial.proyectoId ?? projects[0]?.id,
-      titulo: initial.titulo ?? "",
-      descripcion: initial.descripcion ?? "",
-      asignadoAId: initial.asignadoAId ?? undefined,
-      fechaVencimiento: initial.fechaVencimiento ?? null,
-      estado: initial.estado ?? 1,
-      prioridad: initial.prioridad ?? 2,
+      projectId: initial.projectId ?? projects[0]?.id,
+      title: initial.title ?? "",
+      description: initial.description ?? "",
+      assigneeId: initial.assigneeId ?? undefined,
+      dueDate: initial.dueDate ?? undefined,
+      priority: initial.priority ?? "Medium",
     });
   }, [initial, projects]);
 
@@ -62,7 +54,7 @@ const TaskForm: React.FC<Props> = ({
   ) => {
     const { name, value } = e.target;
 
-    if (["proyectoId", "estado", "prioridad", "asignadoAId"].includes(name)) {
+    if (["projectId", "assigneeId"].includes(name)) {
       setForm((prev) => ({
         ...prev,
         [name]: value === "" ? undefined : Number(value),
@@ -70,10 +62,10 @@ const TaskForm: React.FC<Props> = ({
       return;
     }
 
-    if (name === "fechaVencimiento") {
+    if (name === "dueDate") {
       setForm((prev) => ({
         ...prev,
-        [name]: value ? new Date(value).toISOString() : null,
+        [name]: value ? new Date(value).toISOString() : undefined,
       }));
       return;
     }
@@ -84,11 +76,11 @@ const TaskForm: React.FC<Props> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.titulo || !form.titulo.trim()) {
+    if (!form.title || !form.title.trim()) {
       alert("El título de la tarea es obligatorio.");
       return;
     }
-    if (!form.proyectoId) {
+    if (!form.projectId) {
       alert("Tenés que seleccionar un proyecto.");
       return;
     }
@@ -101,8 +93,8 @@ const TaskForm: React.FC<Props> = ({
     }
   };
 
-  const fechaVencimientoValue = form.fechaVencimiento
-    ? form.fechaVencimiento.substring(0, 10)
+  const dueDateValue = form.dueDate
+    ? form.dueDate.substring(0, 10)
     : "";
 
   return (
@@ -114,15 +106,15 @@ const TaskForm: React.FC<Props> = ({
             Proyecto *
           </label>
           <select
-            name="proyectoId"
-            value={form.proyectoId ?? ""}
+            name="projectId"
+            value={form.projectId ?? ""}
             onChange={handleChange}
             className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
           >
             <option value="">Seleccionar proyecto</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nombre}
+                {p.name}
               </option>
             ))}
           </select>
@@ -134,8 +126,8 @@ const TaskForm: React.FC<Props> = ({
             Asignado a
           </label>
           <select
-            name="asignadoAId"
-            value={form.asignadoAId ?? ""}
+            name="assigneeId"
+            value={form.assigneeId ?? ""}
             onChange={handleChange}
             className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
           >
@@ -148,33 +140,14 @@ const TaskForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Estado */}
-        <div>
-          <label className="block text-xs mb-1 text-slate-400">
-            Estado
-          </label>
-          <select
-            name="estado"
-            value={form.estado ?? 1}
-            onChange={handleChange}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
-          >
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Prioridad */}
         <div>
           <label className="block text-xs mb-1 text-slate-400">
             Prioridad
           </label>
           <select
-            name="prioridad"
-            value={form.prioridad ?? 2}
+            name="priority"
+            value={form.priority ?? "Medium"}
             onChange={handleChange}
             className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
           >
@@ -193,8 +166,8 @@ const TaskForm: React.FC<Props> = ({
           </label>
           <input
             type="date"
-            name="fechaVencimiento"
-            value={fechaVencimientoValue}
+            name="dueDate"
+            value={dueDateValue}
             onChange={handleChange}
             className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
           />
@@ -207,8 +180,8 @@ const TaskForm: React.FC<Props> = ({
           Título de la tarea *
         </label>
         <input
-          name="titulo"
-          value={form.titulo ?? ""}
+          name="title"
+          value={form.title ?? ""}
           onChange={handleChange}
           className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
         />
@@ -219,8 +192,8 @@ const TaskForm: React.FC<Props> = ({
           Descripción
         </label>
         <textarea
-          name="descripcion"
-          value={form.descripcion ?? ""}
+          name="description"
+          value={form.description ?? ""}
           onChange={handleChange}
           rows={3}
           className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"

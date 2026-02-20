@@ -18,32 +18,23 @@ const TasksTable: React.FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
-  const getProjectName = (proyectoId: number) =>
-    projects.find((p) => p.id === proyectoId)?.nombre ?? "—";
+  const getProjectName = (projectId: number) =>
+    projects.find((p) => p.id === projectId)?.name ?? "—";
 
-  const getUserName = (userId?: number | null) =>
+  const getUserName = (userId?: number) =>
     userId ? users.find((u) => u.id === userId)?.fullName ?? "—" : "—";
 
-  const getStatusLabel = (estado: Task["estado"]) => {
-    switch (estado) {
-      case 1: return "Pendiente";
-      case 2: return "En progreso";
-      case 3: return "Bloqueada";
-      case 4: return "Finalizada";
-      default: return estado;
+  const getPriorityLabel = (priority: Task["priority"]) => {
+    switch (priority) {
+      case "Low": return "Baja";
+      case "Medium": return "Media";
+      case "High": return "Alta";
+      case "Urgent": return "Urgente";
+      default: return priority;
     }
   };
 
-  const getPriorityLabel = (prioridad: Task["prioridad"]) => {
-    switch (prioridad) {
-      case 1: return "Baja";
-      case 2: return "Media";
-      case 3: return "Alta";
-      default: return prioridad;
-    }
-  };
-
-  const formatDate = (iso?: string | null) =>
+  const formatDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString() : "—";
 
   return (
@@ -53,7 +44,6 @@ const TasksTable: React.FC<Props> = ({
           <th className="p-3">Tarea</th>
           <th className="p-3">Proyecto</th>
           <th className="p-3">Asignado a</th>
-          <th className="p-3">Estado</th>
           <th className="p-3">Prioridad</th>
           <th className="p-3">Vencimiento</th>
           <th className="p-3">Acciones</th>
@@ -62,12 +52,11 @@ const TasksTable: React.FC<Props> = ({
       <tbody>
         {data.map((t) => (
           <tr key={t.id} className="border-b border-slate-800">
-            <td className="p-3">{t.titulo}</td>
-            <td className="p-3">{getProjectName(t.proyectoId)}</td>
-            <td className="p-3">{getUserName(t.asignadoAId)}</td>
-            <td className="p-3">{getStatusLabel(t.estado)}</td>
-            <td className="p-3">{getPriorityLabel(t.prioridad)}</td>
-            <td className="p-3">{formatDate(t.fechaVencimiento)}</td>
+            <td className="p-3">{t.title}</td>
+            <td className="p-3">{getProjectName(t.projectId)}</td>
+            <td className="p-3">{getUserName(t.assigneeId)}</td>
+            <td className="p-3">{getPriorityLabel(t.priority)}</td>
+            <td className="p-3">{formatDate(t.dueDate)}</td>
             <td className="p-3 space-x-2">
               <button
                 onClick={() => onEdit(t)}
@@ -87,7 +76,7 @@ const TasksTable: React.FC<Props> = ({
         {data.length === 0 && (
           <tr>
             <td
-              colSpan={7}
+              colSpan={6}
               className="p-3 text-center text-slate-500 italic"
             >
               Todavía no hay tareas.

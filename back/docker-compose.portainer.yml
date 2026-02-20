@@ -1,0 +1,25 @@
+services:
+  crmf360.api:
+    image: 145.223.26.76:5000/crm-api:test
+    restart: always
+    ports:
+      - "5010:8080"
+    environment:
+      - ConnectionStrings__pg=${ConnectionStrings__pg}
+
+      # JWT
+      - Jwt__Key=${Jwt__Key}
+      - Jwt__Issuer=${Jwt__Issuer}
+      - Jwt__Audience=${Jwt__Audience}
+      - Jwt__ExpiresInMinutes=${Jwt__ExpiresInMinutes}
+      - Jwt__RefreshExpireDays=${Jwt__RefreshExpireDays}
+
+      # ASP.NET
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+
+    networks:
+      - crmf360-network
+
+networks:
+  crmf360-network:
+    driver: bridge

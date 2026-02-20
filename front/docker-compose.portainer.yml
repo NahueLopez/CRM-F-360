@@ -1,0 +1,13 @@
+services:
+  crmf360.front:
+    image: 145.223.26.76:5000/crm-front:test
+    container_name: crm-front
+    restart: always
+    ports:
+      - "5011:80"
+    networks:
+      - crmf360-network
+
+networks:
+  crmf360-network:
+    driver: bridge
