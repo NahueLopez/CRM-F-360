@@ -28,9 +28,16 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
             .HasForeignKey(a => a.ProjectId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(a => a.Deal)
+            .WithMany()
+            .HasForeignKey(a => a.DealId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasOne(a => a.User)
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(a => a.TenantId);
     }
 }

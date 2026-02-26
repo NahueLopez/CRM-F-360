@@ -16,6 +16,7 @@ const TimeEntriesPage: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projectSummary, setProjectSummary] = useState<ProjectHoursSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showProjectBreakdown, setShowProjectBreakdown] = useState(false);
 
   // Filters
   const [filterProject, setFilterProject] = useState<string>("");
@@ -188,6 +189,8 @@ const TimeEntriesPage: React.FC = () => {
             <p className="text-[10px] text-slate-500 uppercase tracking-wider">Horas totales</p>
             <p className="text-xl font-bold text-indigo-400 mt-1">{totalHours.toFixed(1)} hs</p>
           </div>
+
+          {/* When filtering by project: show estimated + progress */}
           {selectedProjectSummary && (
             <>
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
@@ -226,21 +229,78 @@ const TimeEntriesPage: React.FC = () => {
               </div>
             </>
           )}
-          {!filterProject && isLeader && projectSummary.length > 0 && (
-            <>
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider">Proyectos</p>
-                <p className="text-xl font-bold text-slate-300 mt-1">{projectSummary.length}</p>
-              </div>
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider">Total estimado</p>
-                <p className="text-xl font-bold text-slate-300 mt-1">
-                  {projectSummary.reduce((s, p) => s + p.estimatedHours, 0).toFixed(0)} hs
-                </p>
-              </div>
-            </>
-          )}
         </div>
+
+        {/* ─── Project Breakdown (collapsible, only for leaders viewing all) ─── */}
+        {!filterProject && isLeader && projectSummary.length > 0 && (
+          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowProjectBreakdown(p => !p)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800/50 transition"
+            >
+              <span>📊 Resumen por proyecto ({projectSummary.length})</span>
+              <span className={`text-xs text-slate-500 transition-transform ${showProjectBreakdown ? "rotate-180" : ""}`}>
+                ▼
+              </span>
+            </button>
+            {showProjectBreakdown && (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-t border-slate-700/50 bg-slate-800/50">
+                    <th className="text-left px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Proyecto</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Registradas</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Estimadas</th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Avance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/30">
+                  {projectSummary.map(p => (
+                    <tr
+                      key={p.projectName}
+                      className="hover:bg-slate-800/40 cursor-pointer transition"
+                      onClick={() => { setFilterProject(p.projectName); setShowProjectBreakdown(false); }}
+                    >
+                      <td className="px-4 py-2.5 text-slate-200">{p.projectName}</td>
+                      <td className="px-4 py-2.5 text-right text-indigo-400 font-medium tabular-nums">{p.loggedHours.toFixed(1)} hs</td>
+                      <td className="px-4 py-2.5 text-right text-slate-400 tabular-nums">
+                        {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        {p.estimatedHours > 0 ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${p.burnPercent > 100 ? "bg-red-500" : p.burnPercent > 80 ? "bg-amber-500" : "bg-emerald-500"}`}
+                                style={{ width: `${Math.min(p.burnPercent, 100)}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-medium tabular-nums ${p.burnPercent > 100 ? "text-red-400" : "text-slate-400"}`}>
+                              {p.burnPercent.toFixed(0)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-600">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-slate-700/50 bg-slate-800/50">
+                    <td className="px-4 py-2.5 text-xs font-semibold text-slate-400">Totales</td>
+                    <td className="px-4 py-2.5 text-right text-indigo-400 font-bold tabular-nums text-xs">
+                      {projectSummary.reduce((s, p) => s + p.loggedHours, 0).toFixed(1)} hs
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-slate-400 font-bold tabular-nums text-xs">
+                      {projectSummary.reduce((s, p) => s + p.estimatedHours, 0).toFixed(0)} hs
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* ─── Log Hours Form ─── */}
         <form

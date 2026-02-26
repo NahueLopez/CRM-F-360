@@ -1,12 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { Contact } from "./types";
-import type { Company } from "../companies/types";
 import type { ActivityLog } from "../activities/types";
 import { contactService } from "./contactService";
-import { companyService } from "../companies/companyService";
 import { activityService } from "../activities/activityService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
+import { contactSchema, validateForm } from "../../shared/schemas/formSchemas";
+import { useContacts } from "../../shared/hooks/useContactQuery";
+import { useCompanies } from "../../shared/hooks/useCompanyQuery";
+import { useQueryClient } from "@tanstack/react-query";
+import { contactKeys } from "../../shared/hooks/useContactQuery";
 import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
@@ -22,9 +25,12 @@ const ACTIVITY_TYPES = [
 const ContactsPage: React.FC = () => {
     const { addToast } = useToast();
     const { confirm, confirmProps } = useConfirm();
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [loading, setLoading] = useState(true);
+    const qc = useQueryClient();
+
+    // ── React Query ──
+    const { data: contacts = [], isLoading: loading } = useContacts();
+    const { data: companies = [] } = useCompanies();
+
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Contact | null>(null);
     const [search, setSearch] = useState("");
@@ -46,24 +52,6 @@ const ContactsPage: React.FC = () => {
         notes: "",
     });
 
-    const load = useCallback(async () => {
-        try {
-            setLoading(true);
-            const [c, co] = await Promise.all([
-                contactService.getAll(),
-                companyService.getAll(),
-            ]);
-            setContacts(c);
-            setCompanies(co);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
-
     const resetForm = () => {
         setForm({ companyId: 0, fullName: "", email: "", phone: "", position: "", notes: "" });
         setEditing(null);
@@ -72,30 +60,31 @@ const ContactsPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.fullName || !form.companyId) return;
+        const validated = validateForm(contactSchema, form, (msg) => addToast("error", msg));
+        if (!validated) return;
         try {
             if (editing) {
                 await contactService.update(editing.id, {
-                    fullName: form.fullName,
-                    email: form.email || undefined,
-                    phone: form.phone || undefined,
-                    position: form.position || undefined,
-                    notes: form.notes || undefined,
+                    fullName: validated.fullName,
+                    email: validated.email || undefined,
+                    phone: validated.phone || undefined,
+                    position: validated.position || undefined,
+                    notes: validated.notes || undefined,
                 });
                 addToast("success", "Contacto actualizado");
             } else {
                 await contactService.create({
-                    companyId: form.companyId,
-                    fullName: form.fullName,
-                    email: form.email || undefined,
-                    phone: form.phone || undefined,
-                    position: form.position || undefined,
-                    notes: form.notes || undefined,
+                    companyId: validated.companyId,
+                    fullName: validated.fullName,
+                    email: validated.email || undefined,
+                    phone: validated.phone || undefined,
+                    position: validated.position || undefined,
+                    notes: validated.notes || undefined,
                 });
                 addToast("success", "Contacto creado");
             }
             resetForm();
-            load();
+            qc.invalidateQueries({ queryKey: contactKeys.all });
         } catch (err) {
             console.error(err);
         }
@@ -124,7 +113,7 @@ const ContactsPage: React.FC = () => {
         if (!ok) return;
         await contactService.remove(id);
         if (selected?.id === id) setSelected(null);
-        load();
+        qc.invalidateQueries({ queryKey: contactKeys.all });
         addToast("success", "Contacto eliminado");
     };
 

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import type { Company } from "./types";
 import type { ActivityLog } from "../activities/types";
-import { companyService } from "./companyService";
 import { activityService } from "../activities/activityService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
+import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany } from "../../shared/hooks/useCompanyQuery";
 import CompanyForm from "./components/CompanyForm";
 import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
@@ -33,10 +33,14 @@ const COLORS = [
 ];
 
 const CompaniesPage: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  // ── React Query ──
+  const { data: companies = [], isLoading: loading } = useCompanies();
+  const createMutation = useCreateCompany();
+  const updateMutation = useUpdateCompany();
+  const deleteMutation = useDeleteCompany();
+
   const [editing, setEditing] = useState<Company | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   // Detail panel
@@ -45,20 +49,6 @@ const CompaniesPage: React.FC = () => {
   const [newActivity, setNewActivity] = useState({ type: "Note", description: "" });
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
-
-  const load = async () => {
-    try {
-      setLoading(true);
-      const data = await companyService.getAll();
-      setCompanies(data);
-    } catch (err) {
-      console.error("No se pudo cargar empresas", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
 
   const loadActivities = useCallback(async (companyId: number) => {
     try {
@@ -73,15 +63,13 @@ const CompaniesPage: React.FC = () => {
 
   const handleNewClick = () => { setEditing(null); setShowForm(true); };
   const handleCreate = async (data: Partial<Company>) => {
-    const newCompany = await companyService.create(data);
-    setCompanies(prev => [...prev, newCompany]);
+    await createMutation.mutateAsync(data);
     setShowForm(false);
     addToast("success", "Empresa creada correctamente");
   };
   const handleUpdate = async (data: Partial<Company>) => {
     if (!editing) return;
-    const updated = await companyService.update(editing.id, data);
-    setCompanies(prev => prev.map(c => c.id === editing.id ? updated : c));
+    await updateMutation.mutateAsync({ id: editing.id, data });
     setEditing(null);
     setShowForm(false);
     addToast("success", "Empresa actualizada");
@@ -94,8 +82,7 @@ const CompaniesPage: React.FC = () => {
       variant: "danger",
     });
     if (!ok) return;
-    await companyService.remove(id);
-    setCompanies(prev => prev.filter(c => c.id !== id));
+    await deleteMutation.mutateAsync(id);
     if (selected?.id === id) setSelected(null);
     addToast("success", "Empresa eliminada");
   };

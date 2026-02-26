@@ -2,6 +2,8 @@ import { api } from "../api/apiClient";
 
 export interface AuthUser {
   id: number;
+  tenantId: number;
+  tenantName: string;
   fullName: string;
   email: string;
   phone?: string;
@@ -10,6 +12,8 @@ export interface AuthUser {
 
 interface LoginResponse {
   id: number;
+  tenantId: number;
+  tenantName: string;
   fullName: string;
   email: string;
   phone?: string;
@@ -105,6 +109,8 @@ class AuthStore {
 
     this.user = {
       id: res.id,
+      tenantId: res.tenantId,
+      tenantName: res.tenantName,
       fullName: res.fullName,
       email: res.email,
       phone: res.phone,

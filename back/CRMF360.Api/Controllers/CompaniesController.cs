@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Application.Companies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,11 @@ public class CompaniesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<CompanyDto>>> GetAll(CancellationToken ct)
         => Ok(await _companyService.GetAllAsync(ct));
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResult<CompanyDto>>> GetPaged(
+        [FromQuery] PaginationParams p, CancellationToken ct)
+        => Ok(await _companyService.GetPagedAsync(p, ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CompanyDto>> GetById(int id, CancellationToken ct)

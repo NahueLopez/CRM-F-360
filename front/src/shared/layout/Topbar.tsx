@@ -110,10 +110,12 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
             onFocus={() => searchResults.length > 0 && setShowSearch(true)}
             placeholder="Buscar empresas, contactos, proyectos..."
             className="bg-transparent text-sm outline-none w-full placeholder:text-slate-500"
+            aria-label="Buscar en el CRM"
           />
           {searchQuery && (
             <button onClick={() => { setSearchQuery(""); setSearchResults([]); setShowSearch(false); }}
-              className="text-slate-500 hover:text-slate-300 text-xs ml-1">✕</button>
+              className="text-slate-500 hover:text-slate-300 text-xs ml-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              aria-label="Limpiar búsqueda">✕</button>
           )}
         </div>
 
@@ -138,15 +140,18 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
       <div className="flex items-center gap-2">
         {/* Theme toggle */}
         <button onClick={toggle}
-          className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg"
-          title={theme === "dark" ? "Modo claro" : "Modo oscuro"}>
+          className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+          aria-label={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
           {theme === "dark" ? "☀️" : "🌙"}
         </button>
 
         {/* Notifications */}
         <div ref={notifsRef} className="relative">
           <button onClick={() => setShowNotifs(!showNotifs)}
-            className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg relative">
+            className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label={`Notificaciones${unreadCount > 0 ? `, ${unreadCount} sin leer` : ""}`}
+            aria-expanded={showNotifs}>
             🔔
             {unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">

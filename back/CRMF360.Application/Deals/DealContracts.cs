@@ -10,8 +10,8 @@ public class DealDto
     public string? CompanyName { get; set; }
     public int? ContactId { get; set; }
     public string? ContactName { get; set; }
-    public int AssignedToId { get; set; }
-    public string AssignedToName { get; set; } = null!;
+    public int? AssignedToId { get; set; }
+    public string? AssignedToName { get; set; }
     public string Stage { get; set; } = null!;
     public decimal? Value { get; set; }
     public string? Currency { get; set; }

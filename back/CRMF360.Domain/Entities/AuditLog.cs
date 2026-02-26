@@ -1,8 +1,9 @@
 namespace CRMF360.Domain.Entities;
 
-public class AuditLog
+public class AuditLog : ITenantEntity
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
     public int UserId { get; set; }
 
     /// <summary>Create, Update, Delete, Login, Logout</summary>

@@ -78,7 +78,8 @@ const Sidebar: React.FC = () => {
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white text-xl p-1"
+            className="lg:hidden text-slate-400 hover:text-white text-xl p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label="Cerrar menú"
           >
             ✕
           </button>
@@ -88,18 +89,19 @@ const Sidebar: React.FC = () => {
         </p>
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5 text-sm overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-0.5 text-sm overflow-y-auto" role="navigation" aria-label="Menú principal">
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
+              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isActive
                 ? "bg-indigo-500/10 text-white font-medium"
                 : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
               }`
             }
+            aria-current={undefined}
           >
             {({ isActive }) => (
               <>
@@ -118,7 +120,8 @@ const Sidebar: React.FC = () => {
         <div className="p-4 border-t border-slate-800">
           <button
             onClick={() => navigate("/profile")}
-            className="flex items-center gap-3 w-full text-left group mb-3"
+            className="flex items-center gap-3 w-full text-left group mb-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label="Ver perfil de usuario"
           >
             <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 
                             flex items-center justify-center text-xs font-bold text-indigo-400 shrink-0">
@@ -135,7 +138,8 @@ const Sidebar: React.FC = () => {
           </button>
           <button
             onClick={handleLogout}
-            className="text-xs text-slate-500 hover:text-red-400 transition"
+            className="text-xs text-slate-500 hover:text-red-400 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label="Cerrar sesión"
           >
             Cerrar sesión
           </button>
@@ -147,7 +151,7 @@ const Sidebar: React.FC = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0">
+      <aside className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-y-auto" aria-label="Barra lateral">
         {sidebarContent}
       </aside>
 

@@ -14,5 +14,8 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.Cuit).HasMaxLength(20);
         builder.Property(c => c.Email).HasMaxLength(200);
         builder.Property(c => c.Phone).HasMaxLength(50);
+        builder.Property(c => c.Industry).HasMaxLength(100);
+        builder.Property(c => c.Website).HasMaxLength(200);
+        builder.HasIndex(c => c.TenantId);
     }
 }

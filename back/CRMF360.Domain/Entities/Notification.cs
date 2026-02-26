@@ -1,8 +1,9 @@
 namespace CRMF360.Domain.Entities;
 
-public class Notification
+public class Notification : ITenantEntity
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
     public int UserId { get; set; }
 
     /// <summary>TaskAssigned, TaskCommented, ProjectAdded, TaskOverdue, ReminderDue, DealStageChanged</summary>

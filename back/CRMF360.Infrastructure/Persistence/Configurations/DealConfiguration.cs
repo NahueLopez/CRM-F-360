@@ -18,7 +18,8 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
 
         builder.HasOne(d => d.Company).WithMany().HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(d => d.Contact).WithMany().HasForeignKey(d => d.ContactId).OnDelete(DeleteBehavior.SetNull);
-        builder.HasOne(d => d.AssignedTo).WithMany().HasForeignKey(d => d.AssignedToId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(d => d.AssignedTo).WithMany().HasForeignKey(d => d.AssignedToId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(d => d.Stage);
+        builder.HasIndex(d => d.TenantId);
     }
 }

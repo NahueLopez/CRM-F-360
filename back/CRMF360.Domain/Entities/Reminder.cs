@@ -1,12 +1,14 @@
 namespace CRMF360.Domain.Entities;
 
-public class Reminder
+public class Reminder : ITenantEntity
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
     public int UserId { get; set; }
     public int? ContactId { get; set; }
     public int? CompanyId { get; set; }
     public int? ProjectId { get; set; }
+    public int? DealId { get; set; }
 
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
@@ -18,4 +20,5 @@ public class Reminder
     public Contact? Contact { get; set; }
     public Company? Company { get; set; }
     public Project? Project { get; set; }
+    public Deal? Deal { get; set; }
 }

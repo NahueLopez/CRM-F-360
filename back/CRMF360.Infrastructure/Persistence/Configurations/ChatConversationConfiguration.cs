@@ -13,5 +13,6 @@ public class ChatConversationConfiguration : IEntityTypeConfiguration<ChatConver
         builder.Property(c => c.Name).HasMaxLength(100);
         builder.HasOne(c => c.CreatedBy).WithMany().HasForeignKey(c => c.CreatedById).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(c => c.LastMessageAt);
+        builder.HasIndex(c => c.TenantId);
     }
 }

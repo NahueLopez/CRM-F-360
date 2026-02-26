@@ -80,7 +80,7 @@ public class TaskService : ITaskService
                 "TaskAssigned",
                 $"Nueva tarea asignada: {entity.Title}",
                 $"Se te asignó la tarea \"{entity.Title}\" en el proyecto {project?.Name ?? "—"}.",
-                "Task", entity.Id, ct);
+                "Task", entity.Id, ct: ct);
         }
 
         // Reload
@@ -115,7 +115,7 @@ public class TaskService : ITaskService
                 "TaskAssigned",
                 $"Tarea asignada: {entity.Title}",
                 $"Se te asignó la tarea \"{entity.Title}\" en el proyecto {entity.Project?.Name ?? "—"}.",
-                "Task", entity.Id, ct);
+                "Task", entity.Id, ct: ct);
         }
 
         return true;

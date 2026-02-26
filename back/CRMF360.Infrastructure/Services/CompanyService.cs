@@ -1,4 +1,5 @@
 using CRMF360.Application.Abstractions;
+using CRMF360.Application.Common;
 using CRMF360.Application.Companies;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,43 @@ public class CompanyService : ICompanyService
             .ToListAsync(ct);
     }
 
+    public async Task<PagedResult<CompanyDto>> GetPagedAsync(PaginationParams p, CancellationToken ct = default)
+    {
+        var query = _db.Companies.AsNoTracking().AsQueryable();
+
+        // Search
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var pattern = $"%{p.Search}%";
+            query = query.Where(c => EF.Functions.ILike(c.Name, pattern)
+                || (c.Cuit != null && c.Cuit.Contains(p.Search))
+                || (c.Email != null && EF.Functions.ILike(c.Email, pattern)));
+        }
+
+        // Sort
+        query = p.SortBy?.ToLower() switch
+        {
+            "name" => p.Descending ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
+            "createdat" => p.Descending ? query.OrderByDescending(c => c.CreatedAt) : query.OrderBy(c => c.CreatedAt),
+            _ => query.OrderBy(c => c.Name),
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(c => MapToDto(c))
+            .ToListAsync(ct);
+
+        return new PagedResult<CompanyDto>
+        {
+            Items = items,
+            Page = p.Page,
+            PageSize = p.PageSize,
+            TotalCount = totalCount,
+        };
+    }
+
     public async Task<CompanyDto?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var entity = await _db.Companies
@@ -37,6 +75,8 @@ public class CompanyService : ICompanyService
             Cuit = dto.Cuit,
             Email = dto.Email,
             Phone = dto.Phone,
+            Industry = dto.Industry,
+            Website = dto.Website,
             Notes = dto.Notes,
             CreatedAt = DateTime.UtcNow,
         };
@@ -56,6 +96,8 @@ public class CompanyService : ICompanyService
         entity.Cuit = dto.Cuit;
         entity.Email = dto.Email;
         entity.Phone = dto.Phone;
+        entity.Industry = dto.Industry;
+        entity.Website = dto.Website;
         entity.Notes = dto.Notes;
         entity.Active = dto.Active;
 
@@ -81,6 +123,8 @@ public class CompanyService : ICompanyService
         Cuit = c.Cuit,
         Email = c.Email,
         Phone = c.Phone,
+        Industry = c.Industry,
+        Website = c.Website,
         Notes = c.Notes,
         Active = c.Active,
         CreatedAt = c.CreatedAt,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -8,15 +8,18 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import type { DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
-import { dealService } from "./dealService";
-import { companyService } from "../companies/companyService";
-import type { Deal, DealStage, PipelineSummary } from "./types";
-import type { Company } from "../companies/types";
+import type { Deal, DealStage } from "./types";
 import PipelineStageColumn from "./components/PipelineStageColumn";
 import PipelineDealCard from "./components/PipelineDealCard";
+import DealFormModal from "./components/DealFormModal";
 import { useToast } from "../../shared/context/ToastContext";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
+import {
+    useDeals, useDealSummary, useCreateDeal,
+    useDeleteDeal, useMoveDeal, useSetDealsCache,
+} from "../../shared/hooks/useDealQuery";
+import { useCompanies } from "../../shared/hooks/useCompanyQuery";
 
 const STAGES: { value: DealStage; label: string; color: string; bg: string }[] = [
     { value: "Lead", label: "Lead", color: "text-slate-300", bg: "bg-slate-700/50" },
@@ -32,31 +35,28 @@ const fmt = (v?: number, cur?: string) => {
     return new Intl.NumberFormat("es-AR", { style: "currency", currency: cur || "ARS", maximumFractionDigits: 0 }).format(v);
 };
 
-const PipelinePage: React.FC = () => {
+const PipelinePage = () => {
     const { addToast } = useToast();
     const { confirm, confirmProps } = useConfirm();
-    const [deals, setDeals] = useState<Deal[]>([]);
-    const [summary, setSummary] = useState<PipelineSummary[]>([]);
-    const [companies, setCompanies] = useState<Company[]>([]);
+
+    // ── React Query — replaces 6 useState + useEffect + useCallback ──
+    const { data: deals = [] } = useDeals();
+    const { data: summary = [] } = useDealSummary();
+    const { data: companies = [] } = useCompanies();
+    const createDeal = useCreateDeal();
+    const deleteDeal = useDeleteDeal();
+    const moveDeal = useMoveDeal();
+    const setDealsCache = useSetDealsCache();
+
+    // ── Local UI state only ──
     const [showCreate, setShowCreate] = useState(false);
     const [editDeal, setEditDeal] = useState<Deal | null>(null);
     const [form, setForm] = useState({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
-
-    // Drag state
     const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
     );
-
-    const load = useCallback(async () => {
-        const [d, s, c] = await Promise.all([dealService.getAll(), dealService.getSummary(), companyService.getAll()]);
-        setDeals(d);
-        setSummary(s);
-        setCompanies(c);
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
 
     const dealsByStage = (stage: DealStage) => deals.filter(d => d.stage === stage);
     const stageTotal = (stage: string) => summary.find(s => s.stage === stage);
@@ -74,24 +74,21 @@ const PipelinePage: React.FC = () => {
         const activeId = active.id as number;
         const overId = over.id;
 
-        // Determine target stage
         let targetStage: DealStage | undefined;
-
         if (typeof overId === "string" && overId.startsWith("stage-")) {
             targetStage = overId.replace("stage-", "") as DealStage;
         } else {
-            // Dropped on another deal card — find its stage
             const overDeal = deals.find(d => d.id === overId);
             targetStage = overDeal?.stage;
         }
 
         if (!targetStage) return;
 
-        const activeDeal = deals.find(d => d.id === activeId);
-        if (!activeDeal || activeDeal.stage === targetStage) return;
+        const draggedDeal = deals.find(d => d.id === activeId);
+        if (!draggedDeal || draggedDeal.stage === targetStage) return;
 
-        // Optimistic: move deal to new stage in local state
-        setDeals(prev =>
+        // Optimistic: update React Query cache instantly
+        setDealsCache(prev =>
             prev.map(d =>
                 d.id === activeId ? { ...d, stage: targetStage! } : d
             )
@@ -106,7 +103,6 @@ const PipelinePage: React.FC = () => {
         const dealId = active.id as number;
         const overId = over.id;
 
-        // Determine target stage
         let targetStage: DealStage | undefined;
         if (typeof overId === "string" && overId.startsWith("stage-")) {
             targetStage = overId.replace("stage-", "") as DealStage;
@@ -117,45 +113,41 @@ const PipelinePage: React.FC = () => {
 
         if (!targetStage) return;
 
-        const deal = deals.find(d => d.id === dealId);
-        if (!deal) return;
-
-        // Only call API if stage actually changed from original
-        try {
-            const stageName = STAGES.find(s => s.value === targetStage)?.label ?? targetStage;
-            await dealService.move(dealId, targetStage, 0);
-            addToast("success", `Deal movido a ${stageName}`);
-            await load();
-        } catch (err) {
-            console.error("Error moving deal", err);
-            addToast("error", "Error al mover el deal");
-            load();
-        }
+        const stageName = STAGES.find(s => s.value === targetStage)?.label ?? targetStage;
+        moveDeal.mutate(
+            { id: dealId, stage: targetStage, sortOrder: 0 },
+            {
+                onSuccess: () => addToast("success", `Deal movido a ${stageName}`),
+                onError: () => addToast("error", "Error al mover el deal"),
+            }
+        );
     };
 
     const handleDragCancel = () => {
         setActiveDeal(null);
-        load(); // Revert any optimistic changes
+        // React Query will refetch on next invalidation
     };
 
     // ── CRUD ──
     const handleCreate = async () => {
         if (!form.title.trim()) return;
-        try {
-            await dealService.create({
+        createDeal.mutate(
+            {
                 title: form.title,
                 companyId: form.companyId ? Number(form.companyId) : undefined,
                 value: form.value ? Number(form.value) : undefined,
                 notes: form.notes || undefined,
                 expectedCloseDate: form.expectedCloseDate || undefined,
-            });
-            addToast("success", `Oportunidad "${form.title}" creada`);
-            setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
-            setShowCreate(false);
-            load();
-        } catch {
-            addToast("error", "Error al crear la oportunidad");
-        }
+            },
+            {
+                onSuccess: () => {
+                    addToast("success", `Oportunidad "${form.title}" creada`);
+                    setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+                    setShowCreate(false);
+                },
+                onError: () => addToast("error", "Error al crear la oportunidad"),
+            }
+        );
     };
 
     const handleDelete = async (id: number) => {
@@ -166,13 +158,10 @@ const PipelinePage: React.FC = () => {
             variant: "danger",
         });
         if (!ok) return;
-        try {
-            await dealService.remove(id);
-            addToast("success", "Oportunidad eliminada");
-            load();
-        } catch {
-            addToast("error", "Error al eliminar");
-        }
+        deleteDeal.mutate(id, {
+            onSuccess: () => addToast("success", "Oportunidad eliminada"),
+            onError: () => addToast("error", "Error al eliminar"),
+        });
     };
 
     const totalPipeline = deals.filter(d => d.stage !== "ClosedLost").reduce((s, d) => s + (d.value ?? 0), 0);
@@ -181,7 +170,7 @@ const PipelinePage: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Summary cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-gradient-to-br from-indigo-600/20 to-violet-600/10 border border-indigo-500/20 rounded-xl p-4">
                     <p className="text-xs text-slate-400">Total Pipeline</p>
                     <p className="text-2xl font-bold text-indigo-300">{fmt(totalPipeline)}</p>
@@ -200,7 +189,7 @@ const PipelinePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Pipeline columns with DnD */}
+            {/* Pipeline columns with DnD — responsive breakpoints */}
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
@@ -209,7 +198,7 @@ const PipelinePage: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 onDragCancel={handleDragCancel}
             >
-                <div className="grid grid-cols-6 gap-3 min-h-[60vh]">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-h-[60vh]">
                     {STAGES.map(stg => (
                         <PipelineStageColumn
                             key={stg.value}
@@ -231,37 +220,15 @@ const PipelinePage: React.FC = () => {
                 </DragOverlay>
             </DndContext>
 
-            {/* Create modal */}
+            {/* Create modal — extracted component */}
             {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Nueva oportunidad</h3>
-                            <button onClick={() => setShowCreate(false)} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
-                        </div>
-                        <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                            placeholder="Nombre de la oportunidad"
-                            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm placeholder:text-slate-500" />
-                        <div className="grid grid-cols-2 gap-3">
-                            <select value={form.companyId} onChange={e => setForm({ ...form, companyId: e.target.value })}
-                                className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm">
-                                <option value="">Empresa (opc.)</option>
-                                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                            <input type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })}
-                                placeholder="Valor $" className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm" />
-                        </div>
-                        <input type="date" value={form.expectedCloseDate} onChange={e => setForm({ ...form, expectedCloseDate: e.target.value })}
-                            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm" />
-                        <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                            placeholder="Notas..." rows={2}
-                            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm resize-none placeholder:text-slate-500" />
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg border border-slate-600 text-sm">Cancelar</button>
-                            <button onClick={handleCreate} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition">Crear</button>
-                        </div>
-                    </div>
-                </div>
+                <DealFormModal
+                    form={form}
+                    companies={companies}
+                    onChange={setForm}
+                    onSubmit={handleCreate}
+                    onClose={() => setShowCreate(false)}
+                />
             )}
 
             {/* Detail/Edit modal */}

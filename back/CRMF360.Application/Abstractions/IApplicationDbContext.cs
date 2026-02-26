@@ -5,9 +5,12 @@ namespace CRMF360.Application.Abstractions;
 
 public interface IApplicationDbContext
 {
+    DbSet<Tenant> Tenants { get; }
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }
     DbSet<UserRole> UserRoles { get; }
+    DbSet<Permission> Permissions { get; }
+    DbSet<RolePermission> RolePermissions { get; }
     DbSet<Company> Companies { get; }
     DbSet<Project> Projects { get; }
     DbSet<BoardColumn> BoardColumns { get; }
@@ -21,6 +24,7 @@ public interface IApplicationDbContext
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Reminder> Reminders { get; }
     DbSet<Deal> Deals { get; }
+    DbSet<Lead> Leads { get; }
     DbSet<ChatConversation> ChatConversations { get; }
     DbSet<ChatParticipant> ChatParticipants { get; }
     DbSet<ChatMessage> ChatMessages { get; }

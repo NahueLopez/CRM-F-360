@@ -16,10 +16,12 @@ using CRMF360.Application.Notifications;
 using CRMF360.Application.AuditLogs;
 using CRMF360.Application.Reminders;
 using CRMF360.Application.Deals;
+using CRMF360.Application.Leads;
 using CRMF360.Application.Search;
 using CRMF360.Application.Chat;
 using CRMF360.Infrastructure.Persistence;
 using CRMF360.Infrastructure.Services;
+using CRMF360.Domain.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,10 +40,13 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddScoped<TenantRlsInterceptor>();
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
             options.UseNpgsql(connectionString)
-                   .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
+                   .AddInterceptors(
+                       sp.GetRequiredService<AuditSaveChangesInterceptor>(),
+                       sp.GetRequiredService<TenantRlsInterceptor>()));
 
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<ApplicationDbContext>());
@@ -64,8 +69,12 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IDealService, DealService>();
+        services.AddScoped<ILeadService, LeadService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IChatService, ChatService>();
+
+        // Domain Events
+        services.AddScoped<IDomainEventDispatcher, CRMF360.Infrastructure.Events.DomainEventDispatcher>();
 
         // Background jobs
         services.AddHostedService<Jobs.OverdueNotificationJob>();

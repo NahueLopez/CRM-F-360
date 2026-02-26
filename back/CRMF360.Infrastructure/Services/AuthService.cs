@@ -24,9 +24,10 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
     {
-        var user = await _db.Users
+        var user = await _db.Users.IgnoreQueryFilters()
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+            .Include(u => u.Tenant)
             .FirstOrDefaultAsync(u =>
                 u.Email == request.Email &&
                 u.Active);
@@ -52,6 +53,7 @@ public class AuthService : IAuthService
         var user = await _db.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+            .Include(u => u.Tenant)
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
 
         if (user == null)
@@ -69,6 +71,8 @@ public class AuthService : IAuthService
             .Include(rt => rt.User)
                 .ThenInclude(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
+            .Include(rt => rt.User)
+                .ThenInclude(u => u.Tenant)
             .FirstOrDefaultAsync(rt => rt.Token == refreshTokenValue);
 
         if (storedToken == null || !storedToken.IsActive)
@@ -134,6 +138,8 @@ public class AuthService : IAuthService
     private static LoginResponseDto MapToResponse(User user, string token, string refreshToken) => new()
     {
         Id = user.Id,
+        TenantId = user.TenantId,
+        TenantName = user.Tenant?.Name ?? "Default",
         FullName = user.FullName,
         Email = user.Email,
         Phone = user.Phone,
@@ -151,7 +157,7 @@ public class AuthService : IAuthService
             ?? throw new InvalidOperationException("Jwt:Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "CRMF360";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "CRMF360-BackOffice";
-        var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 480;
+        var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 30;
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -161,7 +167,8 @@ public class AuthService : IAuthService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("fullName", user.FullName),
-            new Claim("id", user.Id.ToString())
+            new Claim("id", user.Id.ToString()),
+            new Claim("tenantId", user.TenantId.ToString())
         };
 
         foreach (var ur in user.UserRoles)

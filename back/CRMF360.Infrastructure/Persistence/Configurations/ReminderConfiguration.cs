@@ -17,6 +17,8 @@ public class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
         builder.HasOne(r => r.Contact).WithMany().HasForeignKey(r => r.ContactId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(r => r.Company).WithMany().HasForeignKey(r => r.CompanyId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(r => r.Project).WithMany().HasForeignKey(r => r.ProjectId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(r => r.Deal).WithMany().HasForeignKey(r => r.DealId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(r => new { r.UserId, r.IsCompleted });
+        builder.HasIndex(r => r.TenantId);
     }
 }

@@ -37,7 +37,7 @@ public class NotificationService : INotificationService
     }
 
     public async Task<NotificationDto> CreateAsync(int userId, string type, string title, string? message,
-        string? relatedEntityType = null, int? relatedEntityId = null, CancellationToken ct = default)
+        string? relatedEntityType = null, int? relatedEntityId = null, int? tenantId = null, CancellationToken ct = default)
     {
         var entity = new Notification
         {
@@ -49,6 +49,7 @@ public class NotificationService : INotificationService
             RelatedEntityId = relatedEntityId,
             CreatedAt = DateTime.UtcNow,
         };
+        if (tenantId.HasValue) entity.TenantId = tenantId.Value;
         _db.Notifications.Add(entity);
         await _db.SaveChangesAsync(ct);
         return Map(entity);

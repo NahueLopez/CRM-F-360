@@ -22,6 +22,6 @@ public interface INotificationService
     Task MarkAsReadAsync(int id, CancellationToken ct = default);
     Task MarkAllAsReadAsync(int userId, CancellationToken ct = default);
     Task<NotificationDto> CreateAsync(int userId, string type, string title, string? message,
-        string? relatedEntityType = null, int? relatedEntityId = null, CancellationToken ct = default);
+        string? relatedEntityType = null, int? relatedEntityId = null, int? tenantId = null, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
 }

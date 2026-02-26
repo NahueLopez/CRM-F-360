@@ -3,6 +3,8 @@
 public class LoginResponseDto
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
+    public string TenantName { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }

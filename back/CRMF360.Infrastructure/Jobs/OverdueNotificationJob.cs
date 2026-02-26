@@ -58,7 +58,7 @@ public class OverdueNotificationJob : BackgroundService
         var createdCount = 0;
 
         // ─── Overdue Tasks ───────────────────────────────────────────────
-        var overdueTasks = await db.Tasks
+        var overdueTasks = await db.Tasks.IgnoreQueryFilters()
             .Include(t => t.Project)
             .Where(t => t.DueDate.HasValue && t.DueDate < now && t.AssigneeId.HasValue)
             .Select(t => new
@@ -67,11 +67,12 @@ public class OverdueNotificationJob : BackgroundService
                 t.Title,
                 t.AssigneeId,
                 ProjectName = t.Project.Name,
+                t.Project.Company.TenantId,
             })
             .ToListAsync(ct);
 
         // Get existing unread TaskOverdue notifications to avoid duplicates
-        var existingTaskNotifs = await db.Notifications
+        var existingTaskNotifs = await db.Notifications.IgnoreQueryFilters()
             .Where(n => n.Type == "TaskOverdue" && !n.IsRead && n.RelatedEntityType == "Task")
             .Select(n => n.RelatedEntityId)
             .ToListAsync(ct);
@@ -89,23 +90,25 @@ public class OverdueNotificationJob : BackgroundService
                 message: $"La tarea \"{task.Title}\" del proyecto {task.ProjectName} está vencida.",
                 relatedEntityType: "Task",
                 relatedEntityId: task.Id,
+                tenantId: task.TenantId,
                 ct: ct);
 
             createdCount++;
         }
 
         // ─── Overdue Reminders ───────────────────────────────────────────
-        var overdueReminders = await db.Reminders
+        var overdueReminders = await db.Reminders.IgnoreQueryFilters()
             .Where(r => r.DueDate < now && !r.IsCompleted)
             .Select(r => new
             {
                 r.Id,
                 r.Title,
                 r.UserId,
+                r.TenantId,
             })
             .ToListAsync(ct);
 
-        var existingReminderNotifs = await db.Notifications
+        var existingReminderNotifs = await db.Notifications.IgnoreQueryFilters()
             .Where(n => n.Type == "ReminderDue" && !n.IsRead && n.RelatedEntityType == "Reminder")
             .Select(n => n.RelatedEntityId)
             .ToListAsync(ct);
@@ -123,6 +126,7 @@ public class OverdueNotificationJob : BackgroundService
                 message: $"El recordatorio \"{reminder.Title}\" ya pasó su fecha.",
                 relatedEntityType: "Reminder",
                 relatedEntityId: reminder.Id,
+                tenantId: reminder.TenantId,
                 ct: ct);
 
             createdCount++;

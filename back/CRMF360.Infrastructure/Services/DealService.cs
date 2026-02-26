@@ -2,6 +2,7 @@ using CRMF360.Application.Abstractions;
 using CRMF360.Application.Deals;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CRMF360.Infrastructure.Services;
 
@@ -10,21 +11,48 @@ public class DealService : IDealService
     private readonly IApplicationDbContext _db;
     public DealService(IApplicationDbContext db) => _db = db;
 
+    // ── Reusable projection — single source of truth ──
+    private static readonly Expression<Func<Deal, DealDto>> DealProjection = d => new DealDto
+    {
+        Id = d.Id,
+        Title = d.Title,
+        CompanyId = d.CompanyId,
+        CompanyName = d.Company != null ? d.Company.Name : null,
+        ContactId = d.ContactId,
+        ContactName = d.Contact != null ? d.Contact.FullName : null,
+        AssignedToId = d.AssignedToId,
+        AssignedToName = d.AssignedTo != null ? d.AssignedTo.FullName : null,
+        Stage = d.Stage.ToString(),
+        Value = d.Value,
+        Currency = d.Currency,
+        Notes = d.Notes,
+        ExpectedCloseDate = d.ExpectedCloseDate,
+        SortOrder = d.SortOrder,
+        CreatedAt = d.CreatedAt,
+    };
+
     public async Task<List<DealDto>> GetAllAsync(CancellationToken ct = default)
-        => await Query().OrderBy(d => d.Stage).ThenBy(d => d.SortOrder)
-            .Select(d => Map(d)).ToListAsync(ct);
+        => await _db.Deals.AsNoTracking()
+            .OrderBy(d => d.Stage).ThenBy(d => d.SortOrder)
+            .Select(DealProjection)
+            .ToListAsync(ct);
 
     public async Task<List<DealDto>> GetByStageAsync(string stage, CancellationToken ct = default)
     {
         if (!Enum.TryParse<DealStage>(stage, out var s)) return new();
-        return await Query().Where(d => d.Stage == s).OrderBy(d => d.SortOrder)
-            .Select(d => Map(d)).ToListAsync(ct);
+        return await _db.Deals.AsNoTracking()
+            .Where(d => d.Stage == s)
+            .OrderBy(d => d.SortOrder)
+            .Select(DealProjection)
+            .ToListAsync(ct);
     }
 
     public async Task<DealDto?> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var e = await Query().FirstOrDefaultAsync(d => d.Id == id, ct);
-        return e is null ? null : Map(e);
+        return await _db.Deals.AsNoTracking()
+            .Where(d => d.Id == id)
+            .Select(DealProjection)
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<DealDto> CreateAsync(int userId, CreateDealDto dto, CancellationToken ct = default)
@@ -45,8 +73,7 @@ public class DealService : IDealService
         };
         _db.Deals.Add(entity);
         await _db.SaveChangesAsync(ct);
-        var loaded = await Query().FirstAsync(d => d.Id == entity.Id, ct);
-        return Map(loaded);
+        return (await GetByIdAsync(entity.Id, ct))!;
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateDealDto dto, CancellationToken ct = default)
@@ -99,21 +126,4 @@ public class DealService : IDealService
                 TotalValue = g.Sum(d => d.Value ?? 0),
             })
             .ToListAsync(ct);
-
-    private IQueryable<Deal> Query()
-        => _db.Deals.AsNoTracking()
-            .Include(d => d.Company)
-            .Include(d => d.Contact)
-            .Include(d => d.AssignedTo);
-
-    private static DealDto Map(Deal d) => new()
-    {
-        Id = d.Id, Title = d.Title,
-        CompanyId = d.CompanyId, CompanyName = d.Company?.Name,
-        ContactId = d.ContactId, ContactName = d.Contact?.FullName,
-        AssignedToId = d.AssignedToId, AssignedToName = d.AssignedTo?.FullName ?? "—",
-        Stage = d.Stage.ToString(), Value = d.Value, Currency = d.Currency,
-        Notes = d.Notes, ExpectedCloseDate = d.ExpectedCloseDate,
-        SortOrder = d.SortOrder, CreatedAt = d.CreatedAt,
-    };
 }

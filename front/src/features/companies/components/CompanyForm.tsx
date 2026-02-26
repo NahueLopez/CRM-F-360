@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import type { Company } from "../types";
+import { companySchema, validateForm } from "../../../shared/schemas/formSchemas";
 
 interface Props {
   initial?: Partial<Company>;
   onSubmit: (values: Partial<Company>) => void;
   onCancel?: () => void;
+  onError?: (msg: string) => void;
 }
 
-const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
+const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel, onError }) => {
   const [form, setForm] = useState<Partial<Company>>({
     name: initial?.name ?? "",
     cuit: initial?.cuit ?? "",
@@ -15,6 +17,8 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
     phone: initial?.phone ?? "",
     notes: initial?.notes ?? "",
   });
+
+  const [errors, setErrors] = useState<string[]>([]);
 
   // 🔁 Cuando cambie "initial" (por ejemplo al editar otra empresa), se actualiza el form
   useEffect(() => {
@@ -31,15 +35,18 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors([]);
   };
 
   const handleSubmit = () => {
-    if (!form.name || form.name.trim() === "") {
-      // Validación mínima
-      alert("El nombre es obligatorio");
+    const errs: string[] = [];
+    const parsed = validateForm(companySchema, form, (msg) => errs.push(msg));
+    if (!parsed) {
+      setErrors(errs);
+      if (onError) errs.forEach(onError);
       return;
     }
-    onSubmit(form);
+    onSubmit(parsed);
   };
 
   return (
@@ -83,6 +90,11 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
         placeholder="Notas"
         className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700"
       />
+      {errors.length > 0 && (
+        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2 space-y-0.5">
+          {errors.map((e, i) => <p key={i}>⚠️ {e}</p>)}
+        </div>
+      )}
 
       <div className="flex gap-2 justify-end pt-2">
         {onCancel && (

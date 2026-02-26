@@ -1,8 +1,9 @@
 namespace CRMF360.Domain.Entities;
 
-public class ChatConversation
+public class ChatConversation : ITenantEntity
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
     public string? Name { get; set; }
     public bool IsGroup { get; set; }
     public int CreatedById { get; set; }

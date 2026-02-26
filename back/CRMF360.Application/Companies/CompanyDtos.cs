@@ -9,6 +9,8 @@ public class CompanyDto
     public string? Cuit { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? Industry { get; set; }
+    public string? Website { get; set; }
     public string? Notes { get; set; }
     public bool Active { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -30,6 +32,12 @@ public class CreateCompanyDto
     [MaxLength(50)]
     public string? Phone { get; set; }
 
+    [MaxLength(100)]
+    public string? Industry { get; set; }
+
+    [MaxLength(200)]
+    public string? Website { get; set; }
+
     public string? Notes { get; set; }
 }
 
@@ -48,6 +56,12 @@ public class UpdateCompanyDto
 
     [MaxLength(50)]
     public string? Phone { get; set; }
+
+    [MaxLength(100)]
+    public string? Industry { get; set; }
+
+    [MaxLength(200)]
+    public string? Website { get; set; }
 
     public string? Notes { get; set; }
     public bool Active { get; set; }

@@ -16,9 +16,9 @@ public class SearchService : ISearchService
 
         var pattern = $"%{query}%";
 
-        // Execute all 5 searches in parallel — single round-trip of tasks
-        // FIX #7: Use EF.Functions.ILike() for PostgreSQL-native case-insensitive search
-        var companiesTask = _db.Companies.AsNoTracking()
+        // Sequential queries — DbContext is NOT thread-safe, cannot use Task.WhenAll
+        // Global Query Filters automatically isolate results by tenant
+        var companies = await _db.Companies.AsNoTracking()
             .Where(c => EF.Functions.ILike(c.Name, pattern) || (c.Cuit != null && c.Cuit.Contains(query)))
             .Take(5)
             .Select(c => new SearchResultDto
@@ -28,7 +28,7 @@ public class SearchService : ISearchService
             })
             .ToListAsync(ct);
 
-        var contactsTask = _db.Contacts.AsNoTracking()
+        var contacts = await _db.Contacts.AsNoTracking()
             .Where(c => EF.Functions.ILike(c.FullName, pattern)
                 || (c.Email != null && EF.Functions.ILike(c.Email, pattern))
                 || (c.Phone != null && c.Phone.Contains(query)))
@@ -40,7 +40,7 @@ public class SearchService : ISearchService
             })
             .ToListAsync(ct);
 
-        var projectsTask = _db.Projects.AsNoTracking()
+        var projects = await _db.Projects.AsNoTracking()
             .Where(p => EF.Functions.ILike(p.Name, pattern))
             .Take(5)
             .Select(p => new SearchResultDto
@@ -50,7 +50,7 @@ public class SearchService : ISearchService
             })
             .ToListAsync(ct);
 
-        var tasksTask = _db.Tasks.AsNoTracking()
+        var tasks = await _db.Tasks.AsNoTracking()
             .Where(t => EF.Functions.ILike(t.Title, pattern))
             .Take(5)
             .Select(t => new SearchResultDto
@@ -60,7 +60,7 @@ public class SearchService : ISearchService
             })
             .ToListAsync(ct);
 
-        var dealsTask = _db.Deals.AsNoTracking()
+        var deals = await _db.Deals.AsNoTracking()
             .Where(d => EF.Functions.ILike(d.Title, pattern))
             .Take(5)
             .Select(d => new SearchResultDto
@@ -70,16 +70,13 @@ public class SearchService : ISearchService
             })
             .ToListAsync(ct);
 
-        await Task.WhenAll(companiesTask, contactsTask, projectsTask, tasksTask, dealsTask);
-
         var results = new List<SearchResultDto>(25);
-        results.AddRange(companiesTask.Result);
-        results.AddRange(contactsTask.Result);
-        results.AddRange(projectsTask.Result);
-        results.AddRange(tasksTask.Result);
-        results.AddRange(dealsTask.Result);
+        results.AddRange(companies);
+        results.AddRange(contacts);
+        results.AddRange(projects);
+        results.AddRange(tasks);
+        results.AddRange(deals);
 
         return results;
     }
 }
-

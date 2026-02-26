@@ -12,6 +12,12 @@ public static class ClaimsPrincipalExtensions
         return int.TryParse(sub, out var id) ? id : 0;
     }
 
+    public static int GetTenantId(this ClaimsPrincipal user)
+    {
+        var claim = user.FindFirstValue("tenantId");
+        return int.TryParse(claim, out var id) ? id : 0;
+    }
+
     public static bool IsAdmin(this ClaimsPrincipal user)
         => user.IsInRole("Admin");
 

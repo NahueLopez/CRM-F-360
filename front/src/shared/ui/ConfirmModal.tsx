@@ -56,11 +56,12 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-desc">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm confirm-modal-backdrop"
                 onClick={onCancel}
+                aria-hidden="true"
             />
             {/* Modal */}
             <div className="relative bg-slate-800 border border-slate-700/60 rounded-2xl shadow-2xl shadow-black/40 w-full max-w-sm p-6 confirm-modal-content">
@@ -68,20 +69,20 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     <div className={`w-14 h-14 rounded-2xl ${cfg.iconBg} border flex items-center justify-center text-2xl mb-4`}>
                         {cfg.icon}
                     </div>
-                    <h3 className="text-base font-semibold mb-1">{title}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">{message}</p>
+                    <h3 id="confirm-title" className="text-base font-semibold mb-1">{title}</h3>
+                    <p id="confirm-desc" className="text-sm text-slate-400 leading-relaxed">{message}</p>
                 </div>
                 <div className="flex gap-3 mt-6">
                     <button
                         ref={cancelRef}
                         onClick={onCancel}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-600 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-all active:scale-[0.97]"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-600 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     >
                         {cancelLabel}
                     </button>
                     <button
                         onClick={onConfirm}
-                        className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-[0.97] shadow-sm ${cfg.button}`}
+                        className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-[0.97] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${cfg.button}`}
                     >
                         {confirmLabel}
                     </button>

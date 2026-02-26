@@ -1,4 +1,5 @@
 using CRMF360.Application.Abstractions;
+using CRMF360.Application.Common;
 using CRMF360.Application.Contacts;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,43 @@ public class ContactService : IContactService
         => await _db.Contacts.AsNoTracking().Include(c => c.Company)
             .OrderBy(c => c.FullName)
             .Select(c => Map(c)).ToListAsync(ct);
+
+    public async Task<PagedResult<ContactDto>> GetPagedAsync(PaginationParams p, CancellationToken ct = default)
+    {
+        var query = _db.Contacts.AsNoTracking().Include(c => c.Company).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var pattern = $"%{p.Search}%";
+            query = query.Where(c => EF.Functions.ILike(c.FullName, pattern)
+                || (c.Email != null && EF.Functions.ILike(c.Email, pattern))
+                || (c.Phone != null && c.Phone.Contains(p.Search))
+                || (c.Company != null && EF.Functions.ILike(c.Company.Name, pattern)));
+        }
+
+        query = p.SortBy?.ToLower() switch
+        {
+            "fullname" or "name" => p.Descending ? query.OrderByDescending(c => c.FullName) : query.OrderBy(c => c.FullName),
+            "company" => p.Descending ? query.OrderByDescending(c => c.Company!.Name) : query.OrderBy(c => c.Company!.Name),
+            "createdat" => p.Descending ? query.OrderByDescending(c => c.CreatedAt) : query.OrderBy(c => c.CreatedAt),
+            _ => query.OrderBy(c => c.FullName),
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(c => Map(c))
+            .ToListAsync(ct);
+
+        return new PagedResult<ContactDto>
+        {
+            Items = items,
+            Page = p.Page,
+            PageSize = p.PageSize,
+            TotalCount = totalCount,
+        };
+    }
 
     public async Task<List<ContactDto>> GetByCompanyAsync(int companyId, CancellationToken ct = default)
         => await _db.Contacts.AsNoTracking().Include(c => c.Company)

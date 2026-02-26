@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Project, ProjectStatus } from "./types";
-import type { Company } from "../companies/types";
 import type { User } from "../users/types";
 import { projectService } from "./projectService";
-import { companyService } from "../companies/companyService";
 import { userService } from "../users/userService";
 import { projectMemberService } from "./projectMemberService";
 import { authStore } from "../../shared/auth/authStore";
 import { useToast } from "../../shared/context/ToastContext";
+import { useProjects } from "../../shared/hooks/useProjectQuery";
+import { useCompanies } from "../../shared/hooks/useCompanyQuery";
+import { useQueryClient } from "@tanstack/react-query";
+import { projectKeys } from "../../shared/hooks/useProjectQuery";
 import ProjectForm from "./components/ProjectForm";
 import ProjectTeamModal from "./components/ProjectTeamModal";
 import EmptyState from "../../shared/ui/EmptyState";
@@ -25,40 +27,29 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; dot: string; bg: str
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const qc = useQueryClient();
+
+  // ── React Query ──
+  const { data: projects = [], isLoading: loading } = useProjects();
+  const { data: companiesData = [] } = useCompanies();
+
   const [users, setUsers] = useState<User[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [teamProjectId, setTeamProjectId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<ProjectStatus | "">("");
+  const [filterStatus, setFilterStatus] = useState<ProjectStatus | "">("")
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
 
   const canManage = authStore.hasAnyRole("Admin", "Manager");
+  const companies = canManage ? companiesData : [];
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const promises: [Promise<Company[]>, Promise<Project[]>, Promise<User[]>] = [
-        canManage ? companyService.getAll() : Promise.resolve([]),
-        projectService.getAll(),
-        canManage ? userService.getAll() : Promise.resolve([]),
-      ];
-      const [companiesData, projectsData, usersData] = await Promise.all(promises);
-      setCompanies(companiesData);
-      setProjects(projectsData);
-      setUsers(usersData);
-    } catch (err) {
-      console.error("Error cargando proyectos/empresas", err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (canManage) {
+      userService.getAll().then(setUsers).catch(console.error);
     }
-  };
-
-  useEffect(() => { load(); }, []);
+  }, [canManage]);
 
   const handleNewClick = () => { setEditing(null); setShowForm(true); };
 
@@ -67,15 +58,15 @@ const ProjectsPage: React.FC = () => {
     if (memberIds && memberIds.length > 0) {
       await Promise.all(memberIds.map((userId) => projectMemberService.add(newProject.id, userId)));
     }
-    setProjects((prev) => [...prev, newProject]);
+    qc.invalidateQueries({ queryKey: projectKeys.all });
     setShowForm(false);
     addToast("success", "Proyecto creado correctamente");
   };
 
   const handleUpdate = async (data: Partial<Project>) => {
     if (!editing) return;
-    const updated = await projectService.update(editing.id, data);
-    setProjects((prev) => prev.map((p) => (p.id === editing.id ? updated : p)));
+    await projectService.update(editing.id, data);
+    qc.invalidateQueries({ queryKey: projectKeys.all });
     setEditing(null);
     setShowForm(false);
     addToast("success", "Proyecto actualizado");
@@ -90,7 +81,7 @@ const ProjectsPage: React.FC = () => {
     });
     if (!ok) return;
     await projectService.remove(id);
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    qc.invalidateQueries({ queryKey: projectKeys.all });
     addToast("success", "Proyecto eliminado");
   };
 
@@ -221,7 +212,7 @@ const ProjectsPage: React.FC = () => {
               return (
                 <div
                   key={p.id}
-                  onClick={() => navigate(`/projects/${p.id}/board`)}
+                  onClick={() => navigate(`/projects/${p.id}`)}
                   className="group flex items-center justify-between p-4 rounded-xl border bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60 transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">

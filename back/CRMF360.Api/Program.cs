@@ -1,6 +1,8 @@
 ﻿using CRMF360.Api.Middleware;
+using CRMF360.Api.Filters;
 using CRMF360.Infrastructure;
 using CRMF360.Infrastructure.Seed;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -16,16 +18,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Infrastructure (DB + Services)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+});
 builder.Services.AddSignalR();
 
-// CORS — permite llamadas desde cualquier origen
+// FluentValidation — auto-register all validators from Application assembly
+builder.Services.AddValidatorsFromAssemblyContaining<CRMF360.Application.Validation.CreateCompanyValidator>();
+
+// CORS — restricted to configured origins
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Environment.IsDevelopment()
+        ? new[] { "http://localhost:5173", "http://localhost:3000" }
+        : Array.Empty<string>());
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .SetIsOriginAllowed(_ => true)
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -82,7 +95,33 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ManagerOrAdmin", policy =>
         policy.RequireRole("Admin", "Manager"));
+
+    // Granular permission policies — each maps to a Permission.Name in DB
+    var permissions = new[]
+    {
+        // Companies
+        "companies.view", "companies.create", "companies.edit", "companies.delete",
+        // Contacts
+        "contacts.view", "contacts.create", "contacts.edit", "contacts.delete",
+        // Deals
+        "deals.view", "deals.create", "deals.edit", "deals.delete", "deals.move",
+        // Projects
+        "projects.view", "projects.create", "projects.edit", "projects.delete",
+        // Users
+        "users.view", "users.create", "users.edit", "users.delete",
+        // Reports
+        "reports.view", "reports.export",
+    };
+
+    foreach (var perm in permissions)
+    {
+        options.AddPolicy(perm, policy =>
+            policy.Requirements.Add(new CRMF360.Api.Authorization.PermissionRequirement(perm)));
+    }
 });
+
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,
+    CRMF360.Api.Authorization.PermissionAuthorizationHandler>();
 
 // ─── Rate Limiting ───
 builder.Services.AddRateLimiter(options =>

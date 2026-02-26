@@ -1,80 +1,19 @@
-import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { reportService } from "../reports/reportService";
 import { authStore } from "../../shared/auth/authStore";
-import type { DashboardReport } from "../reports/types";
+import { useDashboard } from "../../shared/hooks/useDashboardQuery";
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend,
     CartesianGrid,
 } from "recharts";
 
-/* ── Lookups ── */
-const statusLabel: Record<string, { text: string; dot: string }> = {
-    Planned: { text: "Planeado", dot: "bg-slate-400" },
-    InProgress: { text: "En curso", dot: "bg-sky-400" },
-    Paused: { text: "Pausado", dot: "bg-amber-400" },
-    Done: { text: "Finalizado", dot: "bg-emerald-400" },
-};
-
-const activityIcons: Record<string, string> = {
-    Call: "📞", Meeting: "🤝", Email: "📧", Note: "📝", StatusChange: "🔄",
-};
-
-const CHART_COLORS = ["#818cf8", "#22d3ee", "#fbbf24", "#34d399", "#f87171", "#a78bfa", "#fb7185"];
-const STATUS_COLORS: Record<string, string> = {
-    Planned: "#94a3b8", InProgress: "#38bdf8", Paused: "#fbbf24", Done: "#34d399",
-};
-const PRIORITY_COLORS: Record<string, string> = {
-    Low: "#94a3b8", Medium: "#fbbf24", High: "#fb923c", Urgent: "#f87171",
-};
-
-const CustomTooltipStyle = {
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
-    border: "1px solid rgba(100, 116, 139, 0.25)",
-    borderRadius: "12px",
-    fontSize: "12px",
-    color: "#e2e8f0",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-    padding: "8px 12px",
-};
-
-/* ── Skeleton ── */
-const DashboardSkeleton: React.FC = () => (
-    <div className="space-y-6 animate-pulse">
-        {/* Header skeleton */}
-        <div className="space-y-2">
-            <div className="skeleton h-7 w-64 rounded-lg" />
-            <div className="skeleton h-4 w-40 rounded-lg" />
-        </div>
-        {/* KPI cards skeleton */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 space-y-3">
-                    <div className="skeleton h-3 w-16 rounded" />
-                    <div className="skeleton h-8 w-12 rounded" />
-                </div>
-            ))}
-        </div>
-        {/* Charts skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 space-y-4">
-                    <div className="skeleton h-4 w-36 rounded" />
-                    <div className="skeleton h-48 w-full rounded-xl" />
-                </div>
-            ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-slate-700/30 bg-slate-800/30 p-5 space-y-4">
-                    <div className="skeleton h-4 w-40 rounded" />
-                    <div className="skeleton h-56 w-full rounded-xl" />
-                </div>
-            ))}
-        </div>
-    </div>
-);
+// ── Extracted sub-components ──
+import ChartCard, { EmptyChart } from "./components/ChartCard";
+import DashboardSkeleton from "./components/DashboardSkeleton";
+import {
+    statusLabel, activityIcons, CHART_COLORS,
+    STATUS_COLORS, PRIORITY_COLORS, CustomTooltipStyle,
+} from "./dashboardConstants";
 
 /* ── Helpers ── */
 const getGreeting = () => {
@@ -92,23 +31,10 @@ const today = new Date().toLocaleDateString("es-AR", {
 });
 
 /* ── Main Component ── */
-const DashboardPage: React.FC = () => {
-    const [report, setReport] = useState<DashboardReport | null>(null);
-    const [loading, setLoading] = useState(true);
+const DashboardPage = () => {
+    // React Query — replaces manual useState + useEffect
+    const { data: report, isLoading: loading } = useDashboard();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const data = await reportService.getDashboard();
-                setReport(data);
-            } catch (err) {
-                console.error("Error loading dashboard", err);
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, []);
 
     /* ── KPI Cards ── */
     const cards = [
@@ -388,11 +314,10 @@ const DashboardPage: React.FC = () => {
                                             <EmptyChart message="Nadie cargó horas" />
                                         ) : (
                                             <div className="space-y-2.5">
-                                                {(report?.hoursByUser ?? [])
-                                                    .filter(u => u.hoursThisMonth > 0)
-                                                    .slice(0, 7)
-                                                    .map((u, i) => {
-                                                        const max = Math.max(...(report?.hoursByUser ?? []).map(x => x.hoursThisMonth));
+                                                {(() => {
+                                                    const filtered = (report?.hoursByUser ?? []).filter(u => u.hoursThisMonth > 0).slice(0, 7);
+                                                    const max = Math.max(...filtered.map(x => x.hoursThisMonth), 0);
+                                                    return filtered.map((u, i) => {
                                                         const pct = max > 0 ? (u.hoursThisMonth / max) * 100 : 0;
                                                         return (
                                                             <div key={u.userId} className="flex items-center gap-3">
@@ -416,7 +341,8 @@ const DashboardPage: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                         );
-                                                    })}
+                                                    });
+                                                })()}
                                             </div>
                                         )}
                                     </ChartCard>
@@ -479,39 +405,5 @@ const DashboardPage: React.FC = () => {
     );
 };
 
-/* ═══════════ Sub-components ═══════════ */
-
-/** Reusable chart card wrapper */
-const ChartCard: React.FC<{
-    title: string;
-    subtitle?: string;
-    icon?: string;
-    children: React.ReactNode;
-}> = ({ title, subtitle, icon, children }) => (
-    <div className="bg-slate-800/25 border border-slate-700/30 rounded-2xl p-5 transition-colors hover:border-slate-700/50">
-        <div className="flex items-start justify-between mb-4">
-            <div>
-                <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                    {icon && <span className="text-xs">{icon}</span>}
-                    {title}
-                </h4>
-                {subtitle && (
-                    <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>
-                )}
-            </div>
-        </div>
-        {children}
-    </div>
-);
-
-/** Empty chart placeholder */
-const EmptyChart: React.FC<{ message: string }> = ({ message }) => (
-    <div className="h-48 flex flex-col items-center justify-center gap-2">
-        <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/30 flex items-center justify-center text-lg opacity-40">
-            📊
-        </div>
-        <p className="text-xs text-slate-600">{message}</p>
-    </div>
-);
-
 export default DashboardPage;
+

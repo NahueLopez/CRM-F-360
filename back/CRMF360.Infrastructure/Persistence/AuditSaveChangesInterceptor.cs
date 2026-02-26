@@ -15,8 +15,8 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    // Temp storage for pending Create audits (need real IDs after save)
-    [ThreadStatic] private static List<(object Entity, string EntityType, int UserId)>? _pendingCreates;
+    // AsyncLocal instead of ThreadStatic — safe for async/await continuations
+    private static readonly AsyncLocal<List<(object Entity, string EntityType, int UserId, int TenantId)>?> _pendingCreates = new();
 
     public AuditSaveChangesInterceptor(IHttpContextAccessor httpContextAccessor)
     {
@@ -34,7 +34,8 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         var userId = GetCurrentUserId();
         if (userId is null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-        _pendingCreates = new();
+        var tenantId = GetCurrentTenantId();
+        _pendingCreates.Value = new();
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
@@ -47,7 +48,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
             {
                 case EntityState.Added:
                     // Defer until after save so we have the real ID
-                    _pendingCreates.Add((entry.Entity, entityType, userId.Value));
+                    _pendingCreates.Value.Add((entry.Entity, entityType, userId.Value, tenantId));
                     break;
 
                 case EntityState.Modified:
@@ -67,6 +68,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                     context.AuditLogs.Add(new AuditLog
                     {
                         UserId = userId.Value,
+                        TenantId = tenantId,
                         Action = action,
                         EntityType = entityType,
                         EntityId = GetEntityId(entry),
@@ -79,6 +81,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                     context.AuditLogs.Add(new AuditLog
                     {
                         UserId = userId.Value,
+                        TenantId = tenantId,
                         Action = "Delete",
                         EntityType = entityType,
                         EntityId = GetEntityId(entry),
@@ -96,9 +99,9 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         int result,
         CancellationToken cancellationToken = default)
     {
-        if (eventData.Context is ApplicationDbContext context && _pendingCreates is { Count: > 0 })
+        if (eventData.Context is ApplicationDbContext context && _pendingCreates.Value is { Count: > 0 })
         {
-            foreach (var (entity, entityType, userId) in _pendingCreates)
+            foreach (var (entity, entityType, userId, tenantId) in _pendingCreates.Value)
             {
                 var idProp = entity.GetType().GetProperty("Id");
                 var entityId = idProp?.GetValue(entity) as int?;
@@ -106,6 +109,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                 context.AuditLogs.Add(new AuditLog
                 {
                     UserId = userId,
+                    TenantId = tenantId,
                     Action = "Create",
                     EntityType = entityType,
                     EntityId = entityId,
@@ -113,7 +117,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                 });
             }
 
-            _pendingCreates.Clear();
+            _pendingCreates.Value.Clear();
             await context.SaveChangesAsync(cancellationToken);
         }
 
@@ -125,6 +129,12 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         var idClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("id")
                    ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
         return idClaim is not null && int.TryParse(idClaim.Value, out var id) ? id : null;
+    }
+
+    private int GetCurrentTenantId()
+    {
+        var claim = _httpContextAccessor.HttpContext?.User?.FindFirstValue("tenantId");
+        return int.TryParse(claim, out var id) ? id : 0;
     }
 
     private static int? GetEntityId(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
