@@ -50,6 +50,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ChatParticipant> ChatParticipants => Set<ChatParticipant>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Room> Rooms => Set<Room>();
+    public DbSet<RoomReservation> RoomReservations => Set<RoomReservation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +65,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<Company>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
         modelBuilder.Entity<Deal>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
         modelBuilder.Entity<Lead>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
+        modelBuilder.Entity<Room>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
 
         // Root entities with TenantId only (no soft-delete)
         modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == _currentTenantId);
@@ -71,6 +74,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<ChatConversation>().HasQueryFilter(e => e.TenantId == _currentTenantId);
+        modelBuilder.Entity<RoomReservation>().HasQueryFilter(e => e.TenantId == _currentTenantId);
 
         // Child entities with SoftDelete only (tenant isolation inherited via FK)
         modelBuilder.Entity<Contact>().HasQueryFilter(e => !e.IsDeleted);

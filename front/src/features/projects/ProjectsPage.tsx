@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Project, ProjectStatus } from "./types";
 import type { User } from "../users/types";
@@ -87,6 +87,14 @@ const ProjectsPage: React.FC = () => {
 
   const handleEditClick = (project: Project) => { setEditing(project); setShowForm(true); };
   const handleCancelForm = () => { setEditing(null); setShowForm(false); };
+
+  const handleStatusChange = async (projectId: number, newStatus: ProjectStatus) => {
+    try {
+      await projectService.update(projectId, { status: newStatus });
+      qc.invalidateQueries({ queryKey: projectKeys.all });
+      addToast("success", "Estado actualizado");
+    } catch { addToast("error", "Error al cambiar estado"); }
+  };
 
   const filtered = projects.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
@@ -237,13 +245,18 @@ const ProjectsPage: React.FC = () => {
                   </div>
 
                   {/* Meta + Actions */}
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-4 shrink-0">
                     {p.estimatedHours && (
-                      <span className="text-xs text-slate-600 tabular-nums hidden lg:inline">
+                      <span className="text-xs text-slate-600 tabular-nums hidden lg:inline mr-4">
                         {p.estimatedHours}h est.
                       </span>
                     )}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-px h-6 bg-slate-700/50 hidden lg:block" />
+                    <div className="flex items-center gap-2">
+                      <StatusDropdown
+                        currentStatus={p.status}
+                        onChangeStatus={(s: ProjectStatus) => handleStatusChange(p.id, s)}
+                      />
                       <button
                         onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/board`); }}
                         className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
@@ -294,3 +307,64 @@ const ProjectsPage: React.FC = () => {
 };
 
 export default ProjectsPage;
+
+/* ── Inline Status Dropdown ── */
+const StatusDropdown = ({
+  currentStatus,
+  onChangeStatus,
+}: {
+  currentStatus: ProjectStatus;
+  onChangeStatus: (s: ProjectStatus) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const statuses: ProjectStatus[] = ["Planned", "InProgress", "Paused", "Done"];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+        title="Cambiar estado"
+      >
+        🔄 Estado
+      </button>
+
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 bg-slate-800 border border-slate-700/60 rounded-xl shadow-xl py-1 min-w-[130px] animate-fade-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {statuses.map((s) => {
+            const cfg = STATUS_CONFIG[s];
+            const isActive = s === currentStatus;
+            return (
+              <button
+                key={s}
+                onClick={() => { onChangeStatus(s); setOpen(false); }}
+                className={`w-full text-left px-3 py-1.5 text-[11px] flex items-center gap-2 transition ${isActive
+                  ? `${cfg.bg} ${cfg.text} font-medium`
+                  : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
+                  }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+                {isActive && <span className="ml-auto text-[9px]">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};

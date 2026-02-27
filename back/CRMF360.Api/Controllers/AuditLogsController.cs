@@ -6,7 +6,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/audit-logs")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "audit.view")]
 public class AuditLogsController : ControllerBase
 {
     private readonly IAuditLogService _svc;

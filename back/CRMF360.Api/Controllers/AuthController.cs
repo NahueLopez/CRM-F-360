@@ -74,6 +74,30 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("preferences")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPreferences()
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null) return Unauthorized();
+
+        var prefs = await _authService.GetPreferencesAsync(userId.Value);
+        return Ok(new { preferences = prefs });
+    }
+
+    [HttpPut("preferences")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UpdatePreferences([FromBody] UpdatePreferencesRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null) return Unauthorized();
+
+        await _authService.UpdatePreferencesAsync(userId.Value, request.Preferences);
+        return NoContent();
+    }
+
     private int? GetCurrentUserId()
     {
         var idClaim = User.FindFirstValue("id")
@@ -81,4 +105,9 @@ public class AuthController : ControllerBase
 
         return int.TryParse(idClaim, out var id) ? id : null;
     }
+}
+
+public class UpdatePreferencesRequest
+{
+    public string Preferences { get; set; } = null!;
 }

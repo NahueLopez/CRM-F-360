@@ -22,6 +22,7 @@ public class TimeEntriesController : ControllerBase
 
     /// <summary>All time entries — Admins/Managers see all, regular users see only their own.</summary>
     [HttpGet]
+    [Authorize(Policy = "timeentries.view")]
     public async Task<ActionResult<List<TimeEntryDto>>> GetAll(CancellationToken ct)
     {
         if (User.IsManagerOrAdmin())
@@ -31,10 +32,12 @@ public class TimeEntriesController : ControllerBase
     }
 
     [HttpGet("by-task/{taskId:int}")]
+    [Authorize(Policy = "timeentries.view")]
     public async Task<ActionResult<List<TimeEntryDto>>> GetByTask(int taskId, CancellationToken ct)
         => Ok(await _timeEntryService.GetByTaskAsync(taskId, ct));
 
     [HttpGet("by-user/{userId:int}")]
+    [Authorize(Policy = "timeentries.view")]
     public async Task<ActionResult<List<TimeEntryDto>>> GetByUser(int userId, CancellationToken ct)
     {
         // Regular users can only see their own hours
@@ -46,11 +49,12 @@ public class TimeEntriesController : ControllerBase
 
     /// <summary>Project hours summary: estimated vs logged — Managers/Admins only.</summary>
     [HttpGet("project-summary")]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "timeentries.view")]
     public async Task<IActionResult> GetProjectSummary(CancellationToken ct)
         => Ok(await _timeEntryService.GetProjectHoursSummaryAsync(ct));
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "timeentries.view")]
     public async Task<ActionResult<TimeEntryDto>> GetById(int id, CancellationToken ct)
     {
         var dto = await _timeEntryService.GetByIdAsync(id, ct);
@@ -59,6 +63,7 @@ public class TimeEntriesController : ControllerBase
 
     /// <summary>Any authenticated user can log hours (always for themselves).</summary>
     [HttpPost]
+    [Authorize(Policy = "timeentries.create")]
     public async Task<ActionResult<TimeEntryDto>> Create(CreateTimeEntryDto body, CancellationToken ct)
     {
         // Force userId to the current user — no impersonation unless admin
@@ -70,10 +75,12 @@ public class TimeEntriesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "timeentries.edit")]
     public async Task<IActionResult> Update(int id, UpdateTimeEntryDto body, CancellationToken ct)
         => await _timeEntryService.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "timeentries.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _timeEntryService.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

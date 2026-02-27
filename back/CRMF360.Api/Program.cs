@@ -111,6 +111,20 @@ builder.Services.AddAuthorization(options =>
         "users.view", "users.create", "users.edit", "users.delete",
         // Reports
         "reports.view", "reports.export",
+        // Tasks
+        "tasks.view", "tasks.create", "tasks.edit", "tasks.delete",
+        // Calendar
+        "calendar.view", "calendar.create", "calendar.edit",
+        // Rooms
+        "rooms.view", "rooms.create", "rooms.edit", "rooms.delete", "rooms.reserve",
+        // Reminders
+        "reminders.view", "reminders.create", "reminders.edit", "reminders.delete",
+        // Time Entries
+        "timeentries.view", "timeentries.create", "timeentries.edit", "timeentries.delete",
+        // Audit
+        "audit.view",
+        // Roles
+        "roles.manage",
     };
 
     foreach (var perm in permissions)

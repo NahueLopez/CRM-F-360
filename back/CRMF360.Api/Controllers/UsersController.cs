@@ -8,7 +8,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "users.view")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;

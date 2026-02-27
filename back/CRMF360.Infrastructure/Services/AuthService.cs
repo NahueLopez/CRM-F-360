@@ -27,6 +27,8 @@ public class AuthService : IAuthService
         var user = await _db.Users.IgnoreQueryFilters()
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
             .Include(u => u.Tenant)
             .FirstOrDefaultAsync(u =>
                 u.Email == request.Email &&
@@ -53,6 +55,8 @@ public class AuthService : IAuthService
         var user = await _db.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
             .Include(u => u.Tenant)
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
 
@@ -71,6 +75,8 @@ public class AuthService : IAuthService
             .Include(rt => rt.User)
                 .ThenInclude(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
             .Include(rt => rt.User)
                 .ThenInclude(u => u.Tenant)
             .FirstOrDefaultAsync(rt => rt.Token == refreshTokenValue);
@@ -106,6 +112,23 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         await _db.SaveChangesAsync();
 
+        return true;
+    }
+
+    public async Task<string?> GetPreferencesAsync(int userId)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Active);
+        return user?.Preferences;
+    }
+
+    public async Task<bool> UpdatePreferencesAsync(int userId, string preferencesJson)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Active);
+        if (user == null) return false;
+
+        user.Preferences = preferencesJson;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
         return true;
     }
 
@@ -148,6 +171,14 @@ public class AuthService : IAuthService
         Roles = user.UserRoles
             .Where(ur => ur.Role != null)
             .Select(ur => ur.Role.Name)
+            .ToList(),
+        Preferences = user.Preferences,
+        Permissions = user.UserRoles
+            .Where(ur => ur.Role != null)
+            .SelectMany(ur => ur.Role.RolePermissions)
+            .Where(rp => rp.Permission != null)
+            .Select(rp => rp.Permission.Name)
+            .Distinct()
             .ToList()
     };
 

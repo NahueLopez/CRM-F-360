@@ -7,26 +7,30 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "ManagerOrAdmin")]
+[Authorize]
 public class ContactsController : ControllerBase
 {
     private readonly IContactService _service;
     public ContactsController(IContactService service) => _service = service;
 
     [HttpGet]
+    [Authorize(Policy = "contacts.view")]
     public async Task<ActionResult<List<ContactDto>>> GetAll(CancellationToken ct)
         => Ok(await _service.GetAllAsync(ct));
 
     [HttpGet("paged")]
+    [Authorize(Policy = "contacts.view")]
     public async Task<ActionResult<PagedResult<ContactDto>>> GetPaged(
         [FromQuery] PaginationParams p, CancellationToken ct)
         => Ok(await _service.GetPagedAsync(p, ct));
 
     [HttpGet("by-company/{companyId:int}")]
+    [Authorize(Policy = "contacts.view")]
     public async Task<ActionResult<List<ContactDto>>> GetByCompany(int companyId, CancellationToken ct)
         => Ok(await _service.GetByCompanyAsync(companyId, ct));
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "contacts.view")]
     public async Task<ActionResult<ContactDto>> GetById(int id, CancellationToken ct)
     {
         var dto = await _service.GetByIdAsync(id, ct);
@@ -34,6 +38,7 @@ public class ContactsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "contacts.create")]
     public async Task<ActionResult<ContactDto>> Create(CreateContactDto body, CancellationToken ct)
     {
         var dto = await _service.CreateAsync(body, ct);
@@ -41,10 +46,12 @@ public class ContactsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "contacts.edit")]
     public async Task<IActionResult> Update(int id, UpdateContactDto body, CancellationToken ct)
         => await _service.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "contacts.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _service.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

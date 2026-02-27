@@ -6,7 +6,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "roles.manage")]
 public class RolesController : ControllerBase
 {
     private readonly IRoleService _roleService;

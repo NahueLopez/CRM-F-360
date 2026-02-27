@@ -21,6 +21,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "tasks.view")]
     public async Task<ActionResult<List<TaskDto>>> GetAll(CancellationToken ct)
     {
         var all = await _taskService.GetAllAsync(ct);
@@ -33,6 +34,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("by-project/{projectId:int}")]
+    [Authorize(Policy = "tasks.view")]
     public async Task<ActionResult<List<TaskDto>>> GetByProject(int projectId, CancellationToken ct)
     {
         // Must be member or admin
@@ -45,6 +47,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "tasks.view")]
     public async Task<ActionResult<TaskDto>> GetById(int id, CancellationToken ct)
     {
         var dto = await _taskService.GetByIdAsync(id, ct);
@@ -52,6 +55,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "tasks.create")]
     public async Task<ActionResult<TaskDto>> Create(CreateTaskDto body, CancellationToken ct)
     {
         // Must be member or admin
@@ -66,14 +70,17 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "tasks.edit")]
     public async Task<IActionResult> Update(int id, UpdateTaskDto body, CancellationToken ct)
         => await _taskService.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpPatch("{id:int}/move")]
+    [Authorize(Policy = "tasks.edit")]
     public async Task<IActionResult> Move(int id, MoveTaskDto body, CancellationToken ct)
         => await _taskService.MoveAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "tasks.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _taskService.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

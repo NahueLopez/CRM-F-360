@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authStore } from "../auth/authStore";
-import { useTheme } from "../context/ThemeContext";
 import { notificationService } from "../../features/notifications/notificationService";
 import { searchService } from "../../features/search/searchService";
 import type { Notification } from "../../features/notifications/types";
@@ -23,7 +22,6 @@ const NOTIF_ICONS: Record<string, string> = {
 
 const Topbar: React.FC<TopbarProps> = ({ title }) => {
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
   const { setMobileOpen } = useSidebar();
 
   // ── Search ──
@@ -138,13 +136,6 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Theme toggle */}
-        <button onClick={toggle}
-          className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
-          aria-label={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
 
         {/* Notifications */}
         <div ref={notifsRef} className="relative">
@@ -161,11 +152,11 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
           </button>
 
           {showNotifs && (
-            <div className="absolute right-0 top-full mt-1 w-80 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-96 flex flex-col">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700">
-                <h4 className="text-sm font-semibold">Notificaciones</h4>
+            <div className="absolute right-0 top-full mt-1 w-80 bg-slate-950 !bg-opacity-100 !opacity-100 isolate border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl z-50 max-h-96 flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-transparent">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Notificaciones</h4>
                 {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-[10px] text-indigo-400 hover:underline">
+                  <button onClick={markAllRead} className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline">
                     Marcar todas leídas
                   </button>
                 )}
@@ -175,12 +166,12 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
                   <p className="text-xs text-slate-500 p-4 text-center">Sin notificaciones</p>
                 ) : notifications.map(n => (
                   <button key={n.id} onClick={() => markRead(n.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-2.5 hover:bg-slate-700/30 transition text-left ${!n.isRead ? "bg-indigo-500/5" : ""}`}>
+                    className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition text-left border-b border-black/5 dark:border-white/5 last:border-0 ${!n.isRead ? "bg-indigo-500/10 dark:bg-indigo-500/10" : ""}`}>
                     <span className="text-base mt-0.5">{NOTIF_ICONS[n.type] ?? "ℹ️"}</span>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-xs ${!n.isRead ? "font-semibold text-slate-100" : "text-slate-300"}`}>{n.title}</p>
-                      {n.message && <p className="text-[10px] text-slate-500 mt-0.5 truncate">{n.message}</p>}
-                      <p className="text-[9px] text-slate-600 mt-0.5">
+                      <p className={`text-xs ${!n.isRead ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>{n.title}</p>
+                      {n.message && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{n.message}</p>}
+                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">
                         {new Date(n.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>

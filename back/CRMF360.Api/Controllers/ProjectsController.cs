@@ -21,6 +21,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "projects.view")]
     public async Task<ActionResult<List<ProjectDto>>> GetAll(CancellationToken ct)
     {
         var all = await _projectService.GetAllAsync(ct);
@@ -34,6 +35,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "projects.view")]
     public async Task<ActionResult<ProjectDto>> GetById(int id, CancellationToken ct)
     {
         var dto = await _projectService.GetByIdAsync(id, ct);
@@ -50,7 +52,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "projects.create")]
     public async Task<ActionResult<ProjectDto>> Create(CreateProjectDto body, CancellationToken ct)
     {
         var dto = await _projectService.CreateAsync(body, ct);
@@ -80,7 +82,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "projects.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _projectService.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

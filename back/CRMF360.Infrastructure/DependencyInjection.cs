@@ -8,6 +8,7 @@ using CRMF360.Application.Roles;
 using CRMF360.Application.Tasks;
 using CRMF360.Application.TimeEntries;
 using CRMF360.Application.Users;
+using CRMF360.Application.Rooms;
 using CRMF360.Application.ProjectMembers;
 using CRMF360.Application.Contacts;
 using CRMF360.Application.Activities;
@@ -72,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<ILeadService, LeadService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IRoomService, RoomService>();
 
         // Domain Events
         services.AddScoped<IDomainEventDispatcher, CRMF360.Infrastructure.Events.DomainEventDispatcher>();

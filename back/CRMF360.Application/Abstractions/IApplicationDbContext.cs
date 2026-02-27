@@ -29,6 +29,8 @@ public interface IApplicationDbContext
     DbSet<ChatParticipant> ChatParticipants { get; }
     DbSet<ChatMessage> ChatMessages { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<Room> Rooms { get; }
+    DbSet<RoomReservation> RoomReservations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

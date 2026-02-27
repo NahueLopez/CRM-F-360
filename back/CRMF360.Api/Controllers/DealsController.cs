@@ -7,25 +7,29 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "ManagerOrAdmin")]
+[Authorize]
 public class DealsController : ControllerBase
 {
     private readonly IDealService _svc;
     public DealsController(IDealService svc) => _svc = svc;
 
     [HttpGet]
+    [Authorize(Policy = "deals.view")]
     public async Task<IActionResult> GetAll(CancellationToken ct)
         => Ok(await _svc.GetAllAsync(ct));
 
     [HttpGet("stage/{stage}")]
+    [Authorize(Policy = "deals.view")]
     public async Task<IActionResult> GetByStage(string stage, CancellationToken ct)
         => Ok(await _svc.GetByStageAsync(stage, ct));
 
     [HttpGet("summary")]
+    [Authorize(Policy = "deals.view")]
     public async Task<IActionResult> GetSummary(CancellationToken ct)
         => Ok(await _svc.GetSummaryAsync(ct));
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "deals.view")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var dto = await _svc.GetByIdAsync(id, ct);
@@ -33,6 +37,7 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "deals.create")]
     public async Task<IActionResult> Create(CreateDealDto body, CancellationToken ct)
     {
         var dto = await _svc.CreateAsync(User.GetUserId(), body, ct);
@@ -40,14 +45,17 @@ public class DealsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "deals.edit")]
     public async Task<IActionResult> Update(int id, UpdateDealDto body, CancellationToken ct)
         => await _svc.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpPut("{id:int}/move")]
+    [Authorize(Policy = "deals.move")]
     public async Task<IActionResult> Move(int id, MoveDealDto body, CancellationToken ct)
         => await _svc.MoveAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "deals.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _svc.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

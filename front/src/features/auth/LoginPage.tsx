@@ -51,11 +51,14 @@ const LoginPage: React.FC = () => {
 
         {/* Content */}
         <div className="relative flex flex-col justify-between p-12 z-10">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              CRM <span className="text-indigo-200">F360</span>
-            </h1>
-            <p className="text-indigo-200/60 text-sm mt-1">Gestión integral de negocios</p>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="CRM F360" className="w-12 h-12 rounded-2xl shadow-xl border border-white/10" />
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                CRM <span className="text-indigo-200">F360</span>
+              </h1>
+              <p className="text-indigo-200/60 text-sm mt-1">Gestión integral de negocios</p>
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -87,7 +90,8 @@ const LoginPage: React.FC = () => {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm">
           {/* Mobile header */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden flex flex-col items-center text-center mb-8">
+            <img src="/logo.png" alt="CRM F360" className="w-12 h-12 rounded-xl shadow-md border border-slate-700/50 mb-3" />
             <h1 className="text-2xl font-bold">
               CRM <span className="text-indigo-400">F360</span>
             </h1>

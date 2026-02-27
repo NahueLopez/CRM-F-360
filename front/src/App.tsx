@@ -28,6 +28,9 @@ const RemindersPage = lazy(() => import("./features/reminders/RemindersPage"));
 const ProfilePage = lazy(() => import("./features/profile/ProfilePage"));
 const UsersPage = lazy(() => import("./features/users/UsersPage"));
 const AuditLogsPage = lazy(() => import("./features/audit/AuditLogsPage"));
+const RoomsPage = lazy(() => import("./features/rooms/RoomsPage"));
+const SettingsPage = lazy(() => import("./features/settings/SettingsPage"));
+const RolesPermissionsPage = lazy(() => import("./features/roles/RolesPermissionsPage"));
 
 // ── Suspense fallback ──
 const PageLoader = () => (
@@ -83,6 +86,8 @@ const App = () => {
                       <Route path="pipeline" element={<PipelinePage />} />
                       <Route path="reminders" element={<RemindersPage />} />
                       <Route path="profile" element={<ProfilePage />} />
+                      <Route path="rooms" element={<RoomsPage />} />
+                      <Route path="settings" element={<SettingsPage />} />
                     </Route>
                   </Route>
 
@@ -91,6 +96,7 @@ const App = () => {
                     <Route element={<DashboardLayout />}>
                       <Route path="users" element={<UsersPage />} />
                       <Route path="audit-logs" element={<AuditLogsPage />} />
+                      <Route path="roles-permissions" element={<RolesPermissionsPage />} />
                     </Route>
                   </Route>
 

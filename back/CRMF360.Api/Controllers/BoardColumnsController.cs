@@ -33,7 +33,7 @@ public class BoardColumnsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "projects.edit")]
     public async Task<ActionResult<BoardColumnDto>> Create(int projectId, CreateBoardColumnDto body, CancellationToken ct)
     {
         body.ProjectId = projectId;
@@ -42,12 +42,12 @@ public class BoardColumnsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "projects.edit")]
     public async Task<IActionResult> Update(int id, UpdateBoardColumnDto body, CancellationToken ct)
         => await _columnService.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "projects.edit")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _columnService.DeleteAsync(id, ct) ? NoContent() : NotFound();
 }

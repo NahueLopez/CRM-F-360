@@ -12,6 +12,7 @@ public class User : ITenantEntity
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public string? Preferences { get; set; } // JSON: { accentColor, theme, fontSize }
 
     public Tenant Tenant { get; set; } = null!;
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

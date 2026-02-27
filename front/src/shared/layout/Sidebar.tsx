@@ -6,22 +6,26 @@ interface NavItem {
   to: string;
   label: string;
   icon: string;
-  roles: string[];
+  /** The .view permission required — if null, always visible */
+  permission: string | null;
 }
 
 const allItems: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: "📊", roles: ["Admin", "Manager", "User"] },
-  { to: "/companies", label: "Empresas", icon: "🏢", roles: ["Admin", "Manager"] },
-  { to: "/contacts", label: "Contactos", icon: "👤", roles: ["Admin", "Manager"] },
-  { to: "/projects", label: "Proyectos", icon: "📁", roles: ["Admin", "Manager", "User"] },
-  { to: "/tasks", label: "Tareas", icon: "✅", roles: ["Admin", "Manager", "User"] },
-  { to: "/pipeline", label: "Pipeline", icon: "💰", roles: ["Admin", "Manager"] },
-  { to: "/calendar", label: "Calendario", icon: "📅", roles: ["Admin", "Manager", "User"] },
-  { to: "/time-entries", label: "Carga de horas", icon: "⏱", roles: ["Admin", "Manager", "User"] },
-  { to: "/reminders", label: "Recordatorios", icon: "⏰", roles: ["Admin", "Manager", "User"] },
-  { to: "/reports", label: "Reportes", icon: "📈", roles: ["Admin", "Manager"] },
-  { to: "/users", label: "Usuarios", icon: "👥", roles: ["Admin"] },
-  { to: "/audit-logs", label: "Auditoría", icon: "📋", roles: ["Admin"] },
+  { to: "/", label: "Dashboard", icon: "📊", permission: null },
+  { to: "/companies", label: "Empresas", icon: "🏢", permission: "companies.view" },
+  { to: "/contacts", label: "Contactos", icon: "👤", permission: "contacts.view" },
+  { to: "/projects", label: "Proyectos", icon: "📁", permission: "projects.view" },
+  { to: "/tasks", label: "Tareas", icon: "✅", permission: "tasks.view" },
+  { to: "/pipeline", label: "Pipeline", icon: "💰", permission: "deals.view" },
+  { to: "/calendar", label: "Calendario", icon: "📅", permission: "calendar.view" },
+  { to: "/time-entries", label: "Carga de horas", icon: "⏱", permission: "timeentries.view" },
+  { to: "/reminders", label: "Recordatorios", icon: "⏰", permission: "reminders.view" },
+  { to: "/reports", label: "Reportes", icon: "📈", permission: "reports.view" },
+  { to: "/users", label: "Usuarios", icon: "👥", permission: "users.view" },
+  { to: "/audit-logs", label: "Auditoría", icon: "📋", permission: "audit.view" },
+  { to: "/roles-permissions", label: "Roles y Permisos", icon: "🔐", permission: "roles.manage" },
+  { to: "/rooms", label: "Salas", icon: "🚪", permission: "rooms.view" },
+  { to: "/settings", label: "Preferencias", icon: "⚙️", permission: null },
 ];
 
 /* ── Mobile sidebar context ── */
@@ -45,10 +49,9 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mobileOpen, setMobileOpen } = useSidebar();
-  const userRoles = authStore.user?.roles ?? [];
 
   const items = allItems.filter((item) =>
-    item.roles.some((r) => userRoles.includes(r))
+    item.permission === null || authStore.hasPermission(item.permission)
   );
 
   // Close mobile sidebar on route change
@@ -72,9 +75,12 @@ const Sidebar: React.FC = () => {
     <>
       <div className="p-4 border-b border-slate-800">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-tight">
-            CRM <span className="text-indigo-400">F360</span>
-          </h1>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="CRM F360 Logo" className="w-8 h-8 rounded-lg shadow-sm" />
+            <h1 className="text-xl font-bold tracking-tight">
+              CRM <span className="text-indigo-400">F360</span>
+            </h1>
+          </div>
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}

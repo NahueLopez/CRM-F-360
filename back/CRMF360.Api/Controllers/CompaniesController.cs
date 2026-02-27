@@ -7,7 +7,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "ManagerOrAdmin")]
+[Authorize]
 public class CompaniesController : ControllerBase
 {
     private readonly ICompanyService _companyService;
@@ -16,15 +16,18 @@ public class CompaniesController : ControllerBase
         => _companyService = companyService;
 
     [HttpGet]
+    [Authorize(Policy = "companies.view")]
     public async Task<ActionResult<List<CompanyDto>>> GetAll(CancellationToken ct)
         => Ok(await _companyService.GetAllAsync(ct));
 
     [HttpGet("paged")]
+    [Authorize(Policy = "companies.view")]
     public async Task<ActionResult<PagedResult<CompanyDto>>> GetPaged(
         [FromQuery] PaginationParams p, CancellationToken ct)
         => Ok(await _companyService.GetPagedAsync(p, ct));
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "companies.view")]
     public async Task<ActionResult<CompanyDto>> GetById(int id, CancellationToken ct)
     {
         var dto = await _companyService.GetByIdAsync(id, ct);
@@ -32,6 +35,7 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "companies.create")]
     public async Task<ActionResult<CompanyDto>> Create(CreateCompanyDto body, CancellationToken ct)
     {
         var dto = await _companyService.CreateAsync(body, ct);
@@ -39,15 +43,17 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "companies.edit")]
     public async Task<IActionResult> Update(int id, UpdateCompanyDto body, CancellationToken ct)
         => await _companyService.UpdateAsync(id, body, ct) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "companies.delete")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _companyService.DeleteAsync(id, ct) ? NoContent() : NotFound();
 
     [HttpGet("export")]
-    [Authorize(Policy = "ManagerOrAdmin")]
+    [Authorize(Policy = "companies.view")]
     public async Task<IActionResult> ExportCsv(CancellationToken ct)
     {
         var companies = await _companyService.GetAllAsync(ct);
