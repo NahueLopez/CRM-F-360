@@ -12,7 +12,7 @@ public static class DataSeeder
         using var scope = services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         // 1) Default Tenant
         if (!await context.Set<Tenant>().AnyAsync())
