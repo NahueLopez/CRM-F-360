@@ -113,6 +113,7 @@ class AuthStore {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    window.location.href = "/login";
   }
 
   private _setSession(res: LoginResponse) {

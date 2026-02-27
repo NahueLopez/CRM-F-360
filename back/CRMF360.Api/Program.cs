@@ -30,7 +30,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<CRMF360.Application.Validat
 // CORS — restricted to configured origins
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? (builder.Environment.IsDevelopment()
-        ? new[] { "http://localhost:5173", "http://localhost:3000" }
+        ? new[] { "http://localhost:5173", "http://localhost:3000", "https://front-crm.fundacion360.online" }
         : Array.Empty<string>());
 
 builder.Services.AddCors(options =>
