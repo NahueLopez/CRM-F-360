@@ -85,7 +85,7 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
   }, []);
 
   return (
-    <header className="h-14 border-b border-slate-800 dark:border-slate-800 light:border-slate-200 flex items-center justify-between px-3 sm:px-6 bg-slate-950/70 dark:bg-slate-950/70 backdrop-blur gap-2 sm:gap-4">
+    <header className="h-14 border-b border-slate-800 flex items-center justify-between px-3 sm:px-6 bg-slate-950 gap-2 sm:gap-4 relative z-40">
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
@@ -151,36 +151,58 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
             )}
           </button>
 
-          {showNotifs && (
-            <div className="absolute right-0 top-full mt-1 w-80 bg-slate-950 !bg-opacity-100 !opacity-100 isolate border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl z-50 max-h-96 flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-transparent">
-                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Notificaciones</h4>
-                {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline">
-                    Marcar todas leídas
-                  </button>
-                )}
+          {showNotifs && (() => {
+            const isLight = document.body.classList.contains('light');
+            const bg = isLight ? '#ffffff' : '#0f172a';
+            const bgHover = isLight ? '#f1f5f9' : '#1e293b';
+            const bgUnread = isLight ? '#eef2ff' : '#1e1b4b';
+            const textTitle = isLight ? '#1e293b' : '#f1f5f9';
+            const textTitleRead = isLight ? '#475569' : '#cbd5e1';
+            const textMsg = isLight ? '#64748b' : '#94a3b8';
+            const textTime = isLight ? '#94a3b8' : '#64748b';
+            const textEmpty = isLight ? '#94a3b8' : '#64748b';
+            const borderColor = isLight ? '#e2e8f0' : '#334155';
+            const borderItem = isLight ? 'rgba(226,232,240,0.5)' : 'rgba(51,65,85,0.3)';
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#818cf8';
+            return (
+            <>
+              {/* Backdrop */}
+              <div className="fixed inset-0" style={{ background: 'rgba(0,0,0,0.15)', zIndex: 9998 }} onClick={() => setShowNotifs(false)} />
+              <div className="absolute right-0 top-full mt-1 w-80 rounded-xl shadow-2xl max-h-96 flex flex-col overflow-hidden"
+                style={{ background: bg, border: `1px solid ${borderColor}`, isolation: 'isolate', zIndex: 9999 }}>
+                <div className="flex items-center justify-between px-4 py-3" style={{ background: bg, borderBottom: `1px solid ${borderColor}` }}>
+                  <h4 className="text-sm font-semibold" style={{ color: textTitle }}>Notificaciones</h4>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-[10px] hover:underline transition" style={{ color: accentColor }}>
+                      Marcar todas leídas
+                    </button>
+                  )}
+                </div>
+                <div className="overflow-y-auto flex-1" style={{ background: bg }}>
+                  {notifications.length === 0 ? (
+                    <p className="text-xs p-4 text-center" style={{ color: textEmpty }}>Sin notificaciones</p>
+                  ) : notifications.map(n => (
+                    <button key={n.id} onClick={() => markRead(n.id)}
+                      className="w-full flex items-start gap-3 px-4 py-3 transition text-left"
+                      style={{ background: !n.isRead ? bgUnread : bg, borderBottom: `1px solid ${borderItem}` }}
+                      onMouseEnter={e => (e.currentTarget.style.background = bgHover)}
+                      onMouseLeave={e => (e.currentTarget.style.background = !n.isRead ? bgUnread : bg)}>
+                      <span className="text-base mt-0.5">{NOTIF_ICONS[n.type] ?? "ℹ️"}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs" style={{ color: !n.isRead ? textTitle : textTitleRead, fontWeight: !n.isRead ? 600 : 400 }}>{n.title}</p>
+                        {n.message && <p className="text-[10px] mt-0.5 truncate" style={{ color: textMsg }}>{n.message}</p>}
+                        <p className="text-[9px] mt-1" style={{ color: textTime }}>
+                          {new Date(n.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      {!n.isRead && <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: accentColor }} />}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="overflow-y-auto flex-1">
-                {notifications.length === 0 ? (
-                  <p className="text-xs text-slate-500 p-4 text-center">Sin notificaciones</p>
-                ) : notifications.map(n => (
-                  <button key={n.id} onClick={() => markRead(n.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition text-left border-b border-black/5 dark:border-white/5 last:border-0 ${!n.isRead ? "bg-indigo-500/10 dark:bg-indigo-500/10" : ""}`}>
-                    <span className="text-base mt-0.5">{NOTIF_ICONS[n.type] ?? "ℹ️"}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className={`text-xs ${!n.isRead ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>{n.title}</p>
-                      {n.message && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{n.message}</p>}
-                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">
-                        {new Date(n.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                    {!n.isRead && <span className="w-2 h-2 bg-indigo-500 rounded-full mt-1.5 shrink-0" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            </>
+            );
+          })()}
         </div>
 
         {authStore.user && (

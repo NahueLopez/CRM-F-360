@@ -7,7 +7,7 @@ let connection: signalR.HubConnection | null = null;
 export function getConnection(): signalR.HubConnection {
     if (connection) return connection;
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace("/api", "") ?? "http://localhost:5005";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") ?? "http://localhost:5005";
 
     connection = new signalR.HubConnectionBuilder()
         .withUrl(`${baseUrl}/hubs/chat`, {

@@ -463,13 +463,13 @@ const ChatWidget: React.FC = () => {
 
     return (
         <div className={`fixed bottom-5 right-5 z-50 ${widgetW} ${widgetH} flex flex-col overflow-hidden
-            bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl
+            bg-slate-900 border border-slate-700/50 rounded-2xl
             shadow-2xl shadow-black/50
             ${closing ? "chat-widget-close" : "chat-widget-open"}
             transition-[width,height] duration-300 ease-out`}
         >
             {/* ── Header ── */}
-            <div className="px-4 h-13 flex items-center justify-between border-b border-slate-700/40 bg-gradient-to-r from-slate-800/80 to-slate-800/40 shrink-0">
+            <div className="px-4 h-13 flex items-center justify-between border-b border-slate-700/40 bg-slate-800 shrink-0">
                 {screen === "list" && (
                     <>
                         <div className="flex items-center gap-2">
@@ -756,7 +756,7 @@ const ChatWidget: React.FC = () => {
                     )}
 
                     {/* Input */}
-                    <div className="px-3 py-2 border-t border-slate-700/40 bg-slate-800/30 shrink-0">
+                    <div className="px-3 py-2 border-t border-slate-700/40 bg-slate-900 shrink-0">
                         <div className="flex items-end gap-2">
                             <button
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -771,7 +771,7 @@ const ChatWidget: React.FC = () => {
                                 onKeyDown={handleKeyDown}
                                 placeholder="Escribí un mensaje..."
                                 rows={1}
-                                className="flex-1 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700/40 text-[13px] placeholder:text-slate-600 resize-none focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                                className="flex-1 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-[13px] placeholder:text-slate-600 resize-none focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
                                 style={{ minHeight: "38px", maxHeight: "120px" }}
                             />
                             <button

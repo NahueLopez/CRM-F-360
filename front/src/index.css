@@ -395,6 +395,30 @@
   background-color: rgba(226, 232, 240, 0.7) !important;
 }
 
+.light .hover\:bg-slate-700\/60:hover {
+  background-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.light .active\:bg-slate-800\/70:active {
+  background-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+.light .bg-slate-700\/40 {
+  background-color: rgba(203, 213, 225, 0.4) !important;
+}
+
+.light .hover\:text-white:hover {
+  color: #1e293b !important;
+}
+
+.light .hover\:text-slate-300:hover {
+  color: #334155 !important;
+}
+
+.light .hover\:text-slate-200:hover {
+  color: #475569 !important;
+}
+
 /* ── Inputs & selects ── */
 .light select,
 .light input[type="date"],
@@ -800,6 +824,125 @@ input[type="submit"],
 label[for],
 summary {
   cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════
+   CHAT WIDGET — Light theme overrides
+   ═══════════════════════════════════════════ */
+
+/* Widget container */
+.light .bg-slate-900\/95 {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+}
+
+/* Header gradient */
+.light [class*="from-slate-800\/80"] {
+  background: linear-gradient(to right, rgba(241, 245, 249, 0.9), rgba(241, 245, 249, 0.5)) !important;
+}
+
+/* Chat input area */
+.light .bg-slate-900\/80 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.light .bg-slate-800\/30 {
+  background-color: rgba(241, 245, 249, 0.6) !important;
+}
+
+/* Message bubbles - received */
+.light .bg-slate-800\/80 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light .bg-slate-800\/80 .text-slate-200 {
+  color: #1e293b !important;
+}
+
+/* Conversation list hover */
+.light .hover\:bg-slate-800\/50:hover {
+  background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+.light .active\:bg-slate-800\/70:active {
+  background-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+/* Conversation item text - keep names visible */
+.light .text-\[13px\].font-semibold.truncate {
+  color: #1e293b !important;
+}
+
+/* Chat empty state */
+.light .bg-slate-800\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+/* Emoji picker and reply bar */
+.light .bg-slate-800\/50 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+/* Date separator in chat */
+.light .bg-slate-800\/60.shrink-0 {
+  background-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+/* Online indicator border */
+.light .border-slate-900 {
+  border-color: #ffffff !important;
+}
+
+/* ═══════════════════════════════════════════
+   NOTIFICATION PANEL — Light theme overrides 
+   ═══════════════════════════════════════════ */
+.light .notif-panel {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light .notif-panel-header {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light .notif-panel-header h4 {
+  color: #1e293b !important;
+}
+
+.light .notif-panel-body {
+  background-color: #ffffff !important;
+}
+
+.light .notif-item {
+  border-color: rgba(226, 232, 240, 0.5) !important;
+}
+
+.light .notif-item:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.light .notif-item-unread {
+  background-color: rgba(99, 102, 241, 0.06) !important;
+}
+
+.light .notif-item-unread:hover {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+.light .notif-title {
+  color: #1e293b !important;
+}
+
+.light .notif-message {
+  color: #64748b !important;
+}
+
+.light .notif-time {
+  color: #94a3b8 !important;
 }
 
 /* ═══════════════════════════════════════════
