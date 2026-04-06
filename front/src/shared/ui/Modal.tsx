@@ -40,7 +40,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, maxWidth 
     }[maxWidth];
 
     return (
-        <div className="fixed inset-0 z-100 flex flex-col sm:flex-row p-0 sm:p-6" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 sm:px-0" role="dialog" aria-modal="true">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"

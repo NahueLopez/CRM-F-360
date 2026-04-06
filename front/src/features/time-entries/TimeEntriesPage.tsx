@@ -6,6 +6,7 @@ import type { TimeEntry, ProjectHoursSummary } from "./types";
 import type { Task } from "../tasks/types";
 import { useToast } from "../../shared/context/ToastContext";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
+import Modal from "../../shared/ui/Modal";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import { TableSkeleton } from "../../shared/ui/Skeleton";
 
@@ -27,6 +28,7 @@ const TimeEntriesPage: React.FC = () => {
   const [hours, setHours] = useState("");
   const [description, setDescription] = useState("");
   const [editing, setEditing] = useState<TimeEntry | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const userId = authStore.user?.id;
   const isLeader = authStore.hasAnyRole("Admin", "Manager");
@@ -90,6 +92,7 @@ const TimeEntriesPage: React.FC = () => {
     setHours("");
     setDescription("");
     setEditing(null);
+    setIsModalOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,6 +131,7 @@ const TimeEntriesPage: React.FC = () => {
     setDate(entry.date.slice(0, 10));
     setHours(String(entry.hours));
     setDescription(entry.description ?? "");
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -158,6 +162,12 @@ const TimeEntriesPage: React.FC = () => {
             <p className="text-sm text-slate-500 mt-0.5">Registrá las horas trabajadas por tarea</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => { resetForm(); setIsModalOpen(true); }}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition shadow-sm shadow-indigo-500/20"
+            >
+              + Cargar horas
+            </button>
             <select
               value={filterProject}
               onChange={e => setFilterProject(e.target.value)}
@@ -302,78 +312,87 @@ const TimeEntriesPage: React.FC = () => {
           </div>
         )}
 
-        {/* ─── Log Hours Form ─── */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 space-y-4"
+        {/* ─── Log Hours Modal ─── */}
+        <Modal
+          open={isModalOpen}
+          onClose={resetForm}
+          title={editing ? "Editar entrada" : "Cargar horas"}
         >
-          <h3 className="text-sm font-semibold text-slate-200">
-            {editing ? "Editar entrada" : "⏱ Cargar horas"}
-          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tarea</label>
+                <select
+                  value={taskId}
+                  onChange={(e) => setTaskId(e.target.value ? Number(e.target.value) : "")}
+                  required
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="">Seleccionar tarea</option>
+                  {filteredTasks.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.projectName} — {t.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <select
-              value={taskId}
-              onChange={(e) =>
-                setTaskId(e.target.value ? Number(e.target.value) : "")
-              }
-              required
-              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
-            >
-              <option value="">Seleccionar tarea</option>
-              {filteredTasks.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.projectName} — {t.title}
-                </option>
-              ))}
-            </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha</label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Horas</label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    min="0.25"
+                    max="24"
+                    value={hours}
+                    onChange={(e) => setHours(e.target.value)}
+                    placeholder="Ej. 1.5"
+                    required
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
 
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
-            />
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Descripción (Opcional)</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Comentarios sobre el trabajo realizado..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
+                />
+              </div>
+            </div>
 
-            <input
-              type="number"
-              step="0.25"
-              min="0.25"
-              max="24"
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              placeholder="Horas"
-              required
-              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500"
-            />
-
-            <input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción (opc)"
-              className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition"
-            >
-              {editing ? "Actualizar" : "Registrar"}
-            </button>
-            {editing && (
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 rounded-lg border border-slate-600 text-sm text-slate-300 hover:bg-slate-700 transition"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition"
               >
                 Cancelar
               </button>
-            )}
-          </div>
-        </form>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition"
+              >
+                {editing ? "Guardar cambios" : "Registrar horas"}
+              </button>
+            </div>
+          </form>
+        </Modal>
 
         {/* ─── Table ─── */}
         {loading ? (
@@ -408,7 +427,7 @@ const TimeEntriesPage: React.FC = () => {
                       <td className="px-4 py-3 text-slate-300 text-xs">{e.userName}</td>
                     )}
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => startEdit(e)}
                           className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"

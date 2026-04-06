@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { authStore } from "../auth/authStore";
 import { notificationService } from "../../features/notifications/notificationService";
 import { searchService } from "../../features/search/searchService";
@@ -206,9 +206,19 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
         </div>
 
         {authStore.user && (
-          <div className="flex items-center gap-2 text-xs text-slate-400 ml-1">
-            <span>{authStore.user.email}</span>
-          </div>
+          <Link 
+            to="/profile" 
+            className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 pl-2 sm:pl-3 border-l border-slate-700/50 hover:bg-slate-800/40 p-1.5 rounded-xl transition-colors group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-label="Ir a mi perfil"
+          >
+            <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-slate-200 leading-tight group-hover:text-white transition-colors">{authStore.user.fullName}</p>
+                <p className="text-[10px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors">{authStore.user.roles?.[0]}</p>
+            </div>
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm shrink-0 group-hover:bg-indigo-500/30 group-hover:text-indigo-300 transition-colors shadow-sm shadow-indigo-500/10">
+                {authStore.user.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+            </div>
+          </Link>
         )}
       </div>
     </header>

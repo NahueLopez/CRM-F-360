@@ -166,7 +166,7 @@ const UsersPage: React.FC = () => {
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${AVATAR_GRADIENTS[gradIdx]} ${AVATAR_COLORS[gradIdx].border} border flex items-center justify-center ${AVATAR_COLORS[gradIdx].text} text-sm font-bold shrink-0`}>
+                    <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${AVATAR_GRADIENTS[gradIdx]} ${AVATAR_COLORS[gradIdx].border} border flex items-center justify-center ${AVATAR_COLORS[gradIdx].text} text-sm font-bold shrink-0`}>
                       {getInitials(u.fullName)}
                     </div>
 

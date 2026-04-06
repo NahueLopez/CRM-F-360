@@ -129,18 +129,18 @@ const ReportsPage: React.FC = () => {
                       {p.totalHours.toFixed(1)} / {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
                     </span>
                   </div>
-                  <div className="relative h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                  <div className="relative h-2.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner ring-1 ring-black/5 dark:ring-white/5">
                     <div
-                      className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full transition-all duration-500"
+                      className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full transition-all duration-500 shadow-sm shadow-indigo-500/50 ring-1 ring-black/10"
                       style={{
-                        width: `${(p.totalHours / maxProjectHours) * 100}%`,
+                        width: `${Math.max(2, (p.totalHours / maxProjectHours) * 100)}%`,
                       }}
                     />
                     {p.estimatedHours > 0 && (
                       <div
-                        className="absolute inset-y-0 w-0.5 bg-amber-400/80"
+                        className="absolute inset-y-0 w-1 bg-amber-400/90 shadow-sm z-10"
                         style={{
-                          left: `${(p.estimatedHours / maxProjectHours) * 100}%`,
+                          left: `${Math.min(99, (p.estimatedHours / maxProjectHours) * 100)}%`,
                         }}
                       />
                     )}
@@ -180,11 +180,11 @@ const ReportsPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="relative h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                  <div className="relative h-2.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner ring-1 ring-black/5 dark:ring-white/5">
                     <div
-                      className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all duration-500"
+                      className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all duration-500 shadow-sm ring-1 ring-black/10"
                       style={{
-                        width: `${(u.totalHours / maxUserHours) * 100}%`,
+                        width: `${Math.max(2, (u.totalHours / maxUserHours) * 100)}%`,
                       }}
                     />
                   </div>
@@ -258,10 +258,10 @@ const ReportsPage: React.FC = () => {
                         {t.count} ({((t.count / total) * 100).toFixed(0)}%)
                       </span>
                     </div>
-                    <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    <div className="relative h-2.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner ring-1 ring-black/5 dark:ring-white/5 mt-1">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${label.color}`}
-                        style={{ width: `${(t.count / total) * 100}%` }}
+                        className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 shadow-sm ring-1 ring-black/10 ${label.color}`}
+                        style={{ width: `${Math.max(2, (t.count / total) * 100)}%` }}
                       />
                     </div>
                   </div>
