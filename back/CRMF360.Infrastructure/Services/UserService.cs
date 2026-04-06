@@ -135,11 +135,13 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
-        // Reload with role
-        await _context.Entry(user).Collection(u => u.UserRoles).Query()
-            .Include(ur => ur.Role).LoadAsync();
+        // Re-query with role included for the response
+        var updated = await _context.Users.AsNoTracking()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstAsync(u => u.Id == id);
 
-        return MapToDto(user);
+        return MapToDto(updated);
     }
 
     public async Task<bool> DeleteAsync(int id)
