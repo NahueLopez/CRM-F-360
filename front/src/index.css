@@ -200,10 +200,220 @@
   --tw-shadow-color: color-mix(in srgb, var(--accent) 25%, transparent) !important;
 }
 
+.shadow-indigo-500\/10 {
+  --tw-shadow-color: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+}
+
 /* Spinner */
 .border-indigo-500.border-t-transparent {
   border-color: var(--accent) !important;
   border-top-color: transparent !important;
+}
+
+/* ── Gradient stops (from-indigo / to-violet / to-indigo) ── */
+.from-indigo-500 {
+  --tw-gradient-from: var(--accent) !important;
+}
+
+.from-indigo-500\/10, .from-indigo-500\/15, .from-indigo-500\/20 {
+  --tw-gradient-from: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.from-indigo-600 {
+  --tw-gradient-from: var(--accent) !important;
+}
+
+.from-indigo-600\/10, .from-indigo-600\/15, .from-indigo-600\/20 {
+  --tw-gradient-from: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.to-indigo-400, .to-indigo-500 {
+  --tw-gradient-to: var(--accent) !important;
+}
+
+.to-violet-500, .to-violet-600 {
+  --tw-gradient-to: var(--accent) !important;
+  filter: brightness(0.95);
+}
+
+.to-violet-500\/10, .to-violet-500\/20 {
+  --tw-gradient-to: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.to-violet-600\/5, .to-violet-600\/10 {
+  --tw-gradient-to: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+}
+
+.from-violet-500\/20 {
+  --tw-gradient-from: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.from-violet-600\/5 {
+  --tw-gradient-from: color-mix(in srgb, var(--accent) 5%, transparent) !important;
+}
+
+/* ── Violet text/border (used in secondary accents) ── */
+.text-violet-400 {
+  color: var(--accent) !important;
+  filter: brightness(0.95);
+}
+
+.border-violet-500\/20 {
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+/* ── Additional border variants ── */
+.border-indigo-500\/50 {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+}
+
+.border-indigo-500\/60 {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent) !important;
+}
+
+.hover\:border-indigo-500\/40:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent) !important;
+}
+
+/* ── Additional bg opacity variants ── */
+.bg-indigo-600\/10 {
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+}
+
+.bg-indigo-600\/30 {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+.bg-indigo-500\/5 {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent) !important;
+}
+
+/* ── Text opacity variant ── */
+.text-indigo-400\/70 {
+  color: color-mix(in srgb, var(--accent) 70%, transparent) !important;
+}
+
+/* ── Ring additional variants ── */
+.ring-indigo-500\/30 {
+  --tw-ring-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+/* ═══════════════════════════════════════════
+   COMPREHENSIVE ACCENT OVERRIDES — Part 2
+   Covers ALL remaining hover, group-hover,
+   focus, and disabled variants.
+   ═══════════════════════════════════════════ */
+
+/* ── Hover text ── */
+.hover\:text-indigo-600:hover {
+  color: var(--accent) !important;
+}
+
+.hover\:text-indigo-400:hover {
+  color: var(--accent) !important;
+}
+
+.hover\:text-indigo-300:hover {
+  color: var(--accent) !important;
+  filter: brightness(1.2);
+}
+
+/* ── Hover backgrounds (additional opacity levels) ── */
+.hover\:bg-indigo-600\/20:hover {
+  background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.hover\:bg-indigo-600\/50:hover {
+  background-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+}
+
+.hover\:bg-indigo-500\/30:hover {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+/* ── Hover borders (additional) ── */
+.hover\:border-indigo-500\/30:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+.hover\:border-indigo-500\/50:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+}
+
+.hover\:border-indigo-500\/60:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent) !important;
+}
+
+.hover\:border-indigo-400:hover {
+  border-color: var(--accent) !important;
+}
+
+/* ── Group-hover (Topbar avatar, Sidebar link, Dashboard timeline) ── */
+.group:hover .group-hover\:bg-indigo-500\/30 {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+.group:hover .group-hover\:text-indigo-300 {
+  color: var(--accent) !important;
+  filter: brightness(1.2);
+}
+
+.group:hover .group-hover\:text-indigo-400 {
+  color: var(--accent) !important;
+}
+
+.group:hover .group-hover\:border-indigo-500\/40 {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent) !important;
+}
+
+/* ── Focus borders (all used variants) ── */
+.focus\:border-indigo-500:focus {
+  border-color: var(--accent) !important;
+}
+
+.focus\:border-indigo-500\/50:focus {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+}
+
+.focus\:border-indigo-500\/60:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent) !important;
+}
+
+/* ── Focus rings (all used variants) ── */
+.focus\:ring-1.focus\:ring-indigo-500:focus {
+  --tw-ring-color: var(--accent) !important;
+}
+
+.focus\:ring-2.focus\:ring-indigo-500:focus {
+  --tw-ring-color: var(--accent) !important;
+}
+
+.focus\:ring-1.focus\:ring-indigo-500\/50:focus {
+  --tw-ring-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+}
+
+.focus\:ring-2.focus\:ring-indigo-500\/20:focus {
+  --tw-ring-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+/* ── Additional backgrounds ── */
+.bg-indigo-500\/30 {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+/* ── Shadow additional ── */
+.shadow-indigo-500\/30 {
+  --tw-shadow-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+/* ── Disabled hover ── */
+.disabled\:hover\:bg-indigo-600:hover:disabled {
+  background-color: var(--accent) !important;
+}
+
+/* ── Focus-visible ring (sidebar links) ── */
+.focus-visible\:ring-indigo-500:focus-visible {
+  --tw-ring-color: var(--accent) !important;
 }
 
 /* ═══════════════════════════════════════════

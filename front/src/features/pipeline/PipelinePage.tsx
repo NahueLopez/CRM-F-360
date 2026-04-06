@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  closestCenter,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent, DragOverEvent, CollisionDetection } from "@dnd-kit/core";
 import type { Deal, DealStage } from "./types";
 import PipelineStageColumn from "./components/PipelineStageColumn";
 import PipelineDealCard from "./components/PipelineDealCard";
@@ -76,6 +77,30 @@ const PipelinePage = () => {
   const originalDealsRef = useRef<Deal[]>([]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  // Custom collision detection: pointerWithin detects empty columns,
+  // closestCenter handles card-to-card sorting within populated columns.
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    // First check if pointer is within any droppable (works for empty columns)
+    const withinCollisions = pointerWithin(args);
+    if (withinCollisions.length > 0) {
+      // Prefer stage containers over individual cards when pointer is within both
+      const stageCol = withinCollisions.find((c) => String(c.id).startsWith("stage-"));
+      if (stageCol) {
+        // Also check for card collisions within that stage
+        const cardCollisions = closestCenter({
+          ...args,
+          droppableContainers: args.droppableContainers.filter((c) =>
+            withinCollisions.some((w) => w.id === c.id) && !String(c.id).startsWith("stage-")
+          ),
+        });
+        return cardCollisions.length > 0 ? cardCollisions : [stageCol];
+      }
+      return withinCollisions;
+    }
+    // Fallback to closestCenter
+    return closestCenter(args);
+  }, []);
 
   const dealsByStage = (stage: DealStage) =>
     deals.filter((d) => d.stage === stage).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
@@ -319,7 +344,7 @@ const PipelinePage = () => {
       {/* Pipeline columns with DnD — responsive breakpoints */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
