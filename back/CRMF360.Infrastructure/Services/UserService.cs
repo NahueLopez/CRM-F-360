@@ -51,6 +51,8 @@ public class UserService : IUserService
     {
         var users = await _context.Users
             .AsNoTracking()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
             .OrderBy(u => u.FullName)
             .ToListAsync();
 
@@ -59,7 +61,10 @@ public class UserService : IUserService
 
     public async Task<PagedResult<UserDto>> GetPagedAsync(PaginationParams p, System.Threading.CancellationToken ct = default)
     {
-        var query = _context.Users.AsNoTracking().AsQueryable();
+        var query = _context.Users.AsNoTracking()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(p.Search))
         {
@@ -96,6 +101,8 @@ public class UserService : IUserService
     {
         var user = await _context.Users
             .AsNoTracking()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         return user is null ? null : MapToDto(user);
@@ -104,6 +111,7 @@ public class UserService : IUserService
     public async Task<UserDto?> UpdateAsync(int id, UpdateUserDto dto)
     {
         var user = await _context.Users
+            .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         if (user is null)
@@ -114,7 +122,22 @@ public class UserService : IUserService
         user.Phone = dto.Phone;
         user.Active = dto.Active;
 
+        // Update role if provided
+        if (dto.RoleId.HasValue)
+        {
+            user.UserRoles.Clear();
+            user.UserRoles.Add(new UserRole
+            {
+                UserId = user.Id,
+                RoleId = dto.RoleId.Value
+            });
+        }
+
         await _context.SaveChangesAsync();
+
+        // Reload with role
+        await _context.Entry(user).Collection(u => u.UserRoles).Query()
+            .Include(ur => ur.Role).LoadAsync();
 
         return MapToDto(user);
     }
@@ -135,16 +158,22 @@ public class UserService : IUserService
         return true;
     }
 
-    private static UserDto MapToDto(User user) => new()
+    private static UserDto MapToDto(User user)
     {
-        Id = user.Id,
-        FullName = user.FullName,
-        Email = user.Email,
-        Phone = user.Phone,
-        Active = user.Active,
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
-    };
+        var firstRole = user.UserRoles?.FirstOrDefault();
+        return new UserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            Phone = user.Phone,
+            Active = user.Active,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+            RoleId = firstRole?.RoleId,
+            RoleName = firstRole?.Role?.Name,
+        };
+    }
 
     private static string HashPassword(string password)
         => BCrypt.Net.BCrypt.HashPassword(password);

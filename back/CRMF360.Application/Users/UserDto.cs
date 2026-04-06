@@ -1,4 +1,4 @@
-﻿namespace CRMF360.Application.Users;
+namespace CRMF360.Application.Users;
 
 public class UserDto
 {
@@ -10,4 +10,6 @@ public class UserDto
     public bool Active { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public int? RoleId { get; set; }
+    public string? RoleName { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace CRMF360.Application.Users;
+namespace CRMF360.Application.Users;
 
 public class UpdateUserDto
 {
@@ -6,4 +6,5 @@ public class UpdateUserDto
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public bool Active { get; set; } = true;
+    public int? RoleId { get; set; }
 }

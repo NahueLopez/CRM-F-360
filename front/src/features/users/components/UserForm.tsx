@@ -30,7 +30,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
     phone: initial?.phone ?? "",
     active: initial?.active ?? true,
     password: "",
-    roleId: undefined,
+    roleId: initial?.roleId ?? undefined,
   });
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
       phone: initial?.phone ?? "",
       active: initial?.active ?? true,
       password: "",
-      roleId: undefined,
+      roleId: initial?.roleId ?? undefined,
     });
   }, [initial]);
 
@@ -128,8 +128,8 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
         />
       )}
 
-      {/* Role selector */}
-      {!isEditing && roles.length > 0 && (
+      {/* Role selector — always visible */}
+      {roles.length > 0 && (
         <select
           name="roleId"
           value={form.roleId ?? ""}

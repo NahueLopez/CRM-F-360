@@ -6,4 +6,6 @@ export interface User {
   active: boolean;
   createdAt?: string;
   lastLoginAt?: string;
+  roleId?: number;
+  roleName?: string;
 }
