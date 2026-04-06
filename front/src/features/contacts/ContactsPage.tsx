@@ -307,7 +307,7 @@ const ContactsPage: React.FC = () => {
                                         }`}
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-sm font-bold text-indigo-400 shrink-0">
+                                        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-slate-800 to-slate-900 border border-slate-700/50 flex items-center justify-center text-slate-400 font-medium text-sm shadow-inner relative overflow-hidden">
                                             {c.fullName.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
@@ -353,7 +353,7 @@ const ContactsPage: React.FC = () => {
                         {/* Header */}
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-lg font-bold text-indigo-400">
+                                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-xl shadow-inner relative overflow-hidden text-indigo-400">
                                     {selected.fullName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>

@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // ── Shared (always loaded) ──
 import ProtectedRoute from "./shared/auth/ProtectedRoute";
 import DashboardLayout from "./shared/layout/DashboardLayout";
-import { ThemeProvider } from "./shared/context/ThemeContext";
 import { ToastProvider } from "./shared/context/ToastContext";
 import { QueryProvider } from "./shared/api/queryProvider";
 import { authStore } from "./shared/auth/authStore";
@@ -46,7 +45,6 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryProvider>
-        <ThemeProvider>
           <ToastProvider>
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
@@ -106,7 +104,6 @@ const App = () => {
               </Suspense>
             </BrowserRouter>
           </ToastProvider>
-        </ThemeProvider>
       </QueryProvider>
     </ErrorBoundary>
   );

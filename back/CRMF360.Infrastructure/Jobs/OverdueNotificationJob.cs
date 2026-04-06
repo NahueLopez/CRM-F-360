@@ -71,9 +71,9 @@ public class OverdueNotificationJob : BackgroundService
             })
             .ToListAsync(ct);
 
-        // Get existing unread TaskOverdue notifications to avoid duplicates
+        // Get existing TaskOverdue notifications to avoid duplicates (even if already read)
         var existingTaskNotifs = await db.Notifications.IgnoreQueryFilters()
-            .Where(n => n.Type == "TaskOverdue" && !n.IsRead && n.RelatedEntityType == "Task")
+            .Where(n => n.Type == "TaskOverdue" && n.RelatedEntityType == "Task")
             .Select(n => n.RelatedEntityId)
             .ToListAsync(ct);
 
@@ -109,7 +109,7 @@ public class OverdueNotificationJob : BackgroundService
             .ToListAsync(ct);
 
         var existingReminderNotifs = await db.Notifications.IgnoreQueryFilters()
-            .Where(n => n.Type == "ReminderDue" && !n.IsRead && n.RelatedEntityType == "Reminder")
+            .Where(n => n.Type == "ReminderDue" && n.RelatedEntityType == "Reminder")
             .Select(n => n.RelatedEntityId)
             .ToListAsync(ct);
 

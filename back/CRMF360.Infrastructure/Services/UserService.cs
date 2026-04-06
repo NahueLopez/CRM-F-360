@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using CRMF360.Application.Abstractions;
+using CRMF360.Application.Common;
 using CRMF360.Application.Users;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,41 @@ public class UserService : IUserService
             .ToListAsync();
 
         return users.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<UserDto>> GetPagedAsync(PaginationParams p, System.Threading.CancellationToken ct = default)
+    {
+        var query = _context.Users.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var pattern = $"%{p.Search}%";
+            query = query.Where(u => EF.Functions.ILike(u.FullName, pattern)
+                || (u.Email != null && EF.Functions.ILike(u.Email, pattern))
+                || (u.Phone != null && EF.Functions.ILike(u.Phone, pattern)));
+        }
+
+        query = p.SortBy?.ToLower() switch
+        {
+            "name" => p.Descending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName),
+            "createdat" => p.Descending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
+            _ => query.OrderBy(u => u.FullName),
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(u => MapToDto(u))
+            .ToListAsync(ct);
+
+        return new PagedResult<UserDto>
+        {
+            Items = items,
+            Page = p.Page,
+            PageSize = p.PageSize,
+            TotalCount = totalCount,
+        };
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)

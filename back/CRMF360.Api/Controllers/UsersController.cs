@@ -1,4 +1,4 @@
-﻿using CRMF360.Application.Users;
+using CRMF360.Application.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -32,6 +32,13 @@ public class UsersController : ControllerBase
     {
         var users = await _userService.GetAllAsync();
         return Ok(users);
+    }
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] CRMF360.Application.Common.PaginationParams p, System.Threading.CancellationToken ct)
+    {
+        var result = await _userService.GetPagedAsync(p, ct);
+        return Ok(result);
     }
 
     // READ - by id

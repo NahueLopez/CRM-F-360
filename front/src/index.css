@@ -800,6 +800,18 @@
   border-right-color: #bfdbfe;
 }
 
+/* ═══════════════════════════════════════════
+   HIDE SCROLLBAR UTIL
+   ═══════════════════════════════════════════ */
+.hide-scroll {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+
 [data-light="light-cool"] .light .border-slate-700\/30 {
   border-color: rgba(96, 165, 250, 0.2) !important;
 }

@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { User } from "./types";
-import { userService } from "./userService";
 import { useToast } from "../../shared/context/ToastContext";
 import UserForm from "./components/UserForm";
 import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import { CardsSkeleton } from "../../shared/ui/Skeleton";
+import Pagination from "../../shared/ui/Pagination";
+import { usePagination } from "../../shared/hooks/usePagination";
+import { useUsersPaged, useCreateUser, useUpdateUser, useDeleteUser } from "../../shared/hooks/useUserQuery";
 
 const AVATAR_GRADIENTS = [
   "from-violet-500/20 to-purple-500/20",
@@ -26,41 +28,31 @@ const AVATAR_COLORS = [
 ];
 
 const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
   const [editing, setEditing] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const data = await userService.getAll();
-      setUsers(data);
-    } catch (err) {
-      console.error("Error cargando usuarios", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { page, pageSize, search, handleSearch, params, setPage, setPageSize } = usePagination();
+  const { data, isLoading: loading } = useUsersPaged(params);
+  const filtered = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
 
-  useEffect(() => { load(); }, []);
+  const createMutation = useCreateUser();
+  const updateMutation = useUpdateUser();
+  const deleteMutation = useDeleteUser();
 
   const handleNewClick = () => { setEditing(null); setShowForm(true); };
 
   const handleCreate = async (data: Partial<User>) => {
-    const newUser = await userService.create(data);
-    setUsers((prev) => [...prev, newUser]);
+    await createMutation.mutateAsync(data);
     setShowForm(false);
     addToast("success", "Usuario creado correctamente");
   };
 
   const handleUpdate = async (data: Partial<User>) => {
     if (!editing) return;
-    const updated = await userService.update(editing.id, data);
-    setUsers((prev) => prev.map((u) => (u.id === editing.id ? updated : u)));
+    await updateMutation.mutateAsync({ id: editing.id, data });
     setEditing(null);
     setShowForm(false);
     addToast("success", "Usuario actualizado");
@@ -74,20 +66,12 @@ const UsersPage: React.FC = () => {
       variant: "danger",
     });
     if (!ok) return;
-    await userService.remove(id);
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+    await deleteMutation.mutateAsync(id);
     addToast("success", "Usuario eliminado");
   };
 
   const handleEditClick = (user: User) => { setEditing(user); setShowForm(true); };
   const handleCancelForm = () => { setEditing(null); setShowForm(false); };
-
-  const filtered = users.filter((u) => {
-    const q = search.toLowerCase();
-    return u.fullName.toLowerCase().includes(q)
-      || u.email.toLowerCase().includes(q)
-      || (u.phone ?? "").toLowerCase().includes(q);
-  });
 
   const getInitials = (name: string) => {
     const parts = name.split(" ");
@@ -113,7 +97,7 @@ const UsersPage: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold tracking-tight">Usuarios</h3>
             <p className="text-sm text-slate-500 mt-0.5">
-              {filtered.length} {filtered.length === 1 ? "usuario" : "usuarios"} del sistema
+              {totalCount} {totalCount === 1 ? "usuario" : "usuarios"} del sistema
             </p>
           </div>
 
@@ -131,7 +115,7 @@ const UsersPage: React.FC = () => {
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Buscar por nombre, email o teléfono..."
             className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
           />
@@ -156,7 +140,7 @@ const UsersPage: React.FC = () => {
         {loading ? (
           <CardsSkeleton count={6} />
         ) : filtered.length === 0 ? (
-          users.length === 0 ? (
+          search.trim() === "" ? (
             <EmptyState
               icon="👥"
               title="Sin usuarios"
@@ -173,7 +157,7 @@ const UsersPage: React.FC = () => {
           )
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {filtered.map((u, i) => {
+            {filtered.map((u: User, i: number) => {
               const gradIdx = i % AVATAR_GRADIENTS.length;
               const lastLogin = timeAgo(u.lastLoginAt);
               return (
@@ -230,6 +214,17 @@ const UsersPage: React.FC = () => {
               );
             })}
           </div>
+        )}
+
+        {/* Pagination Details */}
+        {!loading && totalCount > 0 && (
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onChangePage={setPage}
+            onChangePageSize={setPageSize}
+          />
         )}
       </div>
       <ConfirmModal {...confirmProps} />
