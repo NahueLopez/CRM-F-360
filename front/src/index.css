@@ -2,8 +2,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   --accent: #818cf8;
   --accent-light: #818cf826;
 }
@@ -312,7 +319,9 @@
 .light .bg-slate-800\/30,
 .light .bg-slate-800\/40 {
   background-color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.03) !important;
 }
 
 .light .bg-slate-800\/20 {
@@ -373,11 +382,11 @@
   border-color: rgba(226, 232, 240, 0.5) !important;
 }
 
-.light .divide-slate-800\/50>*+* {
+.light .divide-slate-800\/50 > * + * {
   border-color: rgba(226, 232, 240, 0.5) !important;
 }
 
-.light .divide-slate-800>*+* {
+.light .divide-slate-800 > * + * {
   border-color: #e2e8f0 !important;
 }
 
@@ -420,7 +429,6 @@
 .light button[class*="bg-indigo"] {
   color: #ffffff !important;
 }
-
 
 /* ── Hover states ── */
 .light .hover\:bg-slate-900:hover {
@@ -509,7 +517,9 @@ html .light input.bg-transparent,
 }
 
 .light .shadow-xl {
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* ── Sidebar active indicator ── */
@@ -537,7 +547,12 @@ html .light input.bg-transparent,
 
 /* ── Skeleton (light) ── */
 .light .skeleton {
-  background: linear-gradient(90deg, rgba(148, 163, 184, 0.15) 0%, rgba(148, 163, 184, 0.05) 50%, rgba(148, 163, 184, 0.15) 100%) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.15) 0%,
+    rgba(148, 163, 184, 0.05) 50%,
+    rgba(148, 163, 184, 0.15) 100%
+  ) !important;
 }
 
 /* ── Toast container  ── */
@@ -663,7 +678,9 @@ html .light input.bg-transparent,
 }
 
 .light .shadow-2xl {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* ── Delete button colors ── */
@@ -873,7 +890,6 @@ html .light input.bg-transparent,
   display: none;
 }
 
-
 [data-light="light-cool"] .light .border-slate-700\/30 {
   border-color: rgba(96, 165, 250, 0.2) !important;
 }
@@ -993,7 +1009,11 @@ summary {
 
 /* Header gradient */
 .light [class*="from-slate-800\/80"] {
-  background: linear-gradient(to right, rgba(241, 245, 249, 0.9), rgba(241, 245, 249, 0.5)) !important;
+  background: linear-gradient(
+    to right,
+    rgba(241, 245, 249, 0.9),
+    rgba(241, 245, 249, 0.5)
+  ) !important;
 }
 
 /* Chat input area */
@@ -1137,7 +1157,9 @@ summary {
 }
 
 .chat-fab {
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease;
 }
 
 /* Chat scrollbar */
@@ -1235,7 +1257,6 @@ table tbody tr:hover {
 
 /* Skeleton loading */
 @keyframes skeleton-pulse {
-
   0%,
   100% {
     opacity: 0.4;
@@ -1247,7 +1268,12 @@ table tbody tr:hover {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(100, 116, 139, 0.2) 0%, rgba(100, 116, 139, 0.1) 50%, rgba(100, 116, 139, 0.2) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(100, 116, 139, 0.2) 0%,
+    rgba(100, 116, 139, 0.1) 50%,
+    rgba(100, 116, 139, 0.2) 100%
+  );
   background-size: 200% 100%;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
   border-radius: 6px;
@@ -1285,7 +1311,6 @@ table tbody tr:hover {
 
 /* Touch targets: increase on mobile */
 @media (max-width: 640px) {
-
   button,
   a {
     min-height: 36px;
@@ -1294,9 +1319,8 @@ table tbody tr:hover {
 
 /* Detail panels: stack vertically on mobile */
 @media (max-width: 1023px) {
-
-  .flex.gap-6>.w-96,
-  .flex.gap-6>[class*="w-[45%]"] {
+  .flex.gap-6 > .w-96,
+  .flex.gap-6 > [class*="w-[45%]"] {
     width: 100% !important;
     max-height: none !important;
   }

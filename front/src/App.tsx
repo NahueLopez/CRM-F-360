@@ -45,65 +45,53 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryProvider>
-          <ToastProvider>
-            <BrowserRouter>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  {/* Public */}
-                  <Route
-                    path="/login"
-                    element={
-                      authStore.isAuthenticated ? (
-                        <Navigate to="/" replace />
-                      ) : (
-                        <LoginPage />
-                      )
-                    }
-                  />
+        <ToastProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public */}
+                <Route
+                  path="/login"
+                  element={authStore.isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+                />
 
-                  {/* Protected */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route element={<DashboardLayout />}>
-                      <Route index element={<DashboardPage />} />
-                      <Route path="companies" element={<CompaniesPage />} />
-                      <Route path="contacts" element={<ContactsPage />} />
-                      <Route path="projects" element={<ProjectsPage />} />
-                      <Route path="projects/:projectId" element={<ProjectDetailPage />} />
-                      <Route path="tasks" element={<TasksPage />} />
-                      <Route
-                        path="projects/:projectId/board"
-                        element={<KanbanBoardPage />}
-                      />
-                      <Route
-                        path="projects/:projectId/activity"
-                        element={<ProjectActivityPage />}
-                      />
-                      <Route path="time-entries" element={<TimeEntriesPage />} />
-                      <Route path="reports" element={<ReportsPage />} />
-                      <Route path="calendar" element={<CalendarPage />} />
-                      <Route path="pipeline" element={<PipelinePage />} />
-                      <Route path="reminders" element={<RemindersPage />} />
-                      <Route path="profile" element={<ProfilePage />} />
-                      <Route path="rooms" element={<RoomsPage />} />
-                      <Route path="settings" element={<SettingsPage />} />
-                    </Route>
+                {/* Protected */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<DashboardLayout />}>
+                    <Route index element={<DashboardPage />} />
+                    <Route path="companies" element={<CompaniesPage />} />
+                    <Route path="contacts" element={<ContactsPage />} />
+                    <Route path="projects" element={<ProjectsPage />} />
+                    <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+                    <Route path="tasks" element={<TasksPage />} />
+                    <Route path="projects/:projectId/board" element={<KanbanBoardPage />} />
+                    <Route path="projects/:projectId/activity" element={<ProjectActivityPage />} />
+                    <Route path="time-entries" element={<TimeEntriesPage />} />
+                    <Route path="reports" element={<ReportsPage />} />
+                    <Route path="calendar" element={<CalendarPage />} />
+                    <Route path="pipeline" element={<PipelinePage />} />
+                    <Route path="reminders" element={<RemindersPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                    <Route path="rooms" element={<RoomsPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
                   </Route>
+                </Route>
 
-                  {/* Admin only */}
-                  <Route element={<ProtectedRoute requiredRoles={["Admin"]} />}>
-                    <Route element={<DashboardLayout />}>
-                      <Route path="users" element={<UsersPage />} />
-                      <Route path="audit-logs" element={<AuditLogsPage />} />
-                      <Route path="roles-permissions" element={<RolesPermissionsPage />} />
-                    </Route>
+                {/* Admin only */}
+                <Route element={<ProtectedRoute requiredRoles={["Admin"]} />}>
+                  <Route element={<DashboardLayout />}>
+                    <Route path="users" element={<UsersPage />} />
+                    <Route path="audit-logs" element={<AuditLogsPage />} />
+                    <Route path="roles-permissions" element={<RolesPermissionsPage />} />
                   </Route>
+                </Route>
 
-                  {/* Catch-all */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </ToastProvider>
+                {/* Catch-all */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </ToastProvider>
       </QueryProvider>
     </ErrorBoundary>
   );

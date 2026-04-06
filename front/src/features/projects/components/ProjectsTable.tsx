@@ -31,12 +31,24 @@ const ProjectsTable: React.FC<Props> = ({ data, companies, onEdit, onDelete, onT
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-700/50 bg-slate-800/50">
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Proyecto</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Empresa</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tareas</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Horas est.</th>
-            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Proyecto
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Empresa
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Estado
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Tareas
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Horas est.
+            </th>
+            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/30">
@@ -49,7 +61,9 @@ const ProjectsTable: React.FC<Props> = ({ data, companies, onEdit, onDelete, onT
                   {p.companyName ?? getCompanyName(p.companyId)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${st.color} ${st.bg}`}>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${st.color} ${st.bg}`}
+                  >
                     {st.text}
                   </span>
                 </td>

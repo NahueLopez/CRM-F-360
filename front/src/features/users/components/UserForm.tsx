@@ -35,9 +35,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) =
     });
   }, [initial]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, value, type, checked } = target;
     if (type === "checkbox") {

@@ -2,19 +2,19 @@ import { Navigate, Outlet } from "react-router-dom";
 import { authStore } from "./authStore";
 
 interface ProtectedRouteProps {
-    requiredRoles?: string[];
+  requiredRoles?: string[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
-    if (!authStore.isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
+  if (!authStore.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-    if (requiredRoles && !requiredRoles.some((r) => authStore.hasRole(r))) {
-        return <Navigate to="/" replace />;
-    }
+  if (requiredRoles && !requiredRoles.some((r) => authStore.hasRole(r))) {
+    return <Navigate to="/" replace />;
+  }
 
-    return <Outlet />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

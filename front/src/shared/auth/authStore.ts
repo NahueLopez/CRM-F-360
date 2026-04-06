@@ -93,10 +93,7 @@ class AuthStore {
   }
 
   /** Change password for current user */
-  async changePassword(
-    currentPassword: string,
-    newPassword: string
-  ): Promise<boolean> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
     try {
       await api.put<void>("/auth/change-password", {
         currentPassword,
@@ -136,7 +133,9 @@ class AuthStore {
     // Apply theme preferences
     let prefs: UserPreferences = DEFAULT_PREFERENCES;
     if (res.preferences) {
-      try { prefs = { ...DEFAULT_PREFERENCES, ...JSON.parse(res.preferences) }; } catch { }
+      try {
+        prefs = { ...DEFAULT_PREFERENCES, ...JSON.parse(res.preferences) };
+      } catch {}
     }
     applyPreferences(prefs);
   }

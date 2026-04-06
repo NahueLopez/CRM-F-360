@@ -18,19 +18,13 @@ const STATUSES: { value: ProjectStatus; label: string }[] = [
   { value: "Done", label: "Finalizado" },
 ];
 
-const ProjectForm: React.FC<Props> = ({
-  initial,
-  companies,
-  users,
-  onSubmit,
-  onCancel,
-}) => {
-  const isEditing = !!(initial?.id);
+const ProjectForm: React.FC<Props> = ({ initial, companies, users, onSubmit, onCancel }) => {
+  const isEditing = !!initial?.id;
 
   const [form, setForm] = useState<Partial<Project>>({
     name: initial?.name ?? "",
     description: initial?.description ?? "",
-    companyId: initial?.companyId ?? (companies[0]?.id ?? undefined),
+    companyId: initial?.companyId ?? companies[0]?.id ?? undefined,
     status: initial?.status ?? "Planned",
     estimatedHours: initial?.estimatedHours ?? undefined,
     startDate: initial?.startDate ?? undefined,
@@ -43,7 +37,7 @@ const ProjectForm: React.FC<Props> = ({
     setForm({
       name: initial?.name ?? "",
       description: initial?.description ?? "",
-      companyId: initial?.companyId ?? (companies[0]?.id ?? undefined),
+      companyId: initial?.companyId ?? companies[0]?.id ?? undefined,
       status: initial?.status ?? "Planned",
       estimatedHours: initial?.estimatedHours ?? undefined,
       startDate: initial?.startDate ?? undefined,
@@ -53,9 +47,7 @@ const ProjectForm: React.FC<Props> = ({
   }, [initial, companies]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -79,9 +71,7 @@ const ProjectForm: React.FC<Props> = ({
 
   const toggleMember = (userId: number) => {
     setSelectedMembers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     );
   };
 
@@ -119,9 +109,7 @@ const ProjectForm: React.FC<Props> = ({
 
       {/* Nombre */}
       <div>
-        <label className="block text-xs text-slate-400 mb-1">
-          Nombre del proyecto
-        </label>
+        <label className="block text-xs text-slate-400 mb-1">Nombre del proyecto</label>
         <input
           name="name"
           value={form.name ?? ""}
@@ -149,9 +137,7 @@ const ProjectForm: React.FC<Props> = ({
           </select>
         </div>
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Horas estimadas
-          </label>
+          <label className="block text-xs text-slate-400 mb-1">Horas estimadas</label>
           <input
             name="estimatedHours"
             type="number"
@@ -168,9 +154,7 @@ const ProjectForm: React.FC<Props> = ({
       {/* Fechas */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Fecha inicio
-          </label>
+          <label className="block text-xs text-slate-400 mb-1">Fecha inicio</label>
           <input
             name="startDate"
             type="date"
@@ -180,9 +164,7 @@ const ProjectForm: React.FC<Props> = ({
           />
         </div>
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Fecha fin estimada
-          </label>
+          <label className="block text-xs text-slate-400 mb-1">Fecha fin estimada</label>
           <input
             name="endDateEstimated"
             type="date"
@@ -195,9 +177,7 @@ const ProjectForm: React.FC<Props> = ({
 
       {/* Descripción */}
       <div>
-        <label className="block text-xs text-slate-400 mb-1">
-          Descripción
-        </label>
+        <label className="block text-xs text-slate-400 mb-1">Descripción</label>
         <textarea
           name="description"
           value={form.description ?? ""}
@@ -211,17 +191,16 @@ const ProjectForm: React.FC<Props> = ({
       {/* Members (only on create) */}
       {!isEditing && users.length > 0 && (
         <div>
-          <label className="block text-xs text-slate-400 mb-2">
-            Asignar miembros al proyecto
-          </label>
+          <label className="block text-xs text-slate-400 mb-2">Asignar miembros al proyecto</label>
           <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 rounded-lg bg-slate-800/50 border border-slate-700">
             {users.map((u) => (
               <label
                 key={u.id}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition text-sm
-                  ${selectedMembers.includes(u.id)
-                    ? "bg-indigo-600/20 border border-indigo-500/40 text-indigo-300"
-                    : "bg-slate-800 border border-slate-700/50 text-slate-300 hover:bg-slate-700/50"
+                  ${
+                    selectedMembers.includes(u.id)
+                      ? "bg-indigo-600/20 border border-indigo-500/40 text-indigo-300"
+                      : "bg-slate-800 border border-slate-700/50 text-slate-300 hover:bg-slate-700/50"
                   }`}
               >
                 <input
@@ -239,7 +218,8 @@ const ProjectForm: React.FC<Props> = ({
           </div>
           {selectedMembers.length > 0 && (
             <p className="text-[10px] text-indigo-400 mt-1">
-              {selectedMembers.length} miembro{selectedMembers.length > 1 ? "s" : ""} seleccionado{selectedMembers.length > 1 ? "s" : ""}
+              {selectedMembers.length} miembro{selectedMembers.length > 1 ? "s" : ""} seleccionado
+              {selectedMembers.length > 1 ? "s" : ""}
             </p>
           )}
         </div>

@@ -33,7 +33,10 @@ interface SidebarContextType {
   mobileOpen: boolean;
   setMobileOpen: (v: boolean) => void;
 }
-const SidebarContext = createContext<SidebarContextType>({ mobileOpen: false, setMobileOpen: () => { } });
+const SidebarContext = createContext<SidebarContextType>({
+  mobileOpen: false,
+  setMobileOpen: () => {},
+});
 export const useSidebar = () => useContext(SidebarContext);
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -50,17 +53,31 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
   const ref = useRef<HTMLElement>(null);
 
   const arrowBtn: React.CSSProperties = {
-    display: "flex", alignItems: "center", justifyContent: "center",
-    gap: 6, width: "100%", padding: "4px 0",
-    color: "#64748b", cursor: "pointer", background: "none", border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    width: "100%",
+    padding: "4px 0",
+    color: "#64748b",
+    cursor: "pointer",
+    background: "none",
+    border: "none",
     fontSize: 12,
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Up arrow */}
-      <button onClick={() => ref.current?.scrollBy({ top: -120, behavior: "smooth" })} style={arrowBtn} tabIndex={-1} aria-label="Scroll up">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
+      <button
+        onClick={() => ref.current?.scrollBy({ top: -120, behavior: "smooth" })}
+        style={arrowBtn}
+        tabIndex={-1}
+        aria-label="Scroll up"
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+        </svg>
       </button>
 
       <nav
@@ -75,9 +92,10 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isActive
-                ? "bg-indigo-500/10 text-white font-medium"
-                : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                isActive
+                  ? "bg-indigo-500/10 text-white font-medium"
+                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
               }`
             }
             aria-current={undefined}
@@ -96,8 +114,15 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
       </nav>
 
       {/* Down arrow */}
-      <button onClick={() => ref.current?.scrollBy({ top: 120, behavior: "smooth" })} style={arrowBtn} tabIndex={-1} aria-label="Scroll down">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+      <button
+        onClick={() => ref.current?.scrollBy({ top: 120, behavior: "smooth" })}
+        style={arrowBtn}
+        tabIndex={-1}
+        aria-label="Scroll down"
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
     </div>
   );
@@ -108,8 +133,8 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { mobileOpen, setMobileOpen } = useSidebar();
 
-  const items = allItems.filter((item) =>
-    item.permission === null || authStore.hasPermission(item.permission)
+  const items = allItems.filter(
+    (item) => item.permission === null || authStore.hasPermission(item.permission),
   );
 
   // Close mobile sidebar on route change
@@ -122,12 +147,13 @@ const Sidebar: React.FC = () => {
     navigate("/login");
   };
 
-  const initials = authStore.user?.fullName
-    ?.split(" ")
-    .map(w => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() ?? "??";
+  const initials =
+    authStore.user?.fullName
+      ?.split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "??";
 
   const header = (
     <div className="p-4 border-b border-slate-800">
@@ -182,7 +208,10 @@ const Sidebar: React.FC = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-hidden" aria-label="Barra lateral">
+      <aside
+        className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-hidden"
+        aria-label="Barra lateral"
+      >
         {header}
         <NavMenu items={items} />
         {footer}

@@ -16,10 +16,18 @@ const CompaniesTable: React.FC<Props> = ({ data, onEdit, onDelete, onRowClick })
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-700/50 bg-slate-800/50">
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Nombre</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">CUIT</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email</th>
-            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Nombre
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              CUIT
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Email
+            </th>
+            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/30">
@@ -42,13 +50,19 @@ const CompaniesTable: React.FC<Props> = ({ data, onEdit, onDelete, onRowClick })
               <td className="px-4 py-3">
                 <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => { e.stopPropagation(); onEdit(c); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(c);
+                    }}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
                   >
                     ✏️ Editar
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(c.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(c.id);
+                    }}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
                   >
                     Eliminar

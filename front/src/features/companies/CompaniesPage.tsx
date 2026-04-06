@@ -4,7 +4,12 @@ import type { ActivityLog } from "../activities/types";
 import { activityService } from "../activities/activityService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
-import { useCompaniesPaged, useCreateCompany, useUpdateCompany, useDeleteCompany } from "../../shared/hooks/useCompanyQuery";
+import {
+  useCompaniesPaged,
+  useCreateCompany,
+  useUpdateCompany,
+  useDeleteCompany,
+} from "../../shared/hooks/useCompanyQuery";
 import CompanyForm from "./components/CompanyForm";
 import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
@@ -15,7 +20,10 @@ import { usePagination } from "../../shared/hooks/usePagination";
 import Modal from "../../shared/ui/Modal";
 
 const ACTIVITY_ICONS: Record<string, string> = {
-  Call: "📞", Meeting: "🤝", Email: "📧", Note: "📝",
+  Call: "📞",
+  Meeting: "🤝",
+  Email: "📧",
+  Note: "📝",
 };
 
 const GRADIENTS = [
@@ -60,14 +68,19 @@ const CompaniesPage: React.FC = () => {
     try {
       const data = await activityService.getByCompany(companyId);
       setActivities(data);
-    } catch { setActivities([]); }
+    } catch {
+      setActivities([]);
+    }
   }, []);
 
   useEffect(() => {
     if (selected) loadActivities(selected.id);
   }, [selected, loadActivities]);
 
-  const handleNewClick = () => { setEditing(null); setShowForm(true); };
+  const handleNewClick = () => {
+    setEditing(null);
+    setShowForm(true);
+  };
   const handleCreate = async (data: Partial<Company>) => {
     await createMutation.mutateAsync(data);
     setShowForm(false);
@@ -92,8 +105,14 @@ const CompaniesPage: React.FC = () => {
     if (selected?.id === id) setSelected(null);
     addToast("success", "Empresa eliminada");
   };
-  const handleEditClick = (company: Company) => { setEditing(company); setShowForm(true); };
-  const handleCancelForm = () => { setEditing(null); setShowForm(false); };
+  const handleEditClick = (company: Company) => {
+    setEditing(company);
+    setShowForm(true);
+  };
+  const handleCancelForm = () => {
+    setEditing(null);
+    setShowForm(false);
+  };
 
   const handleAddActivity = async () => {
     if (!newActivity.description.trim() || !selected) return;
@@ -122,13 +141,17 @@ const CompaniesPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  downloadCsvFromData(companies, [
-                    { key: "name", header: "Nombre" },
-                    { key: "cuit", header: "CUIT" },
-                    { key: "email", header: "Email" },
-                    { key: "phone", header: "Teléfono" },
-                    { key: "notes", header: "Notas" },
-                  ], `empresas_${new Date().toISOString().slice(0, 10)}.csv`);
+                  downloadCsvFromData(
+                    companies,
+                    [
+                      { key: "name", header: "Nombre" },
+                      { key: "cuit", header: "CUIT" },
+                      { key: "email", header: "Email" },
+                      { key: "phone", header: "Teléfono" },
+                      { key: "notes", header: "Notas" },
+                    ],
+                    `empresas_${new Date().toISOString().slice(0, 10)}.csv`,
+                  );
                   addToast("success", `${companies.length} empresas de esta página exportadas`);
                 }}
                 disabled={companies.length === 0}
@@ -136,8 +159,11 @@ const CompaniesPage: React.FC = () => {
               >
                 📥 CSV
               </button>
-              <button type="button" onClick={handleNewClick}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]">
+              <button
+                type="button"
+                onClick={handleNewClick}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
+              >
                 + Nueva empresa
               </button>
             </div>
@@ -145,7 +171,9 @@ const CompaniesPage: React.FC = () => {
 
           {/* Search */}
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+              🔍
+            </span>
             <input
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
@@ -154,12 +182,16 @@ const CompaniesPage: React.FC = () => {
             />
           </div>
 
-          <Modal 
-            open={showForm} 
-            onClose={handleCancelForm} 
+          <Modal
+            open={showForm}
+            onClose={handleCancelForm}
             title={editing ? "✏️ Editar empresa" : "🏢 Nueva empresa"}
           >
-            <CompanyForm initial={editing ?? {}} onSubmit={editing ? handleUpdate : handleCreate} onCancel={handleCancelForm} />
+            <CompanyForm
+              initial={editing ?? {}}
+              onSubmit={editing ? handleUpdate : handleCreate}
+              onCancel={handleCancelForm}
+            />
           </Modal>
 
           {loading ? (
@@ -189,34 +221,46 @@ const CompaniesPage: React.FC = () => {
                     key={c.id}
                     onClick={() => setSelected(c)}
                     className={`group flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all
-                      ${selected?.id === c.id
-                        ? "bg-indigo-950/30 border-indigo-500/40"
-                        : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
+                      ${
+                        selected?.id === c.id
+                          ? "bg-indigo-950/30 border-indigo-500/40"
+                          : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
                       }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${GRADIENTS[gradIdx]} border ${COLORS[gradIdx].split(" ")[1]} flex items-center justify-center text-sm font-bold ${COLORS[gradIdx].split(" ")[0]} shrink-0`}>
+                      <div
+                        className={`w-10 h-10 rounded-xl bg-gradient-to-br ${GRADIENTS[gradIdx]} border ${COLORS[gradIdx].split(" ")[1]} flex items-center justify-center text-sm font-bold ${COLORS[gradIdx].split(" ")[0]} shrink-0`}
+                      >
                         {c.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate text-slate-200">{c.name}</p>
                         <p className="text-xs text-slate-500 truncate">
-                          {c.cuit ? `${c.cuit} · ` : ""}{c.email ?? "Sin email"}
+                          {c.cuit ? `${c.cuit} · ` : ""}
+                          {c.email ?? "Sin email"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {c.phone && (
-                        <span className="text-xs text-slate-600 tabular-nums hidden lg:inline">{c.phone}</span>
+                        <span className="text-xs text-slate-600 tabular-nums hidden lg:inline">
+                          {c.phone}
+                        </span>
                       )}
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleEditClick(c); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(c);
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
                       >
                         ✏️ Editar
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(c.id);
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         Eliminar
@@ -256,8 +300,20 @@ const CompaniesPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-700/50 transition-all">
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              <button
+                onClick={() => setSelected(null)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-700/50 transition-all"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -288,28 +344,39 @@ const CompaniesPage: React.FC = () => {
             </div>
 
             <div className="border-t border-slate-700/40 pt-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Registrar actividad</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                Registrar actividad
+              </h4>
 
               {/* Activity type buttons */}
               <div className="flex gap-1 mb-2">
                 {Object.entries(ACTIVITY_ICONS).map(([type, icon]) => (
-                  <button key={type} onClick={() => setNewActivity(p => ({ ...p, type }))}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${newActivity.type === type
-                      ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                      : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
-                      }`}>
+                  <button
+                    key={type}
+                    onClick={() => setNewActivity((p) => ({ ...p, type }))}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${
+                      newActivity.type === type
+                        ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
+                        : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
+                    }`}
+                  >
                     {icon} {type}
                   </button>
                 ))}
               </div>
               <div className="flex gap-2">
-                <input value={newActivity.description}
-                  onChange={e => setNewActivity(p => ({ ...p, description: e.target.value }))}
-                  onKeyDown={e => e.key === "Enter" && handleAddActivity()}
+                <input
+                  value={newActivity.description}
+                  onChange={(e) => setNewActivity((p) => ({ ...p, description: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddActivity()}
                   placeholder="Agregar nota..."
-                  className="flex-1 px-3 py-2 rounded-xl bg-slate-900/50 border border-slate-700/40 text-xs placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors" />
-                <button onClick={handleAddActivity} disabled={!newActivity.description.trim()}
-                  className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-medium disabled:opacity-30 transition-all active:scale-95">
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-900/50 border border-slate-700/40 text-xs placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                />
+                <button
+                  onClick={handleAddActivity}
+                  disabled={!newActivity.description.trim()}
+                  className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-medium disabled:opacity-30 transition-all active:scale-95"
+                >
                   +
                 </button>
               </div>
@@ -317,12 +384,14 @@ const CompaniesPage: React.FC = () => {
 
             {/* Timeline */}
             <div className="border-t border-slate-700/40 pt-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Historial</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                Historial
+              </h4>
               {activities.length === 0 ? (
                 <p className="text-xs text-slate-600 text-center py-4">Sin actividad registrada</p>
               ) : (
                 <div className="space-y-3">
-                  {activities.map(a => (
+                  {activities.map((a) => (
                     <div key={a.id} className="flex gap-3 items-start">
                       <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-slate-700/40 flex items-center justify-center text-xs shrink-0">
                         {ACTIVITY_ICONS[a.type] ?? "📄"}
@@ -330,7 +399,13 @@ const CompaniesPage: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-300">{a.description}</p>
                         <p className="text-[10px] text-slate-600 mt-0.5">
-                          {a.userName} · {new Date(a.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          {a.userName} ·{" "}
+                          {new Date(a.createdAt).toLocaleString("es-AR", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>

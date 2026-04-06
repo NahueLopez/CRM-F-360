@@ -40,7 +40,8 @@ const LoginPage: React.FC = () => {
         <div
           className="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
             backgroundSize: "60px 60px",
           }}
         />
@@ -52,7 +53,11 @@ const LoginPage: React.FC = () => {
         {/* Content */}
         <div className="relative flex flex-col justify-between p-12 z-10">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="CRM F360" className="w-12 h-12 rounded-2xl shadow-xl border border-white/10" />
+            <img
+              src="/logo.png"
+              alt="CRM F360"
+              className="w-12 h-12 rounded-2xl shadow-xl border border-white/10"
+            />
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">
                 CRM <span className="text-indigo-200">F360</span>
@@ -66,14 +71,24 @@ const LoginPage: React.FC = () => {
               Todo tu negocio en un solo lugar
             </h2>
             <p className="text-lg text-indigo-100/70 max-w-md leading-relaxed">
-              Empresas, contactos, proyectos, tareas, pipeline de ventas y reportes —
-              organizá tu equipo con una herramienta pensada para crecer.
+              Empresas, contactos, proyectos, tareas, pipeline de ventas y reportes — organizá tu
+              equipo con una herramienta pensada para crecer.
             </p>
 
             {/* Feature pills */}
             <div className="flex flex-wrap gap-2">
-              {["📊 Dashboard", "🏢 Empresas", "📁 Proyectos", "💰 Pipeline", "📅 Calendario", "💬 Chat"].map(f => (
-                <span key={f} className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur text-sm text-white/80 border border-white/10">
+              {[
+                "📊 Dashboard",
+                "🏢 Empresas",
+                "📁 Proyectos",
+                "💰 Pipeline",
+                "📅 Calendario",
+                "💬 Chat",
+              ].map((f) => (
+                <span
+                  key={f}
+                  className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur text-sm text-white/80 border border-white/10"
+                >
                   {f}
                 </span>
               ))}
@@ -91,7 +106,11 @@ const LoginPage: React.FC = () => {
         <div className="w-full max-w-sm">
           {/* Mobile header */}
           <div className="lg:hidden flex flex-col items-center text-center mb-8">
-            <img src="/logo.png" alt="CRM F360" className="w-12 h-12 rounded-xl shadow-md border border-slate-700/50 mb-3" />
+            <img
+              src="/logo.png"
+              alt="CRM F360"
+              className="w-12 h-12 rounded-xl shadow-md border border-slate-700/50 mb-3"
+            />
             <h1 className="text-2xl font-bold">
               CRM <span className="text-indigo-400">F360</span>
             </h1>

@@ -6,7 +6,7 @@ export const userService = {
 
   getPaged: (params?: Record<string, any>) => {
     const cleanParams = Object.fromEntries(
-      Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== "")
+      Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== ""),
     );
     const qs = new URLSearchParams(cleanParams as any).toString();
     return api.get<any>(`/users/paged?${qs}`);
@@ -16,8 +16,7 @@ export const userService = {
 
   create: (data: Partial<User>) => api.post<User>("/users", data),
 
-  update: (id: number, data: Partial<User>) =>
-    api.put<User>(`/users/${id}`, data),
+  update: (id: number, data: Partial<User>) => api.put<User>(`/users/${id}`, data),
 
   remove: (id: number) => api.delete(`/users/${id}`),
 };

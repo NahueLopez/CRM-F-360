@@ -43,21 +43,14 @@ const ReportsPage: React.FC = () => {
   }
 
   if (!data) {
-    return (
-      <div className="text-slate-500 text-sm">
-        No se pudieron cargar los reportes.
-      </div>
-    );
+    return <div className="text-slate-500 text-sm">No se pudieron cargar los reportes.</div>;
   }
 
   const maxProjectHours = Math.max(
     ...data.hoursByProject.map((p) => Math.max(p.totalHours, p.estimatedHours)),
-    1
+    1,
   );
-  const maxUserHours = Math.max(
-    ...data.hoursByUser.map((u) => u.totalHours),
-    1
-  );
+  const maxUserHours = Math.max(...data.hoursByUser.map((u) => u.totalHours), 1);
 
   return (
     <div className="space-y-8">
@@ -95,13 +88,8 @@ const ReportsPage: React.FC = () => {
             color: "text-indigo-400",
           },
         ].map((c) => (
-          <div
-            key={c.label}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4"
-          >
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-              {c.label}
-            </p>
+          <div key={c.label} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{c.label}</p>
             <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
           </div>
         ))}
@@ -110,13 +98,9 @@ const ReportsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Hours by Project ── */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
-          <h4 className="text-sm font-semibold text-slate-200 mb-4">
-            Horas por proyecto
-          </h4>
+          <h4 className="text-sm font-semibold text-slate-200 mb-4">Horas por proyecto</h4>
           {data.hoursByProject.length === 0 ? (
-            <p className="text-xs text-slate-500 italic">
-              No hay horas registradas.
-            </p>
+            <p className="text-xs text-slate-500 italic">No hay horas registradas.</p>
           ) : (
             <div className="space-y-3">
               {data.hoursByProject.map((p) => (
@@ -126,7 +110,8 @@ const ReportsPage: React.FC = () => {
                       {p.projectName}
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      {p.totalHours.toFixed(1)} / {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
+                      {p.totalHours.toFixed(1)} /{" "}
+                      {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
                     </span>
                   </div>
                   <div className="relative h-2.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner ring-1 ring-black/5 dark:ring-white/5">
@@ -145,9 +130,7 @@ const ReportsPage: React.FC = () => {
                       />
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-600 mt-0.5">
-                    {p.companyName}
-                  </p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">{p.companyName}</p>
                 </div>
               ))}
             </div>
@@ -156,21 +139,15 @@ const ReportsPage: React.FC = () => {
 
         {/* ── Hours by User ── */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
-          <h4 className="text-sm font-semibold text-slate-200 mb-4">
-            Horas por usuario
-          </h4>
+          <h4 className="text-sm font-semibold text-slate-200 mb-4">Horas por usuario</h4>
           {data.hoursByUser.length === 0 ? (
-            <p className="text-xs text-slate-500 italic">
-              No hay horas registradas.
-            </p>
+            <p className="text-xs text-slate-500 italic">No hay horas registradas.</p>
           ) : (
             <div className="space-y-3">
               {data.hoursByUser.map((u) => (
                 <div key={u.userId}>
                   <div className="flex items-baseline justify-between mb-1">
-                    <span className="text-xs text-slate-300 font-medium">
-                      {u.userName}
-                    </span>
+                    <span className="text-xs text-slate-300 font-medium">{u.userName}</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-[10px] text-indigo-400">
                         {u.hoursThisMonth.toFixed(1)} este mes
@@ -196,13 +173,9 @@ const ReportsPage: React.FC = () => {
 
         {/* ── Projects by Status ── */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
-          <h4 className="text-sm font-semibold text-slate-200 mb-4">
-            Proyectos por estado
-          </h4>
+          <h4 className="text-sm font-semibold text-slate-200 mb-4">Proyectos por estado</h4>
           {data.projectsByStatus.length === 0 ? (
-            <p className="text-xs text-slate-500 italic">
-              No hay proyectos.
-            </p>
+            <p className="text-xs text-slate-500 italic">No hay proyectos.</p>
           ) : (
             <div className="space-y-2">
               {data.projectsByStatus.map((s) => {
@@ -213,12 +186,8 @@ const ReportsPage: React.FC = () => {
                 return (
                   <div key={s.status} className="flex items-center gap-3">
                     <div className={`w-2.5 h-2.5 rounded-full ${label.color}`} />
-                    <span className="text-xs text-slate-300 flex-1">
-                      {label.text}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-200">
-                      {s.count}
-                    </span>
+                    <span className="text-xs text-slate-300 flex-1">{label.text}</span>
+                    <span className="text-sm font-semibold text-slate-200">{s.count}</span>
                   </div>
                 );
               })}
@@ -228,13 +197,9 @@ const ReportsPage: React.FC = () => {
 
         {/* ── Tasks by Priority ── */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
-          <h4 className="text-sm font-semibold text-slate-200 mb-4">
-            Tareas por prioridad
-          </h4>
+          <h4 className="text-sm font-semibold text-slate-200 mb-4">Tareas por prioridad</h4>
           {data.tasksByPriority.length === 0 ? (
-            <p className="text-xs text-slate-500 italic">
-              No hay tareas.
-            </p>
+            <p className="text-xs text-slate-500 italic">No hay tareas.</p>
           ) : (
             <div className="space-y-2">
               {data.tasksByPriority.map((t) => {
@@ -247,12 +212,8 @@ const ReportsPage: React.FC = () => {
                   <div key={t.priority}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full ${label.color}`}
-                        />
-                        <span className="text-xs text-slate-300">
-                          {label.text}
-                        </span>
+                        <div className={`w-2.5 h-2.5 rounded-full ${label.color}`} />
+                        <span className="text-xs text-slate-300">{label.text}</span>
                       </div>
                       <span className="text-xs text-slate-400">
                         {t.count} ({((t.count / total) * 100).toFixed(0)}%)

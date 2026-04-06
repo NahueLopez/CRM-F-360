@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface PaginationProps {
   page: number;
@@ -26,24 +26,52 @@ export const Pagination: React.FC<PaginationProps> = ({
         {onChangePageSize && (
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500 dark:text-slate-400">Mostrar</span>
-            <select 
+            <select
               value={pageSize}
               onChange={(e) => onChangePageSize(Number(e.target.value))}
               className="bg-transparent text-slate-700 dark:text-slate-300 font-semibold cursor-pointer outline-none hover:text-indigo-600 dark:hover:text-white border-b border-dashed border-slate-400/50 hover:border-indigo-500/50 dark:border-slate-600 dark:hover:border-slate-400 transition-colors"
             >
-              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200" value={5}>5</option>
-              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200" value={10}>10</option>
-              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200" value={20}>20</option>
-              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200" value={50}>50</option>
-              <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200" value={100}>100</option>
+              <option
+                className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                value={5}
+              >
+                5
+              </option>
+              <option
+                className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                value={10}
+              >
+                10
+              </option>
+              <option
+                className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                value={20}
+              >
+                20
+              </option>
+              <option
+                className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                value={50}
+              >
+                50
+              </option>
+              <option
+                className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                value={100}
+              >
+                100
+              </option>
             </select>
             <span className="text-slate-500 dark:text-slate-400">filas</span>
           </div>
         )}
         <div className="hidden sm:block">
-          Mostrando <span className="font-medium text-slate-200">{(page - 1) * pageSize + 1}</span> a{' '}
-          <span className="font-medium text-slate-200">{Math.min(page * pageSize, totalCount)}</span> de{' '}
-          <span className="font-medium text-slate-200">{totalCount}</span>
+          Mostrando <span className="font-medium text-slate-200">{(page - 1) * pageSize + 1}</span>{" "}
+          a{" "}
+          <span className="font-medium text-slate-200">
+            {Math.min(page * pageSize, totalCount)}
+          </span>{" "}
+          de <span className="font-medium text-slate-200">{totalCount}</span>
         </div>
       </div>
 

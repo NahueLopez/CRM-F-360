@@ -36,10 +36,7 @@ const TimeEntriesPage: React.FC = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const promises: Promise<unknown>[] = [
-        timeEntryService.getAll(),
-        taskService.getAll(),
-      ];
+      const promises: Promise<unknown>[] = [timeEntryService.getAll(), taskService.getAll()];
       if (isLeader) {
         promises.push(timeEntryService.getProjectSummary());
       }
@@ -63,18 +60,18 @@ const TimeEntriesPage: React.FC = () => {
   // ── Derived data ──
   const projectNames = useMemo(() => {
     const names = new Set<string>();
-    entries.forEach(e => names.add(e.projectName));
+    entries.forEach((e) => names.add(e.projectName));
     return Array.from(names).sort();
   }, [entries]);
 
   const filteredEntries = useMemo(() => {
     if (!filterProject) return entries;
-    return entries.filter(e => e.projectName === filterProject);
+    return entries.filter((e) => e.projectName === filterProject);
   }, [entries, filterProject]);
 
   const filteredTasks = useMemo(() => {
     if (!filterProject) return tasks;
-    return tasks.filter(t => t.projectName === filterProject);
+    return tasks.filter((t) => t.projectName === filterProject);
   }, [tasks, filterProject]);
 
   const totalHours = filteredEntries.reduce((sum, e) => sum + e.hours, 0);
@@ -82,7 +79,7 @@ const TimeEntriesPage: React.FC = () => {
   // Project summary for selected project (if filtering)
   const selectedProjectSummary = useMemo(() => {
     if (!filterProject) return null;
-    return projectSummary.find(p => p.projectName === filterProject) ?? null;
+    return projectSummary.find((p) => p.projectName === filterProject) ?? null;
   }, [filterProject, projectSummary]);
 
   // ── Form handlers ──
@@ -163,19 +160,24 @@ const TimeEntriesPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { resetForm(); setIsModalOpen(true); }}
+              onClick={() => {
+                resetForm();
+                setIsModalOpen(true);
+              }}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition shadow-sm shadow-indigo-500/20"
             >
               + Cargar horas
             </button>
             <select
               value={filterProject}
-              onChange={e => setFilterProject(e.target.value)}
+              onChange={(e) => setFilterProject(e.target.value)}
               className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white min-w-[200px]"
             >
               <option value="">Todos los proyectos</option>
-              {projectNames.map(name => (
-                <option key={name} value={name}>{name}</option>
+              {projectNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
             {filterProject && (
@@ -218,17 +220,23 @@ const TimeEntriesPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${selectedProjectSummary.burnPercent > 100
-                            ? "bg-red-500"
-                            : selectedProjectSummary.burnPercent > 80
-                              ? "bg-amber-500"
-                              : "bg-emerald-500"
-                            }`}
+                          className={`h-full rounded-full transition-all ${
+                            selectedProjectSummary.burnPercent > 100
+                              ? "bg-red-500"
+                              : selectedProjectSummary.burnPercent > 80
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                          }`}
                           style={{ width: `${Math.min(selectedProjectSummary.burnPercent, 100)}%` }}
                         />
                       </div>
-                      <span className={`text-sm font-bold ${selectedProjectSummary.burnPercent > 100 ? "text-red-400" : "text-emerald-400"
-                        }`}>
+                      <span
+                        className={`text-sm font-bold ${
+                          selectedProjectSummary.burnPercent > 100
+                            ? "text-red-400"
+                            : "text-emerald-400"
+                        }`}
+                      >
                         {selectedProjectSummary.burnPercent.toFixed(0)}%
                       </span>
                     </div>
@@ -245,11 +253,13 @@ const TimeEntriesPage: React.FC = () => {
         {!filterProject && isLeader && projectSummary.length > 0 && (
           <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
             <button
-              onClick={() => setShowProjectBreakdown(p => !p)}
+              onClick={() => setShowProjectBreakdown((p) => !p)}
               className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800/50 transition"
             >
               <span>📊 Resumen por proyecto ({projectSummary.length})</span>
-              <span className={`text-xs text-slate-500 transition-transform ${showProjectBreakdown ? "rotate-180" : ""}`}>
+              <span
+                className={`text-xs text-slate-500 transition-transform ${showProjectBreakdown ? "rotate-180" : ""}`}
+              >
                 ▼
               </span>
             </button>
@@ -257,21 +267,34 @@ const TimeEntriesPage: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-t border-slate-700/50 bg-slate-800/50">
-                    <th className="text-left px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Proyecto</th>
-                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Registradas</th>
-                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Estimadas</th>
-                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Avance</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Proyecto
+                    </th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Registradas
+                    </th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Estimadas
+                    </th>
+                    <th className="text-right px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Avance
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/30">
-                  {projectSummary.map(p => (
+                  {projectSummary.map((p) => (
                     <tr
                       key={p.projectName}
                       className="hover:bg-slate-800/40 cursor-pointer transition"
-                      onClick={() => { setFilterProject(p.projectName); setShowProjectBreakdown(false); }}
+                      onClick={() => {
+                        setFilterProject(p.projectName);
+                        setShowProjectBreakdown(false);
+                      }}
                     >
                       <td className="px-4 py-2.5 text-slate-200">{p.projectName}</td>
-                      <td className="px-4 py-2.5 text-right text-indigo-400 font-medium tabular-nums">{p.loggedHours.toFixed(1)} hs</td>
+                      <td className="px-4 py-2.5 text-right text-indigo-400 font-medium tabular-nums">
+                        {p.loggedHours.toFixed(1)} hs
+                      </td>
                       <td className="px-4 py-2.5 text-right text-slate-400 tabular-nums">
                         {p.estimatedHours > 0 ? `${p.estimatedHours} hs` : "—"}
                       </td>
@@ -284,7 +307,9 @@ const TimeEntriesPage: React.FC = () => {
                                 style={{ width: `${Math.min(p.burnPercent, 100)}%` }}
                               />
                             </div>
-                            <span className={`text-xs font-medium tabular-nums ${p.burnPercent > 100 ? "text-red-400" : "text-slate-400"}`}>
+                            <span
+                              className={`text-xs font-medium tabular-nums ${p.burnPercent > 100 ? "text-red-400" : "text-slate-400"}`}
+                            >
                               {p.burnPercent.toFixed(0)}%
                             </span>
                           </div>
@@ -321,7 +346,9 @@ const TimeEntriesPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tarea</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Tarea
+                </label>
                 <select
                   value={taskId}
                   onChange={(e) => setTaskId(e.target.value ? Number(e.target.value) : "")}
@@ -339,7 +366,9 @@ const TimeEntriesPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Fecha
+                  </label>
                   <input
                     type="date"
                     value={date}
@@ -349,7 +378,9 @@ const TimeEntriesPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Horas</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Horas
+                  </label>
                   <input
                     type="number"
                     step="0.25"
@@ -365,7 +396,9 @@ const TimeEntriesPage: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Descripción (Opcional)</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Descripción (Opcional)
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -402,13 +435,29 @@ const TimeEntriesPage: React.FC = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-700/50 bg-slate-800/50">
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Fecha</th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Proyecto</th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tarea</th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Horas</th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Descripción</th>
-                  {isLeader && <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Usuario</th>}
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Proyecto
+                  </th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Tarea
+                  </th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Horas
+                  </th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Descripción
+                  </th>
+                  {isLeader && (
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                      Usuario
+                    </th>
+                  )}
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/30">
@@ -423,9 +472,7 @@ const TimeEntriesPage: React.FC = () => {
                       {e.hours} hs
                     </td>
                     <td className="px-4 py-3 text-slate-400">{e.description ?? "—"}</td>
-                    {isLeader && (
-                      <td className="px-4 py-3 text-slate-300 text-xs">{e.userName}</td>
-                    )}
+                    {isLeader && <td className="px-4 py-3 text-slate-300 text-xs">{e.userName}</td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button

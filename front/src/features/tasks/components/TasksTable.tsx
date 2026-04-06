@@ -23,7 +23,7 @@ const TasksTable: React.FC<Props> = ({ data, projects, users, onEdit, onDelete }
     projects.find((p) => p.id === projectId)?.name ?? "—";
 
   const getUserName = (userId?: number) =>
-    userId ? users.find((u) => u.id === userId)?.fullName ?? "—" : "—";
+    userId ? (users.find((u) => u.id === userId)?.fullName ?? "—") : "—";
 
   const formatDate = (iso?: string) => {
     if (!iso) return "—";
@@ -41,39 +41,61 @@ const TasksTable: React.FC<Props> = ({ data, projects, users, onEdit, onDelete }
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-700/50 bg-slate-800/50">
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tarea</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Proyecto</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Asignado</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Prioridad</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Vence</th>
-            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Tarea
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Proyecto
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Asignado
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Prioridad
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Vence
+            </th>
+            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/30">
           {data.map((t) => {
             const pri = priorityConfig[t.priority] ?? priorityConfig.Medium;
             const date = formatDate(t.dueDate);
-            const dateInfo = typeof date === "string" ? { formatted: date, isOverdue: false } : date;
+            const dateInfo =
+              typeof date === "string" ? { formatted: date, isOverdue: false } : date;
             return (
               <tr key={t.id} className="group transition-colors hover:bg-slate-800/60">
-                <td className="px-4 py-3 font-medium text-slate-200 max-w-[200px] truncate">{t.title}</td>
+                <td className="px-4 py-3 font-medium text-slate-200 max-w-[200px] truncate">
+                  {t.title}
+                </td>
                 <td className="px-4 py-3 text-slate-400">{getProjectName(t.projectId)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-300 shrink-0">
                       {getUserName(t.assigneeId).charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-slate-300 text-xs">{getUserName(t.assigneeId).split(" ")[0]}</span>
+                    <span className="text-slate-300 text-xs">
+                      {getUserName(t.assigneeId).split(" ")[0]}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${pri.color} ${pri.bg}`}>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${pri.color} ${pri.bg}`}
+                  >
                     {pri.label}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs tabular-nums ${dateInfo.isOverdue ? "text-red-400 font-medium" : "text-slate-400"}`}>
-                    {dateInfo.isOverdue && "⚠ "}{dateInfo.formatted}
+                  <span
+                    className={`text-xs tabular-nums ${dateInfo.isOverdue ? "text-red-400 font-medium" : "text-slate-400"}`}
+                  >
+                    {dateInfo.isOverdue && "⚠ "}
+                    {dateInfo.formatted}
                   </span>
                 </td>
                 <td className="px-4 py-3">

@@ -31,9 +31,7 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel, onError }) 
     });
   }, [initial]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors([]);
   };
@@ -92,7 +90,9 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel, onError }) 
       />
       {errors.length > 0 && (
         <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2 space-y-0.5">
-          {errors.map((e, i) => <p key={i}>⚠️ {e}</p>)}
+          {errors.map((e, i) => (
+            <p key={i}>⚠️ {e}</p>
+          ))}
         </div>
       )}
 

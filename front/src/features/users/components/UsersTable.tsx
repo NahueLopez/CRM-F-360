@@ -15,11 +15,21 @@ const UsersTable: React.FC<Props> = ({ data, onEdit, onDelete }) => {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-700/50 bg-slate-800/50">
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Usuario</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Teléfono</th>
-            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
-            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Usuario
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Email
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Teléfono
+            </th>
+            <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Estado
+            </th>
+            <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/30">
@@ -28,7 +38,12 @@ const UsersTable: React.FC<Props> = ({ data, onEdit, onDelete }) => {
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 shrink-0">
-                    {u.fullName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    {u.fullName
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
                   </div>
                   <span className="font-medium text-slate-200">{u.fullName}</span>
                 </div>

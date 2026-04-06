@@ -9,7 +9,12 @@ import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
 import Modal from "../../shared/ui/Modal";
-import { useUsersPaged, useCreateUser, useUpdateUser, useDeleteUser } from "../../shared/hooks/useUserQuery";
+import {
+  useUsersPaged,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+} from "../../shared/hooks/useUserQuery";
 
 const AVATAR_GRADIENTS = [
   "from-violet-500/20 to-purple-500/20",
@@ -43,7 +48,10 @@ const UsersPage: React.FC = () => {
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
 
-  const handleNewClick = () => { setEditing(null); setShowForm(true); };
+  const handleNewClick = () => {
+    setEditing(null);
+    setShowForm(true);
+  };
 
   const handleCreate = async (data: Partial<User>) => {
     await createMutation.mutateAsync(data);
@@ -71,8 +79,14 @@ const UsersPage: React.FC = () => {
     addToast("success", "Usuario eliminado");
   };
 
-  const handleEditClick = (user: User) => { setEditing(user); setShowForm(true); };
-  const handleCancelForm = () => { setEditing(null); setShowForm(false); };
+  const handleEditClick = (user: User) => {
+    setEditing(user);
+    setShowForm(true);
+  };
+  const handleCancelForm = () => {
+    setEditing(null);
+    setShowForm(false);
+  };
 
   const getInitials = (name: string) => {
     const parts = name.split(" ");
@@ -113,7 +127,9 @@ const UsersPage: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+            🔍
+          </span>
           <input
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
@@ -127,12 +143,12 @@ const UsersPage: React.FC = () => {
           onClose={handleCancelForm}
           title={editing ? "✏️ Editar usuario" : "👥 Nuevo usuario"}
         >
-            <UserForm
-              initial={editing ?? {}}
-              isEditing={!!editing}
-              onSubmit={editing ? handleUpdate : handleCreate}
-              onCancel={handleCancelForm}
-            />
+          <UserForm
+            initial={editing ?? {}}
+            isEditing={!!editing}
+            onSubmit={editing ? handleUpdate : handleCreate}
+            onCancel={handleCancelForm}
+          />
         </Modal>
 
         {/* User Cards Grid */}
@@ -166,7 +182,9 @@ const UsersPage: React.FC = () => {
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${AVATAR_GRADIENTS[gradIdx]} ${AVATAR_COLORS[gradIdx].border} border flex items-center justify-center ${AVATAR_COLORS[gradIdx].text} text-sm font-bold shrink-0`}>
+                    <div
+                      className={`w-11 h-11 rounded-xl bg-linear-to-br ${AVATAR_GRADIENTS[gradIdx]} ${AVATAR_COLORS[gradIdx].border} border flex items-center justify-center ${AVATAR_COLORS[gradIdx].text} text-sm font-bold shrink-0`}
+                    >
                       {getInitials(u.fullName)}
                     </div>
 
@@ -175,15 +193,23 @@ const UsersPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-slate-200 truncate">{u.fullName}</p>
                         {u.active !== false ? (
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="Activo" />
+                          <span
+                            className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"
+                            title="Activo"
+                          />
                         ) : (
-                          <span className="w-2 h-2 rounded-full bg-slate-600 shrink-0" title="Inactivo" />
+                          <span
+                            className="w-2 h-2 rounded-full bg-slate-600 shrink-0"
+                            title="Inactivo"
+                          />
                         )}
                       </div>
                       <p className="text-xs text-slate-500 truncate mt-0.5">{u.email}</p>
                       <div className="flex items-center gap-3 mt-2">
                         {u.phone && (
-                          <span className="text-[11px] text-slate-500 tabular-nums">📞 {u.phone}</span>
+                          <span className="text-[11px] text-slate-500 tabular-nums">
+                            📞 {u.phone}
+                          </span>
                         )}
                         {lastLogin && (
                           <span className="text-[11px] text-slate-600">

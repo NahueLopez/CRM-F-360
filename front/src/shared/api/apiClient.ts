@@ -115,6 +115,5 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
     }),
 
-  delete: (path: string) =>
-    request<void>(path, { method: "DELETE" }),
+  delete: (path: string) => request<void>(path, { method: "DELETE" }),
 };

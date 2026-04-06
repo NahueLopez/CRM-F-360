@@ -6,7 +6,7 @@ export const projectService = {
 
   getPaged: (params?: Record<string, any>) => {
     const cleanParams = Object.fromEntries(
-      Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== "")
+      Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== ""),
     );
     const qs = new URLSearchParams(cleanParams as any).toString();
     return api.get<any>(`/projects/paged?${qs}`);
@@ -16,8 +16,7 @@ export const projectService = {
 
   create: (data: Partial<Project>) => api.post<Project>("/projects", data),
 
-  update: (id: number, data: Partial<Project>) =>
-    api.put<Project>(`/projects/${id}`, data),
+  update: (id: number, data: Partial<Project>) => api.put<Project>(`/projects/${id}`, data),
 
   remove: (id: number) => api.delete(`/projects/${id}`),
 };

@@ -2,45 +2,44 @@ import { api } from "../../shared/api/apiClient";
 import type { Task } from "./types";
 
 export const taskService = {
-    getAll: () => api.get<Task[]>("/tasks"),
+  getAll: () => api.get<Task[]>("/tasks"),
 
-    getPaged: (params?: Record<string, any>) => {
-        const cleanParams = Object.fromEntries(
-            Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== "")
-        );
-        const qs = new URLSearchParams(cleanParams as any).toString();
-        return api.get<any>(`/tasks/paged?${qs}`);
+  getPaged: (params?: Record<string, any>) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== ""),
+    );
+    const qs = new URLSearchParams(cleanParams as any).toString();
+    return api.get<any>(`/tasks/paged?${qs}`);
+  },
+
+  getByProject: (projectId: number) => api.get<Task[]>(`/tasks/by-project/${projectId}`),
+
+  getById: (id: number) => api.get<Task>(`/tasks/${id}`),
+
+  create: (data: {
+    projectId: number;
+    columnId?: number;
+    assigneeId?: number;
+    title: string;
+    description?: string;
+    priority?: string;
+    dueDate?: string;
+  }) => api.post<Task>("/tasks", data),
+
+  update: (
+    id: number,
+    data: {
+      columnId?: number;
+      assigneeId?: number;
+      title: string;
+      description?: string;
+      priority: string;
+      dueDate?: string;
     },
+  ) => api.put<Task>(`/tasks/${id}`, data),
 
-    getByProject: (projectId: number) =>
-        api.get<Task[]>(`/tasks/by-project/${projectId}`),
+  move: (id: number, columnId: number, sortOrder: number) =>
+    api.patch<void>(`/tasks/${id}/move`, { columnId, sortOrder }),
 
-    getById: (id: number) => api.get<Task>(`/tasks/${id}`),
-
-    create: (data: {
-        projectId: number;
-        columnId?: number;
-        assigneeId?: number;
-        title: string;
-        description?: string;
-        priority?: string;
-        dueDate?: string;
-    }) => api.post<Task>("/tasks", data),
-
-    update: (
-        id: number,
-        data: {
-            columnId?: number;
-            assigneeId?: number;
-            title: string;
-            description?: string;
-            priority: string;
-            dueDate?: string;
-        }
-    ) => api.put<Task>(`/tasks/${id}`, data),
-
-    move: (id: number, columnId: number, sortOrder: number) =>
-        api.patch<void>(`/tasks/${id}/move`, { columnId, sortOrder }),
-
-    remove: (id: number) => api.delete(`/tasks/${id}`),
+  remove: (id: number) => api.delete(`/tasks/${id}`),
 };

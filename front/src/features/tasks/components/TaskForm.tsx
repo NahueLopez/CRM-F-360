@@ -11,20 +11,13 @@ interface Props {
   onCancel: () => void;
 }
 
-
 const PRIORITIES: { value: TaskPriority; label: string }[] = [
   { value: "Low", label: "Baja" },
   { value: "Medium", label: "Media" },
   { value: "High", label: "Alta" },
 ];
 
-const TaskForm: React.FC<Props> = ({
-  initial,
-  projects,
-  users,
-  onSubmit,
-  onCancel,
-}) => {
+const TaskForm: React.FC<Props> = ({ initial, projects, users, onSubmit, onCancel }) => {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<Partial<Task>>({
@@ -48,9 +41,7 @@ const TaskForm: React.FC<Props> = ({
   }, [initial, projects]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -93,18 +84,14 @@ const TaskForm: React.FC<Props> = ({
     }
   };
 
-  const dueDateValue = form.dueDate
-    ? form.dueDate.substring(0, 10)
-    : "";
+  const dueDateValue = form.dueDate ? form.dueDate.substring(0, 10) : "";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Proyecto */}
         <div>
-          <label className="block text-xs mb-1 text-slate-400">
-            Proyecto *
-          </label>
+          <label className="block text-xs mb-1 text-slate-400">Proyecto *</label>
           <select
             name="projectId"
             value={form.projectId ?? ""}
@@ -122,9 +109,7 @@ const TaskForm: React.FC<Props> = ({
 
         {/* Asignado a */}
         <div>
-          <label className="block text-xs mb-1 text-slate-400">
-            Asignado a
-          </label>
+          <label className="block text-xs mb-1 text-slate-400">Asignado a</label>
           <select
             name="assigneeId"
             value={form.assigneeId ?? ""}
@@ -142,9 +127,7 @@ const TaskForm: React.FC<Props> = ({
 
         {/* Prioridad */}
         <div>
-          <label className="block text-xs mb-1 text-slate-400">
-            Prioridad
-          </label>
+          <label className="block text-xs mb-1 text-slate-400">Prioridad</label>
           <select
             name="priority"
             value={form.priority ?? "Medium"}
@@ -161,9 +144,7 @@ const TaskForm: React.FC<Props> = ({
 
         {/* Fecha vencimiento */}
         <div>
-          <label className="block text-xs mb-1 text-slate-400">
-            Fecha de vencimiento
-          </label>
+          <label className="block text-xs mb-1 text-slate-400">Fecha de vencimiento</label>
           <input
             type="date"
             name="dueDate"
@@ -176,9 +157,7 @@ const TaskForm: React.FC<Props> = ({
 
       {/* Título y descripción */}
       <div>
-        <label className="block text-xs mb-1 text-slate-400">
-          Título de la tarea *
-        </label>
+        <label className="block text-xs mb-1 text-slate-400">Título de la tarea *</label>
         <input
           name="title"
           value={form.title ?? ""}
@@ -188,9 +167,7 @@ const TaskForm: React.FC<Props> = ({
       </div>
 
       <div>
-        <label className="block text-xs mb-1 text-slate-400">
-          Descripción
-        </label>
+        <label className="block text-xs mb-1 text-slate-400">Descripción</label>
         <textarea
           name="description"
           value={form.description ?? ""}
