@@ -23,6 +23,7 @@ import type { Project } from "../projects/types";
 import { useToast } from "../../shared/context/ToastContext";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
+import { authStore } from "../../shared/auth/authStore";
 
 const KanbanBoardPage: React.FC = () => {
   const { projectId: paramId } = useParams<{ projectId: string }>();
@@ -350,85 +351,89 @@ const KanbanBoardPage: React.FC = () => {
                 <KanbanColumn
                   column={col}
                   tasks={tasksByColumn.get(col.id) ?? []}
-                  onEditTask={openEditTask}
-                  onRenameColumn={handleRenameColumn}
-                  onDeleteColumn={handleDeleteColumn}
+                  onEditTask={authStore.hasPermission("tasks.edit") ? openEditTask : () => { }}
+                  onRenameColumn={authStore.hasPermission("projects.edit") ? handleRenameColumn : () => { }}
+                  onDeleteColumn={authStore.hasPermission("projects.edit") ? handleDeleteColumn : () => { }}
                 />
 
-                <button
-                  onClick={() => openNewTask(col.id)}
-                  className="mt-2 w-72 text-xs text-slate-500 hover:text-indigo-400
-                    hover:bg-slate-800/60 border border-dashed border-slate-700
-                    rounded-lg py-2 transition"
-                >
-                  + Agregar tarea
-                </button>
+                {authStore.hasPermission("tasks.create") && (
+                  <button
+                    onClick={() => openNewTask(col.id)}
+                    className="mt-2 w-72 text-xs text-slate-500 hover:text-indigo-400
+                      hover:bg-slate-800/60 border border-dashed border-slate-700
+                      rounded-lg py-2 transition"
+                  >
+                    + Agregar tarea
+                  </button>
+                )}
               </div>
             ))}
 
             {/* Add new column */}
-            <div className="flex flex-col shrink-0">
-              {addingColumn ? (
-                <div className="w-72 min-w-[18rem] rounded-xl bg-slate-800/50 border border-indigo-500/40 p-3">
-                  <input
-                    autoFocus
-                    value={newColumnName}
-                    onChange={(e) => setNewColumnName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddColumn();
-                      if (e.key === "Escape") {
-                        setAddingColumn(false);
-                        setNewColumnName("");
-                      }
-                    }}
-                    placeholder="Nombre de la columna..."
-                    className="w-full text-sm text-slate-200 bg-slate-700/80 
-                                                   border border-slate-600 rounded px-2.5 py-1.5 
-                                                   outline-none focus:border-indigo-500/60 
-                                                   placeholder:text-slate-500"
-                    maxLength={50}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={handleAddColumn}
-                      disabled={!newColumnName.trim()}
-                      className="flex-1 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 
-                                                       disabled:bg-slate-700 disabled:text-slate-500
-                                                       text-white rounded py-1.5 transition"
-                    >
-                      Crear columna
-                    </button>
-                    <button
-                      onClick={() => {
-                        setAddingColumn(false);
-                        setNewColumnName("");
+            {authStore.hasPermission("projects.edit") && (
+              <div className="flex flex-col shrink-0">
+                {addingColumn ? (
+                  <div className="w-72 min-w-[18rem] rounded-xl bg-slate-800/50 border border-indigo-500/40 p-3">
+                    <input
+                      autoFocus
+                      value={newColumnName}
+                      onChange={(e) => setNewColumnName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddColumn();
+                        if (e.key === "Escape") {
+                          setAddingColumn(false);
+                          setNewColumnName("");
+                        }
                       }}
-                      className="text-xs text-slate-400 hover:text-slate-200 px-2 transition"
-                    >
-                      ✕
-                    </button>
+                      placeholder="Nombre de la columna..."
+                      className="w-full text-sm text-slate-200 bg-slate-700/80 
+                                                     border border-slate-600 rounded px-2.5 py-1.5 
+                                                     outline-none focus:border-indigo-500/60 
+                                                     placeholder:text-slate-500"
+                      maxLength={50}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={handleAddColumn}
+                        disabled={!newColumnName.trim()}
+                        className="flex-1 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 
+                                                         disabled:bg-slate-700 disabled:text-slate-500
+                                                         text-white rounded py-1.5 transition"
+                      >
+                        Crear columna
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAddingColumn(false);
+                          setNewColumnName("");
+                        }}
+                        className="text-xs text-slate-400 hover:text-slate-200 px-2 transition"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setAddingColumn(true)}
-                  className="w-72 min-w-[18rem] rounded-xl bg-slate-800/30 
-                                               border border-dashed border-slate-700/60 
-                                               hover:border-indigo-500/40 hover:bg-slate-800/50 
-                                               text-slate-500 hover:text-indigo-400
-                                               flex items-center justify-center gap-2 py-8 
-                                               transition cursor-pointer text-sm"
-                >
-                  <span className="text-lg">+</span> Nueva columna
-                </button>
-              )}
-            </div>
+                ) : (
+                  <button
+                    onClick={() => setAddingColumn(true)}
+                    className="w-72 min-w-[18rem] rounded-xl bg-slate-800/30 
+                                                 border border-dashed border-slate-700/60 
+                                                 hover:border-indigo-500/40 hover:bg-slate-800/50 
+                                                 text-slate-500 hover:text-indigo-400
+                                                 flex items-center justify-center gap-2 py-8 
+                                                 transition cursor-pointer text-sm"
+                  >
+                    <span className="text-lg">+</span> Nueva columna
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <DragOverlay>
             {activeTask ? (
               <div className="rotate-2 scale-105">
-                <KanbanCard task={activeTask} onEdit={() => {}} />
+                <KanbanCard task={activeTask} onEdit={() => { }} />
               </div>
             ) : null}
           </DragOverlay>
@@ -441,7 +446,7 @@ const KanbanBoardPage: React.FC = () => {
           initial={editingTask}
           users={users}
           onSubmit={handleSubmitTask}
-          onDelete={editingTask ? handleDeleteTask : undefined}
+          onDelete={editingTask && authStore.hasPermission("tasks.delete") ? handleDeleteTask : undefined}
           onClose={() => setModalOpen(false)}
         />
       )}

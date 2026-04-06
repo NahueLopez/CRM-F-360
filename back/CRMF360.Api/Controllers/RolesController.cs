@@ -6,7 +6,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "roles.manage")]
+[Authorize]
 public class RolesController : ControllerBase
 {
     private readonly IRoleService _roleService;
@@ -36,6 +36,7 @@ public class RolesController : ControllerBase
 
     // POST: api/roles
     [HttpPost]
+    [Authorize(Policy = "roles.manage")]
     public async Task<ActionResult<RoleDto>> Create([FromBody] CreateRoleDto dto, CancellationToken cancellationToken)
     {
         var created = await _roleService.CreateAsync(dto, cancellationToken);
@@ -44,6 +45,7 @@ public class RolesController : ControllerBase
 
     // PUT: api/roles/5
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "roles.manage")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto, CancellationToken cancellationToken)
     {
         var ok = await _roleService.UpdateAsync(id, dto, cancellationToken);
@@ -54,6 +56,7 @@ public class RolesController : ControllerBase
 
     // DELETE: api/roles/5
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "roles.manage")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var ok = await _roleService.DeleteAsync(id, cancellationToken);

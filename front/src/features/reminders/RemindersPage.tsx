@@ -5,6 +5,7 @@ import { contactService } from "../contacts/contactService";
 import type { Reminder } from "./types";
 import type { Company } from "../companies/types";
 import type { Contact } from "../contacts/types";
+import { authStore } from "../../shared/auth/authStore";
 
 const RemindersPage: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -103,12 +104,14 @@ const RemindersPage: React.FC = () => {
             </button>
           ))}
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition"
-        >
-          + Nuevo recordatorio
-        </button>
+        {authStore.hasPermission("reminders.create") && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition"
+          >
+            + Nuevo recordatorio
+          </button>
+        )}
       </div>
 
       {/* Reminders list */}
@@ -124,19 +127,19 @@ const RemindersPage: React.FC = () => {
           filtered.map((r) => (
             <div
               key={r.id}
-              className={`flex items-center gap-4 p-4 rounded-xl border transition ${
-                r.isCompleted
+              className={`flex items-center gap-4 p-4 rounded-xl border transition ${r.isCompleted
                   ? "bg-slate-800/30 border-slate-700/30 opacity-60"
                   : isOverdue(r)
                     ? "bg-red-500/5 border-red-500/20"
                     : isDueToday(r)
                       ? "bg-amber-500/5 border-amber-500/20"
                       : "bg-slate-800/50 border-slate-700/50"
-              }`}
+                }`}
             >
               <button
-                onClick={() => handleToggle(r.id)}
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition shrink-0 ${r.isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-500 hover:border-indigo-400"}`}
+                onClick={authStore.hasPermission("reminders.edit") ? () => handleToggle(r.id) : undefined}
+                disabled={!authStore.hasPermission("reminders.edit")}
+                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition shrink-0 ${r.isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-500 hover:border-indigo-400"} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {r.isCompleted && <span className="text-xs">✓</span>}
               </button>
@@ -175,12 +178,14 @@ const RemindersPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleDelete(r.id)}
-                className="text-slate-600 hover:text-red-400 text-sm transition"
-              >
-                ✕
-              </button>
+              {authStore.hasPermission("reminders.delete") && (
+                <button
+                  onClick={() => handleDelete(r.id)}
+                  className="text-slate-600 hover:text-red-400 text-sm transition"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))
         )}

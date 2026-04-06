@@ -9,6 +9,7 @@ import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
 import Modal from "../../shared/ui/Modal";
+import { authStore } from "../../shared/auth/authStore";
 import {
   useUsersPaged,
   useCreateUser,
@@ -123,13 +124,15 @@ const UsersPage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleNewClick}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
-          >
-            + Nuevo usuario
-          </button>
+          {authStore.hasPermission("users.create") && (
+            <button
+              type="button"
+              onClick={handleNewClick}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
+            >
+              + Nuevo usuario
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -168,8 +171,8 @@ const UsersPage: React.FC = () => {
               icon="👥"
               title="Sin usuarios"
               description="Agregá usuarios al sistema para que puedan cargar horas y gestionar proyectos."
-              actionLabel="+ Nuevo usuario"
-              onAction={handleNewClick}
+              actionLabel={authStore.hasPermission("users.create") ? "+ Nuevo usuario" : undefined}
+              onAction={authStore.hasPermission("users.create") ? handleNewClick : undefined}
             />
           ) : (
             <EmptyState
@@ -229,18 +232,22 @@ const UsersPage: React.FC = () => {
                   </div>
 
                   <div className="absolute top-3 right-3 flex items-center gap-1">
-                    <button
-                      onClick={() => handleEditClick(u)}
-                      className="px-2 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDelete(u.id)}
-                      className="px-2 py-1 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                    >
-                      🗑️
-                    </button>
+                    {authStore.hasPermission("users.edit") && (
+                      <button
+                        onClick={() => handleEditClick(u)}
+                        className="px-2 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    {authStore.hasPermission("users.delete") && (
+                      <button
+                        onClick={() => handleDelete(u.id)}
+                        className="px-2 py-1 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               );

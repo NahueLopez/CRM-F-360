@@ -77,11 +77,21 @@ const App = () => {
                   </Route>
                 </Route>
 
-                {/* Admin only */}
-                <Route element={<ProtectedRoute requiredRoles={["Admin"]} />}>
+                {/* Admin only or restricted by permissions */}
+                <Route element={<ProtectedRoute requiredPermissions={["users.view"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="users" element={<UsersPage />} />
+                  </Route>
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermissions={["audit.view"]} />}>
+                  <Route element={<DashboardLayout />}>
                     <Route path="audit-logs" element={<AuditLogsPage />} />
+                  </Route>
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermissions={["roles.manage"]} />}>
+                  <Route element={<DashboardLayout />}>
                     <Route path="roles-permissions" element={<RolesPermissionsPage />} />
                   </Route>
                 </Route>

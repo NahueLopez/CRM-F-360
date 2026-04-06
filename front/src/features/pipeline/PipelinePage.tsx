@@ -27,6 +27,7 @@ import {
   usePipelineWebSockets,
 } from "../../shared/hooks/useDealQuery";
 import { useCompanies } from "../../shared/hooks/useCompanyQuery";
+import { authStore } from "../../shared/auth/authStore";
 
 const STAGES: { value: DealStage; label: string; color: string; bg: string }[] = [
   { value: "Lead", label: "Lead", color: "text-slate-300", bg: "bg-slate-700/50" },
@@ -121,12 +122,14 @@ const PipelinePage = () => {
 
   // ── Drag & Drop ──
   const handleDragStart = (event: DragStartEvent) => {
+    if (!authStore.hasPermission("deals.move")) return;
     const deal = deals.find((d) => d.id === event.active.id);
     setActiveDeal(deal ?? null);
     originalDealsRef.current = deals; // Save snapshot for rollback
   };
 
   const handleDragOver = (event: DragOverEvent) => {
+    if (!authStore.hasPermission("deals.move")) return;
     const { active, over } = event;
     if (!over) return;
 
@@ -153,6 +156,7 @@ const PipelinePage = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (!authStore.hasPermission("deals.move")) return;
     setActiveDeal(null);
     const { active, over } = event;
     if (!over) {
@@ -348,15 +352,17 @@ const PipelinePage = () => {
           </p>
         </div>
         <div className="flex items-center justify-end">
-          <button
-            onClick={() => {
-              setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
-              setShowCreate(true);
-            }}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition"
-          >
-            + Nueva oportunidad
-          </button>
+          {authStore.hasPermission("deals.create") && (
+            <button
+              onClick={() => {
+                setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+                setShowCreate(true);
+              }}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition"
+            >
+              + Nueva oportunidad
+            </button>
+          )}
         </div>
       </div>
 
@@ -376,7 +382,7 @@ const PipelinePage = () => {
               stage={stg}
               deals={dealsByStage(stg.value)}
               summary={stageTotal(stg.value)}
-              onEditDeal={handleEditDealClick}
+              onEditDeal={authStore.hasPermission("deals.edit") ? handleEditDealClick : () => { }}
             />
           ))}
         </div>
@@ -385,7 +391,7 @@ const PipelinePage = () => {
         <DragOverlay>
           {activeDeal ? (
             <div className="rotate-1 scale-105 opacity-90">
-              <PipelineDealCard deal={activeDeal} onEdit={() => {}} />
+              <PipelineDealCard deal={activeDeal} onEdit={() => { }} />
             </div>
           ) : null}
         </DragOverlay>
@@ -411,10 +417,10 @@ const PipelinePage = () => {
           onChange={setForm}
           onSubmit={handleUpdate}
           onClose={() => setEditDeal(null)}
-          onDelete={() => {
+          onDelete={authStore.hasPermission("deals.delete") ? () => {
             handleDelete(editDeal.id);
             setEditDeal(null);
-          }}
+          } : undefined}
         />
       )}
       <ConfirmModal {...confirmProps} />

@@ -17,6 +17,7 @@ import { TableSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
 import Modal from "../../shared/ui/Modal";
+import { authStore } from "../../shared/auth/authStore";
 
 const ACTIVITY_TYPES = [
   { value: "Call", label: "📞 Llamada", color: "text-sky-400", bg: "bg-sky-400/10" },
@@ -172,36 +173,40 @@ const ContactsPage: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  downloadCsvFromData(
-                    contacts,
-                    [
-                      { key: "fullName", header: "Nombre" },
-                      { key: "email", header: "Email" },
-                      { key: "phone", header: "Teléfono" },
-                      { key: "position", header: "Cargo" },
-                      { key: "companyName", header: "Empresa" },
-                      { key: "notes", header: "Notas" },
-                    ],
-                    `contactos_${new Date().toISOString().slice(0, 10)}.csv`,
-                  );
-                  addToast("success", `${contacts.length} contactos exportados`);
-                }}
-                disabled={contacts.length === 0}
-                className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
-              >
-                📥 CSV
-              </button>
-              <button
-                onClick={() => {
-                  setShowForm(!showForm);
-                  setEditing(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
-              >
-                + Nuevo contacto
-              </button>
+              {authStore.hasPermission("reports.export") && (
+                <button
+                  onClick={() => {
+                    downloadCsvFromData(
+                      contacts,
+                      [
+                        { key: "fullName", header: "Nombre" },
+                        { key: "email", header: "Email" },
+                        { key: "phone", header: "Teléfono" },
+                        { key: "position", header: "Cargo" },
+                        { key: "companyName", header: "Empresa" },
+                        { key: "notes", header: "Notas" },
+                      ],
+                      `contactos_${new Date().toISOString().slice(0, 10)}.csv`,
+                    );
+                    addToast("success", `${contacts.length} contactos exportados`);
+                  }}
+                  disabled={contacts.length === 0}
+                  className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
+                >
+                  📥 CSV
+                </button>
+              )}
+              {authStore.hasPermission("contacts.create") && (
+                <button
+                  onClick={() => {
+                    setShowForm(!showForm);
+                    setEditing(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
+                >
+                  + Nuevo contacto
+                </button>
+              )}
             </div>
           </div>
 
@@ -314,11 +319,15 @@ const ContactsPage: React.FC = () => {
                 icon="👤"
                 title="Sin contactos"
                 description="Agregá tu primer contacto para empezar a registrar interacciones."
-                actionLabel="+ Nuevo contacto"
-                onAction={() => {
-                  setShowForm(true);
-                  setEditing(null);
-                }}
+                actionLabel={authStore.hasPermission("contacts.create") ? "+ Nuevo contacto" : undefined}
+                onAction={
+                  authStore.hasPermission("contacts.create")
+                    ? () => {
+                      setShowForm(true);
+                      setEditing(null);
+                    }
+                    : undefined
+                }
               />
             ) : (
               <EmptyState
@@ -334,10 +343,9 @@ const ContactsPage: React.FC = () => {
                   key={c.id}
                   onClick={() => openDetail(c)}
                   className={`group flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all
-                    ${
-                      selected?.id === c.id
-                        ? "bg-indigo-950/30 border-indigo-500/40"
-                        : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
+                    ${selected?.id === c.id
+                      ? "bg-indigo-950/30 border-indigo-500/40"
+                      : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
                     }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -356,24 +364,28 @@ const ContactsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(c);
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(c.id);
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500/80 dark:text-red-400/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 transition-all"
-                    >
-                      Eliminar
-                    </button>
+                    {authStore.hasPermission("contacts.edit") && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(c);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
+                      >
+                        ✏️ Editar
+                      </button>
+                    )}
+                    {authStore.hasPermission("contacts.delete") && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(c.id);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500/80 dark:text-red-400/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 transition-all"
+                      >
+                        Eliminar
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -459,11 +471,10 @@ const ContactsPage: React.FC = () => {
                   <button
                     key={t.value}
                     onClick={() => setActType(t.value)}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${
-                      actType === t.value
-                        ? `${t.bg} ${t.color} border border-current/20`
-                        : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
-                    }`}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${actType === t.value
+                      ? `${t.bg} ${t.color} border border-current/20`
+                      : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
+                      }`}
                   >
                     {t.label}
                   </button>

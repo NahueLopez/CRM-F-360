@@ -18,6 +18,7 @@ import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
 import Modal from "../../shared/ui/Modal";
+import { authStore } from "../../shared/auth/authStore";
 
 const ACTIVITY_ICONS: Record<string, string> = {
   Call: "📞",
@@ -139,33 +140,37 @@ const CompaniesPage: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  downloadCsvFromData(
-                    companies,
-                    [
-                      { key: "name", header: "Nombre" },
-                      { key: "cuit", header: "CUIT" },
-                      { key: "email", header: "Email" },
-                      { key: "phone", header: "Teléfono" },
-                      { key: "notes", header: "Notas" },
-                    ],
-                    `empresas_${new Date().toISOString().slice(0, 10)}.csv`,
-                  );
-                  addToast("success", `${companies.length} empresas de esta página exportadas`);
-                }}
-                disabled={companies.length === 0}
-                className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
-              >
-                📥 CSV
-              </button>
-              <button
-                type="button"
-                onClick={handleNewClick}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
-              >
-                + Nueva empresa
-              </button>
+              {authStore.hasPermission("reports.export") && (
+                <button
+                  onClick={() => {
+                    downloadCsvFromData(
+                      companies,
+                      [
+                        { key: "name", header: "Nombre" },
+                        { key: "cuit", header: "CUIT" },
+                        { key: "email", header: "Email" },
+                        { key: "phone", header: "Teléfono" },
+                        { key: "notes", header: "Notas" },
+                      ],
+                      `empresas_${new Date().toISOString().slice(0, 10)}.csv`,
+                    );
+                    addToast("success", `${companies.length} empresas exportadas`);
+                  }}
+                  disabled={companies.length === 0}
+                  className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
+                >
+                  📥 CSV
+                </button>
+              )}
+              {authStore.hasPermission("companies.create") && (
+                <button
+                  type="button"
+                  onClick={handleNewClick}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-all shadow-sm shadow-indigo-500/20 active:scale-[0.97]"
+                >
+                  + Nueva empresa
+                </button>
+              )}
             </div>
           </div>
 
@@ -202,8 +207,8 @@ const CompaniesPage: React.FC = () => {
                 icon="🏢"
                 title="Sin empresas registradas"
                 description="Creá tu primera empresa para empezar a gestionar clientes y proyectos."
-                actionLabel="+ Nueva empresa"
-                onAction={handleNewClick}
+                actionLabel={authStore.hasPermission("companies.create") ? "+ Nueva empresa" : undefined}
+                onAction={authStore.hasPermission("companies.create") ? handleNewClick : undefined}
               />
             ) : (
               <EmptyState
@@ -221,10 +226,9 @@ const CompaniesPage: React.FC = () => {
                     key={c.id}
                     onClick={() => setSelected(c)}
                     className={`group flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all
-                      ${
-                        selected?.id === c.id
-                          ? "bg-indigo-950/30 border-indigo-500/40"
-                          : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
+                      ${selected?.id === c.id
+                        ? "bg-indigo-950/30 border-indigo-500/40"
+                        : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
                       }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -247,24 +251,28 @@ const CompaniesPage: React.FC = () => {
                           {c.phone}
                         </span>
                       )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(c);
-                        }}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(c.id);
-                        }}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                      >
-                        Eliminar
-                      </button>
+                      {authStore.hasPermission("companies.edit") && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(c);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+                        >
+                          ✏️ Editar
+                        </button>
+                      )}
+                      {authStore.hasPermission("companies.delete") && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(c.id);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        >
+                          Eliminar
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -354,11 +362,10 @@ const CompaniesPage: React.FC = () => {
                   <button
                     key={type}
                     onClick={() => setNewActivity((p) => ({ ...p, type }))}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${
-                      newActivity.type === type
-                        ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                        : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
-                    }`}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg transition-all ${newActivity.type === type
+                      ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
+                      : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/60 border border-transparent"
+                      }`}
                   >
                     {icon} {type}
                   </button>

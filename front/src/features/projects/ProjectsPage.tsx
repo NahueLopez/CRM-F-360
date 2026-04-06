@@ -91,14 +91,18 @@ const ProjectsPage: React.FC = () => {
     setPage(1);
   };
 
-  const canManage = authStore.hasAnyRole("Admin", "Manager");
-  const companies = canManage ? companiesData : [];
+  const canCreate = authStore.hasPermission("projects.create");
+  const canEdit = authStore.hasPermission("projects.edit");
+  const canDelete = authStore.hasPermission("projects.delete");
+
+  // They need companies data if they might create or edit a project
+  const companies = (canCreate || canEdit) ? companiesData : [];
 
   useEffect(() => {
-    if (canManage) {
+    if (canCreate || canEdit) {
       userService.getAll().then(setUsers).catch(console.error);
     }
-  }, [canManage]);
+  }, [canCreate, canEdit]);
 
   const handleNewClick = () => {
     setEditing(null);
@@ -169,13 +173,11 @@ const ProjectsPage: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold tracking-tight">Proyectos</h3>
             <p className="text-sm text-slate-500 mt-0.5">
-              {canManage
-                ? `${totalCount} ${totalCount === 1 ? "proyecto" : "proyectos"}`
-                : "Tus proyectos asignados"}
+              {totalCount} {totalCount === 1 ? "proyecto" : "proyectos"}
             </p>
           </div>
 
-          {canManage && (
+          {canCreate && (
             <button
               type="button"
               onClick={handleNewClick}
@@ -187,7 +189,7 @@ const ProjectsPage: React.FC = () => {
           )}
         </div>
 
-        {canManage && companies.length === 0 && (
+        {canCreate && companies.length === 0 && (
           <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3">
             <span>⚠️</span>
             Para crear proyectos primero necesitás cargar al menos una empresa.
@@ -210,11 +212,10 @@ const ProjectsPage: React.FC = () => {
           <div className="flex gap-1 flex-wrap">
             <button
               onClick={() => handleStatusFilter("")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                !filterStatus
+              className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${!filterStatus
                   ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
                   : "bg-slate-700/10 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
-              }`}
+                }`}
             >
               Todos
             </button>
@@ -222,11 +223,10 @@ const ProjectsPage: React.FC = () => {
               <button
                 key={s}
                 onClick={() => handleStatusFilter(s)}
-                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
-                  filterStatus === s
+                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${filterStatus === s
                     ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].text} border ${STATUS_CONFIG[s].border}`
                     : "bg-slate-700/10 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
-                }`}
+                  }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[s].dot}`} />
                 {STATUS_CONFIG[s].label}
@@ -236,7 +236,7 @@ const ProjectsPage: React.FC = () => {
         </div>
 
         <Modal
-          open={showForm && canManage}
+          open={showForm && (canCreate || canEdit)}
           onClose={handleCancelForm}
           title={editing ? "✏️ Editar proyecto" : "📁 Nuevo proyecto"}
         >
@@ -258,8 +258,8 @@ const ProjectsPage: React.FC = () => {
               icon="📁"
               title="Sin proyectos"
               description="Creá tu primer proyecto para empezar a organizar las tareas de tu equipo."
-              actionLabel={canManage ? "+ Nuevo proyecto" : undefined}
-              onAction={canManage ? handleNewClick : undefined}
+              actionLabel={canCreate ? "+ Nuevo proyecto" : undefined}
+              onAction={canCreate ? handleNewClick : undefined}
             />
           ) : (
             <EmptyState
@@ -312,10 +312,17 @@ const ProjectsPage: React.FC = () => {
                     )}
                     <div className="w-px h-6 bg-slate-700/50 hidden lg:block" />
                     <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                      <StatusDropdown
-                        currentStatus={p.status}
-                        onChangeStatus={(s: ProjectStatus) => handleStatusChange(p.id, s)}
-                      />
+                      {canEdit && (
+                        <StatusDropdown
+                          currentStatus={p.status}
+                          onChangeStatus={(s: ProjectStatus) => handleStatusChange(p.id, s)}
+                        />
+                      )}
+                      {!canEdit && (
+                        <span className={`px-2 py-1 text-[10px] font-medium rounded-lg ${STATUS_CONFIG[p.status]?.bg} ${STATUS_CONFIG[p.status]?.text} border ${STATUS_CONFIG[p.status]?.border}`}>
+                          {STATUS_CONFIG[p.status]?.label}
+                        </span>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -325,36 +332,40 @@ const ProjectsPage: React.FC = () => {
                       >
                         📋 Tablero
                       </button>
-                      {canManage && (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setTeamProjectId(p.id);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
-                          >
-                            👥
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(p);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
-                          >
-                            ✏️ Editar
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(p.id);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                          >
-                            Eliminar
-                          </button>
-                        </>
+
+                      {canEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTeamProjectId(p.id);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
+                          title="Gestionar Equipo"
+                        >
+                          👥
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(p);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
+                        >
+                          ✏️ Editar
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(p.id);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        >
+                          Eliminar
+                        </button>
                       )}
                     </div>
                   </div>
@@ -436,11 +447,10 @@ const StatusDropdown = ({
                   onChangeStatus(s);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 text-[11px] flex items-center gap-2 transition ${
-                  isActive
+                className={`w-full text-left px-3 py-1.5 text-[11px] flex items-center gap-2 transition ${isActive
                     ? `${cfg.bg} ${cfg.text} font-medium`
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
                 {cfg.label}
