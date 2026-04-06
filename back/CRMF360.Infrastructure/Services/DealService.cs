@@ -1,6 +1,7 @@
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.Deals;
 using CRMF360.Domain.Entities;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -9,7 +10,13 @@ namespace CRMF360.Infrastructure.Services;
 public class DealService : IDealService
 {
     private readonly IApplicationDbContext _db;
-    public DealService(IApplicationDbContext db) => _db = db;
+    private readonly IHubContext<CRMF360.Infrastructure.Hubs.PipelineHub> _hub;
+
+    public DealService(IApplicationDbContext db, IHubContext<CRMF360.Infrastructure.Hubs.PipelineHub> hub)
+    {
+        _db = db;
+        _hub = hub;
+    }
 
     // ── Reusable projection — single source of truth ──
     private static readonly Expression<Func<Deal, DealDto>> DealProjection = d => new DealDto
@@ -73,7 +80,9 @@ public class DealService : IDealService
         };
         _db.Deals.Add(entity);
         await _db.SaveChangesAsync(ct);
-        return (await GetByIdAsync(entity.Id, ct))!;
+        var created = (await GetByIdAsync(entity.Id, ct))!;
+        await _hub.Clients.All.SendAsync("DealCreated", created, ct);
+        return created;
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateDealDto dto, CancellationToken ct = default)
@@ -89,6 +98,9 @@ public class DealService : IDealService
         e.Notes = dto.Notes;
         e.ExpectedCloseDate = dto.ExpectedCloseDate;
         await _db.SaveChangesAsync(ct);
+        var updated = await GetByIdAsync(id, ct);
+        if (updated != null)
+            await _hub.Clients.All.SendAsync("DealUpdated", updated, ct);
         return true;
     }
 
@@ -101,6 +113,7 @@ public class DealService : IDealService
             e.Stage = stage;
             e.SortOrder = dto.SortOrder;
             await _db.SaveChangesAsync(ct);
+            await _hub.Clients.All.SendAsync("DealMoved", id, dto.Stage, dto.SortOrder, ct);
             return true;
         }
         return false;
@@ -113,6 +126,7 @@ public class DealService : IDealService
         e.IsDeleted = true;
         e.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
+        await _hub.Clients.All.SendAsync("DealDeleted", id, ct);
         return true;
     }
 

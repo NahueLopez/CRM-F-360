@@ -1,4 +1,4 @@
-﻿using CRMF360.Api.Middleware;
+using CRMF360.Api.Middleware;
 using CRMF360.Api.Filters;
 using CRMF360.Infrastructure;
 using CRMF360.Infrastructure.Seed;
@@ -222,5 +222,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<CRMF360.Api.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<CRMF360.Infrastructure.Hubs.PipelineHub>("/hubs/pipeline");
 
 app.Run();

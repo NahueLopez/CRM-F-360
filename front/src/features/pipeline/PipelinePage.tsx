@@ -23,6 +23,7 @@ import {
   useDeleteDeal,
   useMoveDeal,
   useSetDealsCache,
+  usePipelineWebSockets,
 } from "../../shared/hooks/useDealQuery";
 import { useCompanies } from "../../shared/hooks/useCompanyQuery";
 
@@ -58,6 +59,9 @@ const PipelinePage = () => {
   const moveDeal = useMoveDeal();
   const setDealsCache = useSetDealsCache();
 
+  // ── Real-time WebSocket sync ──
+  usePipelineWebSockets();
+
   // ── Local UI state only ──
   const [showCreate, setShowCreate] = useState(false);
   const [editDeal, setEditDeal] = useState<Deal | null>(null);
@@ -73,7 +77,8 @@ const PipelinePage = () => {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  const dealsByStage = (stage: DealStage) => deals.filter((d) => d.stage === stage);
+  const dealsByStage = (stage: DealStage) =>
+    deals.filter((d) => d.stage === stage).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const stageTotal = (stage: string) => summary.find((s) => s.stage === stage);
 
   const handleEditDealClick = (deal: Deal) => {
@@ -144,9 +149,43 @@ const PipelinePage = () => {
 
     if (!targetStage) return;
 
+    // Compute sort order based on drop position
+    const stageDeals = deals
+      .filter((d) => d.stage === targetStage && d.id !== dealId)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    let newSortOrder: number;
+    if (typeof overId === "string" && overId.startsWith("stage-")) {
+      // Dropped on empty area — put at the end
+      const lastOrder = stageDeals.length > 0 ? (stageDeals[stageDeals.length - 1].sortOrder ?? 0) : 0;
+      newSortOrder = lastOrder + 1000;
+    } else {
+      // Dropped on a specific card — insert at that position
+      const overIndex = stageDeals.findIndex((d) => d.id === overId);
+      if (overIndex <= 0) {
+        // First position
+        const firstOrder = stageDeals.length > 0 ? (stageDeals[0].sortOrder ?? 0) : 0;
+        newSortOrder = firstOrder > 0 ? Math.floor(firstOrder / 2) : firstOrder - 1000;
+      } else {
+        // Between two cards
+        const prev = stageDeals[overIndex - 1].sortOrder ?? 0;
+        const curr = stageDeals[overIndex].sortOrder ?? 0;
+        newSortOrder = Math.floor((prev + curr) / 2);
+        // If collision, just use curr - 1
+        if (newSortOrder === prev) newSortOrder = prev + 1;
+      }
+    }
+
+    // Optimistic cache update with the new stage and sortOrder
+    setDealsCache((prev) =>
+      prev.map((d) =>
+        d.id === dealId ? { ...d, stage: targetStage!, sortOrder: newSortOrder } : d,
+      ),
+    );
+
     const stageName = STAGES.find((s) => s.value === targetStage)?.label ?? targetStage;
     moveDeal.mutate(
-      { id: dealId, stage: targetStage, sortOrder: 0 },
+      { id: dealId, stage: targetStage, sortOrder: newSortOrder },
       {
         onSuccess: () => addToast("success", `Oportunidad movida a ${stageName}`),
         onError: () => {
@@ -233,12 +272,12 @@ const PipelinePage = () => {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-indigo-600/20 to-violet-600/10 border border-indigo-500/20 rounded-xl p-4">
+        <div className="bg-linear-to-br from-indigo-600/20 to-violet-600/10 border border-indigo-500/20 rounded-xl p-4">
           <p className="text-xs text-slate-400">Total Pipeline</p>
           <p className="text-2xl font-bold text-indigo-300">{fmt(totalPipeline)}</p>
           <p className="text-[10px] text-slate-500">{deals.length} oportunidades</p>
         </div>
-        <div className="bg-gradient-to-br from-emerald-600/20 to-green-600/10 border border-emerald-500/20 rounded-xl p-4">
+        <div className="bg-linear-to-br from-emerald-600/20 to-green-600/10 border border-emerald-500/20 rounded-xl p-4">
           <p className="text-xs text-slate-400">Ganados</p>
           <p className="text-2xl font-bold text-emerald-300">{fmt(wonTotal)}</p>
           <p className="text-[10px] text-slate-500">

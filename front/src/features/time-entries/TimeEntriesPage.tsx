@@ -158,7 +158,7 @@ const TimeEntriesPage: React.FC = () => {
             <h2 className="text-xl font-bold tracking-tight">Carga de horas</h2>
             <p className="text-sm text-slate-500 mt-0.5">Registrá las horas trabajadas por tarea</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <button
               onClick={() => {
                 resetForm();
@@ -171,7 +171,7 @@ const TimeEntriesPage: React.FC = () => {
             <select
               value={filterProject}
               onChange={(e) => setFilterProject(e.target.value)}
-              className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white min-w-[200px]"
+              className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white w-full sm:min-w-[200px]"
             >
               <option value="">Todos los proyectos</option>
               {projectNames.map((name) => (
@@ -431,7 +431,7 @@ const TimeEntriesPage: React.FC = () => {
         {loading ? (
           <TableSkeleton rows={5} cols={6} />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/30">
+          <div className="overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/30">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-700/50 bg-slate-800/50">

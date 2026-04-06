@@ -41,13 +41,13 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, maxWidth 
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 sm:px-0"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 sm:px-0 h-dvh w-full"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />

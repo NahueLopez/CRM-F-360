@@ -195,7 +195,7 @@ const ProjectsPage: React.FC = () => {
         )}
 
         {/* Search & Status Filter */}
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <div className="flex-1 relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
               🔍
@@ -207,7 +207,7 @@ const ProjectsPage: React.FC = () => {
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
             />
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             <button
               onClick={() => handleStatusFilter("")}
               className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
@@ -276,7 +276,7 @@ const ProjectsPage: React.FC = () => {
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projects/${p.id}`)}
-                  className="group flex items-center justify-between p-4 rounded-xl border bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60 transition-all cursor-pointer"
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60 transition-all cursor-pointer gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {/* Status dot */}
@@ -304,14 +304,14 @@ const ProjectsPage: React.FC = () => {
                   </div>
 
                   {/* Meta + Actions */}
-                  <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-4 shrink-0 flex-wrap">
                     {p.estimatedHours && (
                       <span className="text-xs text-slate-600 tabular-nums hidden lg:inline mr-4">
                         {p.estimatedHours}h est.
                       </span>
                     )}
                     <div className="w-px h-6 bg-slate-700/50 hidden lg:block" />
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                       <StatusDropdown
                         currentStatus={p.status}
                         onChangeStatus={(s: ProjectStatus) => handleStatusChange(p.id, s)}

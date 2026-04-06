@@ -290,7 +290,7 @@ const TasksPage: React.FC = () => {
         </div>
       ) : viewMode === "list" ? (
         /* ── List View ── */
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
+        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700/50 text-[10px] text-slate-500 uppercase tracking-wider">
@@ -361,7 +361,7 @@ const TasksPage: React.FC = () => {
           {grouped.map(([key, group]) => (
             <div
               key={key}
-              className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden"
+              className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-x-auto"
             >
               <div className="px-4 py-3 border-b border-slate-700/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">

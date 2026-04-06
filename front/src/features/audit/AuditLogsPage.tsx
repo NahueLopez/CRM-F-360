@@ -98,7 +98,7 @@ const AuditLogsPage: React.FC = () => {
             ))}
           </select>
 
-          <div className="relative w-64">
+          <div className="relative w-full sm:w-64">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"
               fill="none"
@@ -131,7 +131,7 @@ const AuditLogsPage: React.FC = () => {
           <p className="text-sm">No hay registros de auditoría</p>
         </div>
       ) : (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700 text-left">

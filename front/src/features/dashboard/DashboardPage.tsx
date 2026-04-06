@@ -148,22 +148,22 @@ const DashboardPage = () => {
 
         <div className="relative flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               {getGreeting()}, {authStore.user?.fullName?.split(" ")[0] ?? "usuario"} 👋
             </h2>
-            <p className="text-sm text-slate-500 mt-1 capitalize">{today}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-500 mt-1 capitalize">{today}</p>
           </div>
           {report && (
             <div className="hidden sm:flex items-center gap-6 text-xs text-slate-500">
               <div className="text-center">
-                <p className="text-lg font-bold text-white tabular-nums">
+                <p className="text-lg font-bold text-slate-800 dark:text-white tabular-nums">
                   {report.totalHoursAllTime.toFixed(0)}
                 </p>
                 <p>horas totales</p>
               </div>
               <div className="w-px h-8 bg-slate-700/60" />
               <div className="text-center">
-                <p className="text-lg font-bold text-white tabular-nums">{report.totalUsers}</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-white tabular-nums">{report.totalUsers}</p>
                 <p>usuarios</p>
               </div>
             </div>
