@@ -149,10 +149,23 @@ const PipelinePage = () => {
 
     if (!targetStage) return;
 
-    // Compute sort order based on drop position
+    // Check if the card actually moved
+    const draggedDeal = deals.find((d) => d.id === dealId);
+    if (!draggedDeal) return;
+
+    // If dropped back on same position (same stage + same card), skip
+    if (draggedDeal.stage === targetStage && overId === dealId) return;
+
+    // Get other cards in the target stage, sorted by sortOrder
     const stageDeals = deals
       .filter((d) => d.stage === targetStage && d.id !== dealId)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    // Normalize sortOrders if they're all the same (unseeded data)
+    const allSame = stageDeals.length > 1 && stageDeals.every((d) => (d.sortOrder ?? 0) === (stageDeals[0].sortOrder ?? 0));
+    if (allSame) {
+      stageDeals.forEach((d, i) => (d.sortOrder = i * 1000));
+    }
 
     let newSortOrder: number;
     if (typeof overId === "string" && overId.startsWith("stage-")) {
@@ -162,17 +175,21 @@ const PipelinePage = () => {
     } else {
       // Dropped on a specific card — insert at that position
       const overIndex = stageDeals.findIndex((d) => d.id === overId);
-      if (overIndex <= 0) {
-        // First position
-        const firstOrder = stageDeals.length > 0 ? (stageDeals[0].sortOrder ?? 0) : 0;
-        newSortOrder = firstOrder > 0 ? Math.floor(firstOrder / 2) : firstOrder - 1000;
+      if (overIndex === -1) {
+        // Target card not found (shouldn't happen) — put at end
+        const lastOrder = stageDeals.length > 0 ? (stageDeals[stageDeals.length - 1].sortOrder ?? 0) : 0;
+        newSortOrder = lastOrder + 1000;
+      } else if (overIndex === 0) {
+        // Insert before the first card
+        const firstOrder = stageDeals[0].sortOrder ?? 0;
+        newSortOrder = firstOrder - 1000;
       } else {
         // Between two cards
         const prev = stageDeals[overIndex - 1].sortOrder ?? 0;
         const curr = stageDeals[overIndex].sortOrder ?? 0;
-        newSortOrder = Math.floor((prev + curr) / 2);
-        // If collision, just use curr - 1
-        if (newSortOrder === prev) newSortOrder = prev + 1;
+        newSortOrder = Math.round((prev + curr) / 2);
+        // If collision (e.g. consecutive integers), offset
+        if (newSortOrder <= prev) newSortOrder = prev + 1;
       }
     }
 
