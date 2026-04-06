@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { projectKeys } from "../../shared/hooks/useProjectQuery";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
+import Modal from "../../shared/ui/Modal";
 import ProjectForm from "./components/ProjectForm";
 import ProjectTeamModal from "./components/ProjectTeamModal";
 import EmptyState from "../../shared/ui/EmptyState";
@@ -184,12 +185,11 @@ const ProjectsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Form panel */}
-        {showForm && canManage && (
-          <div className="border border-slate-700/50 rounded-xl p-5 bg-slate-800/30 animate-page-in">
-            <h4 className="text-sm font-semibold mb-4">
-              {editing ? "✏️ Editar proyecto" : "📁 Nuevo proyecto"}
-            </h4>
+        <Modal
+          open={showForm && canManage}
+          onClose={handleCancelForm}
+          title={editing ? "✏️ Editar proyecto" : "📁 Nuevo proyecto"}
+        >
             <ProjectForm
               initial={editing ?? {}}
               companies={companies}
@@ -197,8 +197,7 @@ const ProjectsPage: React.FC = () => {
               onSubmit={editing ? handleUpdate : handleCreate}
               onCancel={handleCancelForm}
             />
-          </div>
-        )}
+        </Modal>
 
         {/* Project Cards */}
         {loading ? (

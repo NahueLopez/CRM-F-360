@@ -12,6 +12,7 @@ import { useConfirm } from "../../shared/ui/useConfirm";
 import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
+import Modal from "../../shared/ui/Modal";
 
 const ACTIVITY_ICONS: Record<string, string> = {
   Call: "📞", Meeting: "🤝", Email: "📧", Note: "📝",
@@ -153,12 +154,13 @@ const CompaniesPage: React.FC = () => {
             />
           </div>
 
-          {showForm && (
-            <div className="border border-slate-700/50 rounded-xl p-5 bg-slate-800/30 animate-page-in">
-              <h4 className="text-sm font-semibold mb-4">{editing ? "✏️ Editar empresa" : "🏢 Nueva empresa"}</h4>
-              <CompanyForm initial={editing ?? {}} onSubmit={editing ? handleUpdate : handleCreate} onCancel={handleCancelForm} />
-            </div>
-          )}
+          <Modal 
+            open={showForm} 
+            onClose={handleCancelForm} 
+            title={editing ? "✏️ Editar empresa" : "🏢 Nueva empresa"}
+          >
+            <CompanyForm initial={editing ?? {}} onSubmit={editing ? handleUpdate : handleCreate} onCancel={handleCancelForm} />
+          </Modal>
 
           {loading ? (
             <CardsSkeleton count={6} />
@@ -203,7 +205,7 @@ const CompaniesPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 shrink-0">
                       {c.phone && (
                         <span className="text-xs text-slate-600 tabular-nums hidden lg:inline">{c.phone}</span>
                       )}

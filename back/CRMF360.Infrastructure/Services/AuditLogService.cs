@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.AuditLogs;
 using CRMF360.Domain.Entities;
@@ -10,6 +11,48 @@ public class AuditLogService : IAuditLogService
 {
     private readonly IApplicationDbContext _db;
     public AuditLogService(IApplicationDbContext db) => _db = db;
+
+    public async Task<PagedResult<AuditLogDto>> GetPagedAsync(PaginationParams p, string? action = null, string? entityType = null, int? userId = null, CancellationToken ct = default)
+    {
+        var query = _db.AuditLogs.AsNoTracking().Include(a => a.User).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var search = $"%{p.Search}%";
+            query = query.Where(a =>
+                EF.Functions.ILike(a.Action, search) ||
+                EF.Functions.ILike(a.EntityType, search) ||
+                (a.EntityName != null && EF.Functions.ILike(a.EntityName, search)) ||
+                (a.User != null && EF.Functions.ILike(a.User.FullName, search))
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(action))
+            query = query.Where(a => a.Action == action);
+
+        if (!string.IsNullOrWhiteSpace(entityType))
+            query = query.Where(a => a.EntityType == entityType);
+
+        if (userId.HasValue)
+            query = query.Where(a => a.UserId == userId.Value);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(a => Map(a))
+            .ToListAsync(ct);
+
+        return new PagedResult<AuditLogDto>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = p.Page,
+            PageSize = p.PageSize
+        };
+    }
 
     public async Task<List<AuditLogDto>> GetAllAsync(int page = 1, int pageSize = 50, CancellationToken ct = default)
         => await _db.AuditLogs.AsNoTracking()

@@ -1,6 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { auditLogService } from "./auditLogService";
+import React from "react";
 import type { AuditLogEntry } from "./types";
+import { usePagination } from "../../shared/hooks/usePagination";
+import Pagination from "../../shared/ui/Pagination";
+import { useAuditLogsPaged } from "../../shared/hooks/useAuditLogQuery";
+import { useUsers } from "../../shared/hooks/useUserQuery";
 
 const ACTION_COLORS: Record<string, string> = {
     Create: "text-emerald-400 bg-emerald-500/10",
@@ -16,30 +19,76 @@ const ENTITY_ICONS: Record<string, string> = {
 };
 
 const AuditLogsPage: React.FC = () => {
-    const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-    const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(true);
+    const { page, pageSize, search, handleSearch, params, setPage, setPageSize } = usePagination();
+    const [actionFilter, setActionFilter] = React.useState<string>("");
+    const [entityFilter, setEntityFilter] = React.useState<string>("");
+    const [userFilter, setUserFilter] = React.useState<string>("");
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await auditLogService.getAll(page, 50);
-            setLogs(data);
-        } finally { setLoading(false); }
-    }, [page]);
+    // Prepare custom params including filters
+    const auditParams = React.useMemo(() => {
+        const p: any = { ...params };
+        if (actionFilter) p.action = actionFilter;
+        if (entityFilter) p.entityType = entityFilter;
+        if (userFilter) p.userId = userFilter;
+        return p;
+    }, [params, actionFilter, entityFilter, userFilter]);
 
-    useEffect(() => { load(); }, [load]);
+    const { data, isLoading: loading } = useAuditLogsPaged(auditParams);
+    const { data: usersData } = useUsers();
+
+    const logs = data?.items ?? [];
+    const totalCount = data?.totalCount ?? 0;
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <p className="text-sm text-slate-400">Registro de todas las acciones del sistema</p>
-                <div className="flex gap-2">
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs disabled:opacity-30">← Anterior</button>
-                    <span className="text-xs text-slate-500 self-center">Página {page}</span>
-                    <button onClick={() => setPage(p => p + 1)} disabled={logs.length < 50}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs disabled:opacity-30">Siguiente →</button>
+                <div className="flex flex-wrap items-center gap-3">
+                    <select
+                        value={userFilter}
+                        onChange={(e) => { setUserFilter(e.target.value); setPage(1); }}
+                        className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                    >
+                        <option value="">Todos los usuarios</option>
+                        {usersData?.map((u) => (
+                            <option key={u.id} value={u.id}>{u.fullName}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={entityFilter}
+                        onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
+                        className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                    >
+                        <option value="">Cualquier entidad</option>
+                        {Object.keys(ENTITY_ICONS).map(entity => (
+                            <option key={entity} value={entity}>{ENTITY_ICONS[entity]} {entity}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={actionFilter}
+                        onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+                        className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                    >
+                        <option value="">Todas las acciones</option>
+                        {Object.keys(ACTION_COLORS).map(action => (
+                            <option key={action} value={action}>{action}</option>
+                        ))}
+                    </select>
+
+                    <div className="relative w-64">
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                            type="text"
+                            placeholder="Buscar detalle, nombre..."
+                            value={search}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -64,7 +113,7 @@ const AuditLogsPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {logs.map(log => (
+                            {logs.map((log: AuditLogEntry) => (
                                 <tr key={log.id} className="border-b border-slate-700/30 hover:bg-slate-700/20 transition">
                                     <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">
                                         {new Date(log.createdAt).toLocaleString("es-AR", {
@@ -88,6 +137,16 @@ const AuditLogsPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+            )}
+
+            {logs.length > 0 && (
+                <Pagination
+                    page={page}
+                    pageSize={pageSize}
+                    totalCount={totalCount}
+                    onChangePage={setPage}
+                    onChangePageSize={setPageSize}
+                />
             )}
         </div>
     );

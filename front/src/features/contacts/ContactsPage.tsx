@@ -16,6 +16,7 @@ import { useConfirm } from "../../shared/ui/useConfirm";
 import { TableSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
+import Modal from "../../shared/ui/Modal";
 
 const ACTIVITY_TYPES = [
     { value: "Call", label: "📞 Llamada", color: "text-sky-400", bg: "bg-sky-400/10" },
@@ -213,18 +214,19 @@ const ContactsPage: React.FC = () => {
                     </div>
 
                     {/* Form */}
-                    {showForm && (
-                        <form onSubmit={handleSubmit} className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 space-y-4 animate-page-in">
-                            <h4 className="text-sm font-semibold">
-                                {editing ? "✏️ Editar contacto" : "👤 Nuevo contacto"}
-                            </h4>
+                    <Modal 
+                        open={showForm} 
+                        onClose={resetForm} 
+                        title={editing ? "✏️ Editar contacto" : "👤 Nuevo contacto"}
+                    >
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <select
                                     value={form.companyId || ""}
                                     onChange={(e) => setForm({ ...form, companyId: Number(e.target.value) })}
                                     required
                                     disabled={!!editing}
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 >
                                     <option value="">Empresa *</option>
                                     {companies.map((co) => (
@@ -236,44 +238,44 @@ const ContactsPage: React.FC = () => {
                                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                                     placeholder="Nombre completo *"
                                     required
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 />
                                 <input
                                     value={form.email}
                                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                                     placeholder="Email"
                                     type="email"
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 />
                                 <input
                                     value={form.phone}
                                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                                     placeholder="Teléfono"
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 />
                                 <input
                                     value={form.position}
                                     onChange={(e) => setForm({ ...form, position: e.target.value })}
                                     placeholder="Cargo / Rol"
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 />
                                 <input
                                     value={form.notes}
                                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                                     placeholder="Notas"
-                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600"
+                                    className="px-3 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/40 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                                 />
                             </div>
-                            <div className="flex gap-2">
-                                <button type="submit" className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium transition-all active:scale-[0.97]">
-                                    {editing ? "Actualizar" : "Crear"}
-                                </button>
-                                <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-slate-600/50 text-sm text-slate-400 hover:text-white hover:bg-slate-700/40 transition-all">
+                            <div className="flex gap-2 justify-end pt-2">
+                                <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-slate-600/50 text-sm text-slate-400 hover:text-white hover:bg-slate-700/40 transition-all font-medium">
                                     Cancelar
+                                </button>
+                                <button type="submit" className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white shadow-sm shadow-indigo-500/20 transition-all active:scale-[0.97]">
+                                    {editing ? "Actualizar" : "Crear"}
                                 </button>
                             </div>
                         </form>
-                    )}
+                    </Modal>
 
                     {/* Contact Cards */}
                     {loading ? (
@@ -317,7 +319,7 @@ const ContactsPage: React.FC = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleEdit(c); }}
                                             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"

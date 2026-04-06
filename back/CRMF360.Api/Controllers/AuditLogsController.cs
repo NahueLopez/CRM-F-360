@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Application.AuditLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,10 @@ public class AuditLogsController : ControllerBase
 {
     private readonly IAuditLogService _svc;
     public AuditLogsController(IAuditLogService svc) => _svc = svc;
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] PaginationParams p, [FromQuery] string? action, [FromQuery] string? entityType, [FromQuery] int? userId, CancellationToken ct = default)
+        => Ok(await _svc.GetPagedAsync(p, action, entityType, userId, ct));
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)

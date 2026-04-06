@@ -86,17 +86,14 @@ const ChatWidget: React.FC = () => {
     useEffect(() => {
         const handleMessage = (msg: ChatMessage) => {
             setMessages(prev => {
+                if (activeConvRef.current !== msg.conversationId) return prev;
+
                 // Replace optimistic message if exists
                 const withoutOptimistic = prev.filter(
                     m => !(m._optimistic && m.content === msg.content && m.senderId === msg.senderId)
                 );
-                if (withoutOptimistic.length > 0 && withoutOptimistic[0]?.conversationId === msg.conversationId) {
-                    return [...withoutOptimistic, msg];
-                }
-                if (prev.length > 0 && prev[0]?.conversationId === msg.conversationId) {
-                    return [...prev, msg];
-                }
-                return prev;
+                
+                return [...withoutOptimistic, msg];
             });
             setConversations(prev => {
                 const exists = prev.some(c => c.id === msg.conversationId);

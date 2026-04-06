@@ -1,3 +1,5 @@
+using CRMF360.Application.Common;
+
 namespace CRMF360.Application.AuditLogs;
 
 public class AuditLogDto
@@ -15,6 +17,7 @@ public class AuditLogDto
 
 public interface IAuditLogService
 {
+    Task<PagedResult<AuditLogDto>> GetPagedAsync(PaginationParams p, string? action = null, string? entityType = null, int? userId = null, CancellationToken ct = default);
     Task<List<AuditLogDto>> GetAllAsync(int page = 1, int pageSize = 50, CancellationToken ct = default);
     Task<List<AuditLogDto>> GetByEntityAsync(string entityType, int entityId, CancellationToken ct = default);
     Task LogAsync(int userId, string action, string entityType, int? entityId = null,

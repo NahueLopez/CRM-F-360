@@ -72,6 +72,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                         Action = action,
                         EntityType = entityType,
                         EntityId = GetEntityId(entry),
+                        EntityName = GetEntityName(entry),
                         Details = changes.Count > 0 ? $"Changed: {string.Join(", ", changes)}" : null,
                         CreatedAt = DateTime.UtcNow,
                     });
@@ -85,6 +86,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                         Action = "Delete",
                         EntityType = entityType,
                         EntityId = GetEntityId(entry),
+                        EntityName = GetEntityName(entry),
                         CreatedAt = DateTime.UtcNow,
                     });
                     break;
@@ -113,6 +115,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                     Action = "Create",
                     EntityType = entityType,
                     EntityId = entityId,
+                    EntityName = GetEntityNameFromObject(entity),
                     CreatedAt = DateTime.UtcNow,
                 });
             }
@@ -141,5 +144,24 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
     {
         var idProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "Id");
         return idProp?.CurrentValue as int?;
+    }
+
+    private static string? GetEntityName(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        var nameProp = entry.Properties.FirstOrDefault(p => 
+            p.Metadata.Name == "Name" || 
+            p.Metadata.Name == "FullName" || 
+            p.Metadata.Name == "Title" ||
+            p.Metadata.Name == "CompanyName");
+        return nameProp?.CurrentValue?.ToString();
+    }
+
+    private static string? GetEntityNameFromObject(object entity)
+    {
+        var nameProp = entity.GetType().GetProperty("Name") 
+                    ?? entity.GetType().GetProperty("FullName") 
+                    ?? entity.GetType().GetProperty("Title")
+                    ?? entity.GetType().GetProperty("CompanyName");
+        return nameProp?.GetValue(entity)?.ToString();
     }
 }

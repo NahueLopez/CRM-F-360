@@ -8,6 +8,7 @@ import { useConfirm } from "../../shared/ui/useConfirm";
 import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Pagination from "../../shared/ui/Pagination";
 import { usePagination } from "../../shared/hooks/usePagination";
+import Modal from "../../shared/ui/Modal";
 import { useUsersPaged, useCreateUser, useUpdateUser, useDeleteUser } from "../../shared/hooks/useUserQuery";
 
 const AVATAR_GRADIENTS = [
@@ -121,20 +122,18 @@ const UsersPage: React.FC = () => {
           />
         </div>
 
-        {/* Form panel */}
-        {showForm && (
-          <div className="border border-slate-700/50 rounded-xl p-5 bg-slate-800/30 animate-page-in">
-            <h4 className="text-sm font-semibold mb-4">
-              {editing ? "✏️ Editar usuario" : "👥 Nuevo usuario"}
-            </h4>
+        <Modal
+          open={showForm}
+          onClose={handleCancelForm}
+          title={editing ? "✏️ Editar usuario" : "👥 Nuevo usuario"}
+        >
             <UserForm
               initial={editing ?? {}}
               isEditing={!!editing}
               onSubmit={editing ? handleUpdate : handleCreate}
               onCancel={handleCancelForm}
             />
-          </div>
-        )}
+        </Modal>
 
         {/* User Cards Grid */}
         {loading ? (
@@ -195,8 +194,7 @@ const UsersPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Ghost actions */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-3 right-3 flex items-center gap-1">
                     <button
                       onClick={() => handleEditClick(u)}
                       className="px-2 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"

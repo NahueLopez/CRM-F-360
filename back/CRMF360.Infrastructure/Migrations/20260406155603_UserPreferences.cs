@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -16,9 +16,7 @@ namespace CRMF360.Infrastructure.Migrations
                 name: "FK_Deals_Users_AssignedToId",
                 table: "Deals");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Email",
-                table: "Users");
+            migrationBuilder.Sql("DROP INDEX IF EXISTS \"IX_Users_Email\";");
 
             migrationBuilder.AddColumn<string>(
                 name: "Preferences",
