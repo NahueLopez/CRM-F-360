@@ -1,28 +1,36 @@
 import React, { useEffect, useState } from "react";
 import type { User } from "../types";
 
+interface RoleOption {
+  id: number;
+  name: string;
+}
+
 interface UserFormData {
   fullName: string;
   email: string;
   phone: string;
   active: boolean;
   password?: string;
+  roleId?: number;
 }
 
 interface Props {
   initial?: Partial<User>;
   isEditing?: boolean;
+  roles?: RoleOption[];
   onSubmit: (values: Partial<UserFormData>) => void;
   onCancel?: () => void;
 }
 
-const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) => {
+const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, onCancel }) => {
   const [form, setForm] = useState<UserFormData>({
     fullName: initial?.fullName ?? "",
     email: initial?.email ?? "",
     phone: initial?.phone ?? "",
     active: initial?.active ?? true,
     password: "",
+    roleId: undefined,
   });
 
   useEffect(() => {
@@ -32,6 +40,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) =
       phone: initial?.phone ?? "",
       active: initial?.active ?? true,
       password: "",
+      roleId: undefined,
     });
   }, [initial]);
 
@@ -58,6 +67,10 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) =
       alert("La contraseña es obligatoria");
       return;
     }
+    if (!isEditing && !form.roleId) {
+      alert("Debe seleccionar un rol");
+      return;
+    }
 
     const payload: Partial<UserFormData> = {
       fullName: form.fullName,
@@ -68,6 +81,10 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) =
 
     if (form.password && form.password.trim() !== "") {
       payload.password = form.password;
+    }
+
+    if (form.roleId) {
+      payload.roleId = Number(form.roleId);
     }
 
     onSubmit(payload);
@@ -109,6 +126,24 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, onSubmit, onCancel }) =
           placeholder="Contraseña"
           className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500"
         />
+      )}
+
+      {/* Role selector */}
+      {!isEditing && roles.length > 0 && (
+        <select
+          name="roleId"
+          value={form.roleId ?? ""}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-indigo-500/40 transition-colors"
+        >
+          <option value="" disabled>Seleccionar rol *</option>
+          {roles.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
       )}
 
       <label className="inline-flex items-center gap-2 text-sm text-slate-300">

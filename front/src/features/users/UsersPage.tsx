@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { User } from "./types";
 import { useToast } from "../../shared/context/ToastContext";
 import UserForm from "./components/UserForm";
@@ -15,6 +15,7 @@ import {
   useUpdateUser,
   useDeleteUser,
 } from "../../shared/hooks/useUserQuery";
+import { rolesApi } from "../roles/rolesService";
 
 const AVATAR_GRADIENTS = [
   "from-violet-500/20 to-purple-500/20",
@@ -38,6 +39,12 @@ const UsersPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
+
+  // Fetch available roles for the selector
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  useEffect(() => {
+    rolesApi.getAll().then((r) => setRoles(r.map((role) => ({ id: role.id, name: role.name }))));
+  }, []);
 
   const { page, pageSize, search, handleSearch, params, setPage, setPageSize } = usePagination();
   const { data, isLoading: loading } = useUsersPaged(params);
@@ -146,6 +153,7 @@ const UsersPage: React.FC = () => {
           <UserForm
             initial={editing ?? {}}
             isEditing={!!editing}
+            roles={roles}
             onSubmit={editing ? handleUpdate : handleCreate}
             onCancel={handleCancelForm}
           />

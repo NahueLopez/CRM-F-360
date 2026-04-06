@@ -36,6 +36,14 @@ public class UserService : IUserService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        // Assign role (required)
+        _context.UserRoles.Add(new UserRole
+        {
+            UserId = user.Id,
+            RoleId = dto.RoleId
+        });
+        await _context.SaveChangesAsync();
+
         return MapToDto(user);
     }
 

@@ -1,4 +1,4 @@
-﻿namespace CRMF360.Application.Users;
+namespace CRMF360.Application.Users;
 
 public class CreateUserDto
 {
@@ -6,4 +6,5 @@ public class CreateUserDto
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public string Password { get; set; } = null!;
+    public int RoleId { get; set; }
 }
