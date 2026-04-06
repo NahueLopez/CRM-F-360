@@ -4,11 +4,18 @@ import type { Project } from "../../features/projects/types";
 
 export const projectKeys = {
     all: ["projects"] as const,
+    paged: (params: Record<string, any>) => ["projects", "paged", params] as const,
     detail: (id: number) => ["projects", id] as const,
 };
 
 export const useProjects = () =>
     useQuery({ queryKey: projectKeys.all, queryFn: () => projectService.getAll() });
+
+export const useProjectsPaged = (params: Record<string, any>) =>
+    useQuery({
+        queryKey: projectKeys.paged(params),
+        queryFn: () => projectService.getPaged(params),
+    });
 
 export const useProject = (id: number) =>
     useQuery({

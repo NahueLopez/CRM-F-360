@@ -4,11 +4,18 @@ import type { Company } from "../../features/companies/types";
 
 export const companyKeys = {
     all: ["companies"] as const,
+    paged: (params: Record<string, any>) => ["companies", "paged", params] as const,
     detail: (id: number) => ["companies", id] as const,
 };
 
 export const useCompanies = () =>
     useQuery({ queryKey: companyKeys.all, queryFn: () => companyService.getAll() });
+
+export const useCompaniesPaged = (params: Record<string, any>) =>
+    useQuery({
+        queryKey: companyKeys.paged(params),
+        queryFn: () => companyService.getPaged(params),
+    });
 
 export const useCreateCompany = () => {
     const qc = useQueryClient();

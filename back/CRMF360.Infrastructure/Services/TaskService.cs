@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.Notifications;
 using CRMF360.Application.Tasks;
@@ -25,6 +26,62 @@ public class TaskService : ITaskService
             .OrderByDescending(t => t.CreatedAt)
             .Select(t => MapToDto(t))
             .ToListAsync(ct);
+    }
+
+    public async Task<PagedResult<TaskDto>> GetPagedAsync(PaginationParams p, List<int>? allowedProjectIds = null, string? priority = null, int? assigneeId = null, bool? isOverdue = null, CancellationToken ct = default)
+    {
+        var query = QueryBase();
+
+        if (allowedProjectIds != null)
+        {
+            query = query.Where(t => allowedProjectIds.Contains(t.ProjectId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(priority) && Enum.TryParse<TaskPriority>(priority, true, out var parsedPriority))
+        {
+            query = query.Where(t => t.Priority == parsedPriority);
+        }
+
+        if (assigneeId.HasValue)
+        {
+            query = query.Where(t => t.AssigneeId == assigneeId.Value);
+        }
+
+        if (isOverdue.HasValue && isOverdue.Value)
+        {
+            query = query.Where(t => t.DueDate != null && t.DueDate < DateTime.UtcNow);
+        }
+
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var pattern = $"%{p.Search}%";
+            query = query.Where(t => EF.Functions.ILike(t.Title, pattern)
+                || (t.Project != null && EF.Functions.ILike(t.Project.Name, pattern)));
+        }
+
+        query = p.SortBy?.ToLower() switch
+        {
+            "title" => p.Descending ? query.OrderByDescending(t => t.Title) : query.OrderBy(t => t.Title),
+            "createdat" => p.Descending ? query.OrderByDescending(t => t.CreatedAt) : query.OrderBy(t => t.CreatedAt),
+            "priority" => p.Descending ? query.OrderByDescending(t => t.Priority) : query.OrderBy(t => t.Priority),
+            "duedate" => p.Descending ? query.OrderByDescending(t => t.DueDate) : query.OrderBy(t => t.DueDate),
+            _ => query.OrderByDescending(t => t.CreatedAt)
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(t => MapToDto(t))
+            .ToListAsync(ct);
+
+        return new PagedResult<TaskDto>
+        {
+            Items = items,
+            Page = p.Page,
+            PageSize = p.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<List<TaskDto>> GetByProjectAsync(int projectId, CancellationToken ct = default)

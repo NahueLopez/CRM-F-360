@@ -16,9 +16,14 @@ public class ContactService : IContactService
             .OrderBy(c => c.FullName)
             .Select(c => Map(c)).ToListAsync(ct);
 
-    public async Task<PagedResult<ContactDto>> GetPagedAsync(PaginationParams p, CancellationToken ct = default)
+    public async Task<PagedResult<ContactDto>> GetPagedAsync(PaginationParams p, int? companyId = null, CancellationToken ct = default)
     {
         var query = _db.Contacts.AsNoTracking().Include(c => c.Company).AsQueryable();
+
+        if (companyId.HasValue)
+        {
+            query = query.Where(c => c.CompanyId == companyId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(p.Search))
         {

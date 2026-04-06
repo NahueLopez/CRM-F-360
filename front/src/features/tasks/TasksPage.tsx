@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import type { Task, TaskPriority } from "./types";
 import type { User } from "../users/types";
-import { taskService } from "./taskService";
+import { useTasksPaged } from "../../shared/hooks/useTaskQuery";
+import Pagination from "../../shared/ui/Pagination";
+import { usePagination } from "../../shared/hooks/usePagination";
 import { userService } from "../users/userService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
@@ -18,15 +20,24 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string
 
 const TasksPage: React.FC = () => {
   const { addToast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Filters
-  const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<TaskPriority | "">("");
   const [filterAssignee, setFilterAssignee] = useState<number | "">("");
   const [filterOverdue, setFilterOverdue] = useState(false);
+
+  const { page, pageSize, search, handleSearch, params: baseParams, setPage, setPageSize } = usePagination();
+  const params = {
+    ...baseParams,
+    priority: filterPriority || undefined,
+    assigneeId: filterAssignee || undefined,
+    isOverdue: filterOverdue || undefined
+  };
+
+  const { data, isLoading: loading } = useTasksPaged(params);
+  const displayedTasks = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
 
   // View options
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -35,47 +46,27 @@ const TasksPage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
-        const [t, u] = await Promise.all([
-          taskService.getAll(),
-          userService.getAll(),
-        ]);
-        setTasks(t);
+        const u = await userService.getAll();
         setUsers(u);
       } catch (err) {
         console.error(err);
-        addToast("error", "Error al cargar tareas");
-      } finally {
-        setLoading(false);
       }
     })();
   }, []);
 
   const isOverdue = (t: Task) => t.dueDate && new Date(t.dueDate) < new Date();
 
-  const filtered = useMemo(() => {
-    return tasks.filter(t => {
-      if (search && !t.title.toLowerCase().includes(search.toLowerCase()) &&
-        !(t.projectName ?? "").toLowerCase().includes(search.toLowerCase())) return false;
-      if (filterPriority && t.priority !== filterPriority) return false;
-      if (filterAssignee && t.assigneeId !== filterAssignee) return false;
-      if (filterOverdue && !isOverdue(t)) return false;
-      return true;
-    });
-  }, [tasks, search, filterPriority, filterAssignee, filterOverdue]);
-
   // Stats
   const stats = useMemo(() => ({
-    total: tasks.length,
-    overdue: tasks.filter(isOverdue).length,
-    urgent: tasks.filter(t => t.priority === "Urgent").length,
-    unassigned: tasks.filter(t => !t.assigneeId).length,
-  }), [tasks]);
+    overdue: displayedTasks.filter(isOverdue).length,
+    urgent: displayedTasks.filter((t: Task) => t.priority === "Urgent").length,
+    unassigned: displayedTasks.filter((t: Task) => !t.assigneeId).length,
+  }), [displayedTasks]);
 
   // Grouped data
   const grouped = useMemo(() => {
     const groups: Record<string, { label: string; tasks: Task[] }> = {};
-    for (const t of filtered) {
+    for (const t of displayedTasks) {
       let key: string;
       let label: string;
       if (groupBy === "project") {
@@ -99,10 +90,10 @@ const TasksPage: React.FC = () => {
       entries.sort(([, a], [, b]) => b.tasks.length - a.tasks.length);
     }
     return entries;
-  }, [filtered, groupBy]);
+  }, [displayedTasks, groupBy]);
 
   const handleExport = () => {
-    downloadCsvFromData(filtered, [
+    downloadCsvFromData(displayedTasks, [
       { key: "title", header: "Título" },
       { key: "projectName", header: "Proyecto" },
       { key: "priority", header: "Prioridad" },
@@ -110,7 +101,7 @@ const TasksPage: React.FC = () => {
       { key: "dueDate", header: "Vencimiento" },
       { key: "columnName", header: "Columna" },
     ], `tareas_${new Date().toISOString().slice(0, 10)}.csv`);
-    addToast("success", `${filtered.length} tareas exportadas`);
+    addToast("success", `${displayedTasks.length} tareas exportadas`);
   };
 
   const activeFilters = [filterPriority, filterAssignee, filterOverdue, search].filter(Boolean).length;
@@ -128,7 +119,7 @@ const TasksPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
-            disabled={filtered.length === 0}
+            disabled={displayedTasks.length === 0}
             className="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800/60 text-sm text-slate-300 transition disabled:opacity-40"
           >
             📥 CSV
@@ -139,19 +130,19 @@ const TasksPage: React.FC = () => {
       {/* Stat pills */}
       <div className="flex flex-wrap gap-2">
         <span className="px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-xs">
-          📋 <strong className="text-white">{stats.total}</strong> total
+          📋 <strong className="text-white">{totalCount}</strong> total
         </span>
         <button
-          onClick={() => setFilterOverdue(!filterOverdue)}
+          onClick={() => { setFilterOverdue(!filterOverdue); setPage(1); }}
           className={`px-3 py-1.5 rounded-lg text-xs transition ${filterOverdue ? "bg-red-500/20 border-red-500/40 text-red-300" : "bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800"}`}
         >
-          ⚠️ <strong className={stats.overdue > 0 ? "text-red-400" : "text-white"}>{stats.overdue}</strong> vencidas
+          ⚠️ <strong className={stats.overdue > 0 ? "text-red-400" : "text-white"}>{stats.overdue}</strong> vencidas (pág)
         </button>
         <span className="px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-xs">
-          🔴 <strong className="text-orange-400">{stats.urgent}</strong> urgentes
+          🔴 <strong className="text-orange-400">{stats.urgent}</strong> urgentes (pág)
         </span>
         <span className="px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-xs">
-          👤 <strong className="text-amber-400">{stats.unassigned}</strong> sin asignar
+          👤 <strong className="text-amber-400">{stats.unassigned}</strong> sin asignar (pág)
         </span>
       </div>
 
@@ -160,13 +151,13 @@ const TasksPage: React.FC = () => {
         <div className="flex flex-wrap gap-2 flex-1">
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => handleSearch(e.target.value)}
             placeholder="Buscar tarea o proyecto..."
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm placeholder:text-slate-500 w-48 sm:w-64"
           />
           <select
             value={filterPriority}
-            onChange={e => setFilterPriority(e.target.value as TaskPriority | "")}
+            onChange={e => { setFilterPriority(e.target.value as TaskPriority | ""); setPage(1); }}
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm"
           >
             <option value="">Prioridad</option>
@@ -177,7 +168,7 @@ const TasksPage: React.FC = () => {
           </select>
           <select
             value={filterAssignee}
-            onChange={e => setFilterAssignee(e.target.value ? Number(e.target.value) : "")}
+            onChange={e => { setFilterAssignee(e.target.value ? Number(e.target.value) : ""); setPage(1); }}
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm"
           >
             <option value="">Asignado</option>
@@ -187,7 +178,7 @@ const TasksPage: React.FC = () => {
           </select>
           {activeFilters > 0 && (
             <button
-              onClick={() => { setSearch(""); setFilterPriority(""); setFilterAssignee(""); setFilterOverdue(false); }}
+              onClick={() => { handleSearch(""); setFilterPriority(""); setFilterAssignee(""); setFilterOverdue(false); setPage(1); }}
               className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white border border-slate-700 hover:bg-slate-800 transition"
             >
               ✕ Limpiar ({activeFilters})
@@ -233,7 +224,7 @@ const TasksPage: React.FC = () => {
             <div key={i} className="h-12 skeleton rounded-lg" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : displayedTasks.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-4xl block mb-3">📋</span>
           <p className="text-slate-400 text-sm">No hay tareas que coincidan con los filtros</p>
@@ -252,7 +243,7 @@ const TasksPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(t => (
+              {displayedTasks.map((t: Task) => (
                 <tr key={t.id} className="border-b border-slate-700/20 hover:bg-slate-800/40 transition">
                   <td className="px-4 py-3">
                     <p className="font-medium truncate max-w-[280px]">{t.title}</p>
@@ -345,11 +336,15 @@ const TasksPage: React.FC = () => {
         </div>
       )}
 
-      {/* Result count */}
-      {!loading && filtered.length > 0 && (
-        <p className="text-[10px] text-slate-600 text-right">
-          Mostrando {filtered.length} de {tasks.length} tareas
-        </p>
+      {/* Pagination component */}
+      {!loading && totalCount > 0 && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          onChangePage={setPage}
+          onChangePageSize={setPageSize}
+        />
       )}
     </div>
   );

@@ -9,6 +9,12 @@ export const contactKeys = {
 export const useContacts = () =>
     useQuery({ queryKey: contactKeys.all, queryFn: () => contactService.getAll() });
 
+export const useContactsPaged = (params: Record<string, unknown>) =>
+    useQuery({
+        queryKey: contactKeys.paged(params),
+        queryFn: () => contactService.getPaged(params),
+    });
+
 export const useCreateContact = () => {
     const qc = useQueryClient();
     return useMutation({

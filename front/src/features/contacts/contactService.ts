@@ -4,6 +4,14 @@ import type { Contact } from "./types";
 export const contactService = {
     getAll: () => api.get<Contact[]>("/contacts"),
 
+    getPaged: (params?: Record<string, any>) => {
+        const cleanParams = Object.fromEntries(
+            Object.entries(params || {}).filter(([_, v]) => v !== undefined && v !== "")
+        );
+        const qs = new URLSearchParams(cleanParams as any).toString();
+        return api.get<any>(`/contacts/paged?${qs}`);
+    },
+
     getByCompany: (companyId: number) =>
         api.get<Contact[]>(`/contacts/by-company/${companyId}`),
 

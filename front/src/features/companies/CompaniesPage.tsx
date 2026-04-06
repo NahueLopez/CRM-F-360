@@ -4,12 +4,14 @@ import type { ActivityLog } from "../activities/types";
 import { activityService } from "../activities/activityService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
-import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany } from "../../shared/hooks/useCompanyQuery";
+import { useCompaniesPaged, useCreateCompany, useUpdateCompany, useDeleteCompany } from "../../shared/hooks/useCompanyQuery";
 import CompanyForm from "./components/CompanyForm";
 import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import { CardsSkeleton } from "../../shared/ui/Skeleton";
+import Pagination from "../../shared/ui/Pagination";
+import { usePagination } from "../../shared/hooks/usePagination";
 
 const ACTIVITY_ICONS: Record<string, string> = {
   Call: "📞", Meeting: "🤝", Email: "📧", Note: "📝",
@@ -34,14 +36,17 @@ const COLORS = [
 
 const CompaniesPage: React.FC = () => {
   // ── React Query ──
-  const { data: companies = [], isLoading: loading } = useCompanies();
+  const { page, pageSize, search, handleSearch, params, setPage, setPageSize } = usePagination();
+  const { data, isLoading: loading } = useCompaniesPaged(params);
+  const companies = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
   const deleteMutation = useDeleteCompany();
 
   const [editing, setEditing] = useState<Company | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [search, setSearch] = useState("");
 
   // Detail panel
   const [selected, setSelected] = useState<Company | null>(null);
@@ -101,13 +106,6 @@ const CompaniesPage: React.FC = () => {
     addToast("success", "Actividad registrada");
   };
 
-  const filtered = companies.filter((c) => {
-    const q = search.toLowerCase();
-    return c.name.toLowerCase().includes(q)
-      || (c.cuit ?? "").toLowerCase().includes(q)
-      || (c.email ?? "").toLowerCase().includes(q);
-  });
-
   return (
     <>
       <div className="flex gap-6">
@@ -117,22 +115,22 @@ const CompaniesPage: React.FC = () => {
             <div>
               <h3 className="text-xl font-bold tracking-tight">Empresas</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                {filtered.length} {filtered.length === 1 ? "empresa registrada" : "empresas registradas"}
+                {totalCount} {totalCount === 1 ? "empresa registrada" : "empresas registradas"}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  downloadCsvFromData(filtered, [
+                  downloadCsvFromData(companies, [
                     { key: "name", header: "Nombre" },
                     { key: "cuit", header: "CUIT" },
                     { key: "email", header: "Email" },
                     { key: "phone", header: "Teléfono" },
                     { key: "notes", header: "Notas" },
                   ], `empresas_${new Date().toISOString().slice(0, 10)}.csv`);
-                  addToast("success", `${filtered.length} empresas exportadas`);
+                  addToast("success", `${companies.length} empresas de esta página exportadas`);
                 }}
-                disabled={filtered.length === 0}
+                disabled={companies.length === 0}
                 className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
               >
                 📥 CSV
@@ -149,7 +147,7 @@ const CompaniesPage: React.FC = () => {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               placeholder="Buscar por nombre, CUIT o email..."
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
             />
@@ -164,8 +162,8 @@ const CompaniesPage: React.FC = () => {
 
           {loading ? (
             <CardsSkeleton count={6} />
-          ) : filtered.length === 0 ? (
-            companies.length === 0 ? (
+          ) : companies.length === 0 ? (
+            search.trim() === "" ? (
               <EmptyState
                 icon="🏢"
                 title="Sin empresas registradas"
@@ -182,7 +180,7 @@ const CompaniesPage: React.FC = () => {
             )
           ) : (
             <div className="space-y-2">
-              {filtered.map((c, i) => {
+              {companies.map((c: Company, i: number) => {
                 const gradIdx = i % GRADIENTS.length;
                 return (
                   <div
@@ -225,6 +223,16 @@ const CompaniesPage: React.FC = () => {
                   </div>
                 );
               })}
+
+              {!loading && totalCount > 0 && (
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  totalCount={totalCount}
+                  onChangePage={setPage}
+                  onChangePageSize={setPageSize}
+                />
+              )}
             </div>
           )}
         </div>

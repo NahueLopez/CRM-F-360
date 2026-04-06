@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Api.Extensions;
 using CRMF360.Application.ProjectMembers;
 using CRMF360.Application.Projects;
@@ -32,6 +33,19 @@ public class ProjectsController : ControllerBase
 
         var userProjectIds = await _memberService.GetProjectIdsForUserAsync(User.GetUserId(), ct);
         return Ok(all.Where(p => userProjectIds.Contains(p.Id)).ToList());
+    }
+
+    [HttpGet("paged")]
+    [Authorize(Policy = "projects.view")]
+    public async Task<ActionResult<PagedResult<ProjectDto>>> GetPaged(
+        [FromQuery] PaginationParams p, [FromQuery] string? status, CancellationToken ct)
+    {
+        List<int>? allowedProjectIds = null;
+        if (!User.IsAdmin())
+        {
+            allowedProjectIds = (await _memberService.GetProjectIdsForUserAsync(User.GetUserId(), ct)).ToList();
+        }
+        return Ok(await _projectService.GetPagedAsync(p, allowedProjectIds, status, ct));
     }
 
     [HttpGet("{id:int}")]

@@ -21,8 +21,8 @@ public class ContactsController : ControllerBase
     [HttpGet("paged")]
     [Authorize(Policy = "contacts.view")]
     public async Task<ActionResult<PagedResult<ContactDto>>> GetPaged(
-        [FromQuery] PaginationParams p, CancellationToken ct)
-        => Ok(await _service.GetPagedAsync(p, ct));
+        [FromQuery] PaginationParams p, [FromQuery] int? companyId, CancellationToken ct)
+        => Ok(await _service.GetPagedAsync(p, companyId, ct));
 
     [HttpGet("by-company/{companyId:int}")]
     [Authorize(Policy = "contacts.view")]

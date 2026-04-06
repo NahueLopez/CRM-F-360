@@ -1,3 +1,4 @@
+using CRMF360.Application.Common;
 using CRMF360.Application.Abstractions;
 using CRMF360.Application.Projects;
 using CRMF360.Domain;
@@ -33,6 +34,65 @@ public class ProjectService : IProjectService
                 TaskCount = p.Tasks.Count, // Subquery count — no Include needed
             })
             .ToListAsync(ct);
+    }
+
+    public async Task<PagedResult<ProjectDto>> GetPagedAsync(PaginationParams p, List<int>? allowedProjectIds = null, string? status = null, CancellationToken ct = default)
+    {
+        var query = _db.Projects.AsNoTracking().AsQueryable();
+
+        if (allowedProjectIds != null)
+        {
+            query = query.Where(proj => allowedProjectIds.Contains(proj.Id));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ProjectStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(proj => proj.Status == parsedStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(p.Search))
+        {
+            var pattern = $"%{p.Search}%";
+            query = query.Where(proj => EF.Functions.ILike(proj.Name, pattern)
+                || (proj.Company != null && EF.Functions.ILike(proj.Company.Name, pattern)));
+        }
+
+        query = p.SortBy?.ToLower() switch
+        {
+            "name" => p.Descending ? query.OrderByDescending(proj => proj.Name) : query.OrderBy(proj => proj.Name),
+            "createdat" => p.Descending ? query.OrderByDescending(proj => proj.CreatedAt) : query.OrderBy(proj => proj.CreatedAt),
+            "status" => p.Descending ? query.OrderByDescending(proj => proj.Status) : query.OrderBy(proj => proj.Status),
+            _ => query.OrderByDescending(proj => proj.CreatedAt)
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Include(proj => proj.Company)
+            .Skip((p.Page - 1) * p.PageSize)
+            .Take(p.PageSize)
+            .Select(proj => new ProjectDto
+            {
+                Id = proj.Id,
+                CompanyId = proj.CompanyId,
+                CompanyName = proj.Company != null ? proj.Company.Name : "—",
+                Name = proj.Name,
+                Description = proj.Description,
+                Status = proj.Status.ToString(),
+                StartDate = proj.StartDate,
+                EndDateEstimated = proj.EndDateEstimated,
+                EstimatedHours = proj.EstimatedHours,
+                CreatedAt = proj.CreatedAt,
+                TaskCount = proj.Tasks.Count,
+            })
+            .ToListAsync(ct);
+
+        return new PagedResult<ProjectDto>
+        {
+            Items = items,
+            Page = p.Page,
+            PageSize = p.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<ProjectDto?> GetByIdAsync(int id, CancellationToken ct = default)

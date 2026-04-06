@@ -6,7 +6,7 @@ import { activityService } from "../activities/activityService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
 import { contactSchema, validateForm } from "../../shared/schemas/formSchemas";
-import { useContacts } from "../../shared/hooks/useContactQuery";
+import { useContactsPaged } from "../../shared/hooks/useContactQuery";
 import { useCompanies } from "../../shared/hooks/useCompanyQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import { contactKeys } from "../../shared/hooks/useContactQuery";
@@ -14,6 +14,8 @@ import EmptyState from "../../shared/ui/EmptyState";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import { TableSkeleton } from "../../shared/ui/Skeleton";
+import Pagination from "../../shared/ui/Pagination";
+import { usePagination } from "../../shared/hooks/usePagination";
 
 const ACTIVITY_TYPES = [
     { value: "Call", label: "📞 Llamada", color: "text-sky-400", bg: "bg-sky-400/10" },
@@ -28,13 +30,24 @@ const ContactsPage: React.FC = () => {
     const qc = useQueryClient();
 
     // ── React Query ──
-    const { data: contacts = [], isLoading: loading } = useContacts();
+    const [filterCompany, setFilterCompany] = useState<number | "">("");
+
+    const { page, pageSize, search, handleSearch, params: baseParams, setPage, setPageSize } = usePagination();
+    const params = { ...baseParams, companyId: filterCompany || undefined };
+
+    const { data, isLoading: loading } = useContactsPaged(params);
+    const contacts = data?.items ?? [];
+    const totalCount = data?.totalCount ?? 0;
+
     const { data: companies = [] } = useCompanies();
 
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Contact | null>(null);
-    const [search, setSearch] = useState("");
-    const [filterCompany, setFilterCompany] = useState<number | "">();
+
+    const handleCompanyFilter = (val: number | "") => {
+        setFilterCompany(val);
+        setPage(1);
+    };
 
     // Detail panel
     const [selected, setSelected] = useState<Contact | null>(null);
@@ -137,15 +150,6 @@ const ContactsPage: React.FC = () => {
         addToast("success", "Actividad registrada");
     };
 
-    const filtered = contacts.filter((c) => {
-        const matchSearch =
-            c.fullName.toLowerCase().includes(search.toLowerCase()) ||
-            (c.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
-            (c.position ?? "").toLowerCase().includes(search.toLowerCase());
-        const matchCompany = !filterCompany || c.companyId === filterCompany;
-        return matchSearch && matchCompany;
-    });
-
     return (
         <>
             <div className="flex gap-6 h-full">
@@ -155,13 +159,13 @@ const ContactsPage: React.FC = () => {
                         <div>
                             <h3 className="text-xl font-bold tracking-tight">Contactos</h3>
                             <p className="text-sm text-slate-500 mt-0.5">
-                                {filtered.length} {filtered.length === 1 ? "contacto" : "contactos"}
+                                {totalCount} {totalCount === 1 ? "contacto" : "contactos"}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => {
-                                    downloadCsvFromData(filtered, [
+                                    downloadCsvFromData(contacts, [
                                         { key: "fullName", header: "Nombre" },
                                         { key: "email", header: "Email" },
                                         { key: "phone", header: "Teléfono" },
@@ -169,9 +173,9 @@ const ContactsPage: React.FC = () => {
                                         { key: "companyName", header: "Empresa" },
                                         { key: "notes", header: "Notas" },
                                     ], `contactos_${new Date().toISOString().slice(0, 10)}.csv`);
-                                    addToast("success", `${filtered.length} contactos exportados`);
+                                    addToast("success", `${contacts.length} contactos exportados`);
                                 }}
-                                disabled={filtered.length === 0}
+                                disabled={contacts.length === 0}
                                 className="px-3 py-2 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 text-sm text-slate-400 hover:text-slate-200 transition-all disabled:opacity-30"
                             >
                                 📥 CSV
@@ -191,14 +195,14 @@ const ContactsPage: React.FC = () => {
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
                             <input
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => handleSearch(e.target.value)}
                                 placeholder="Buscar por nombre, email o cargo..."
                                 className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
                             />
                         </div>
                         <select
                             value={filterCompany ?? ""}
-                            onChange={(e) => setFilterCompany(e.target.value ? Number(e.target.value) : undefined)}
+                            onChange={(e) => handleCompanyFilter(e.target.value ? Number(e.target.value) : "")}
                             className="px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-slate-300"
                         >
                             <option value="">Todas las empresas</option>
@@ -274,8 +278,8 @@ const ContactsPage: React.FC = () => {
                     {/* Contact Cards */}
                     {loading ? (
                         <TableSkeleton rows={6} cols={3} />
-                    ) : filtered.length === 0 ? (
-                        contacts.length === 0 ? (
+                    ) : contacts.length === 0 ? (
+                        search.trim() === "" && !filterCompany ? (
                             <EmptyState
                                 icon="👤"
                                 title="Sin contactos"
@@ -292,7 +296,7 @@ const ContactsPage: React.FC = () => {
                         )
                     ) : (
                         <div className="space-y-2">
-                            {filtered.map((c) => (
+                            {contacts.map((c: Contact) => (
                                 <div
                                     key={c.id}
                                     onClick={() => openDetail(c)}
@@ -329,6 +333,16 @@ const ContactsPage: React.FC = () => {
                                     </div>
                                 </div>
                             ))}
+
+                            {!loading && totalCount > 0 && (
+                                <Pagination
+                                    page={page}
+                                    pageSize={pageSize}
+                                    totalCount={totalCount}
+                                    onChangePage={setPage}
+                                    onChangePageSize={setPageSize}
+                                />
+                            )}
                         </div>
                     )}
                 </div>

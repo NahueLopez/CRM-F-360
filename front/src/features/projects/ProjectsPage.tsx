@@ -7,10 +7,12 @@ import { userService } from "../users/userService";
 import { projectMemberService } from "./projectMemberService";
 import { authStore } from "../../shared/auth/authStore";
 import { useToast } from "../../shared/context/ToastContext";
-import { useProjects } from "../../shared/hooks/useProjectQuery";
+import { useProjectsPaged } from "../../shared/hooks/useProjectQuery";
 import { useCompanies } from "../../shared/hooks/useCompanyQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import { projectKeys } from "../../shared/hooks/useProjectQuery";
+import Pagination from "../../shared/ui/Pagination";
+import { usePagination } from "../../shared/hooks/usePagination";
 import ProjectForm from "./components/ProjectForm";
 import ProjectTeamModal from "./components/ProjectTeamModal";
 import EmptyState from "../../shared/ui/EmptyState";
@@ -30,17 +32,28 @@ const ProjectsPage: React.FC = () => {
   const qc = useQueryClient();
 
   // ── React Query ──
-  const { data: projects = [], isLoading: loading } = useProjects();
+  const [filterStatus, setFilterStatus] = useState<ProjectStatus | "">("");
+
+  const { page, pageSize, search, handleSearch, params: baseParams, setPage, setPageSize } = usePagination();
+  const params = { ...baseParams, status: filterStatus || undefined };
+
+  const { data, isLoading: loading } = useProjectsPaged(params);
+  const projects = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+
   const { data: companiesData = [] } = useCompanies();
 
   const [users, setUsers] = useState<User[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [teamProjectId, setTeamProjectId] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<ProjectStatus | "">("")
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
+
+  const handleStatusFilter = (val: ProjectStatus | "") => {
+    setFilterStatus(val);
+    setPage(1);
+  };
 
   const canManage = authStore.hasAnyRole("Admin", "Manager");
   const companies = canManage ? companiesData : [];
@@ -96,13 +109,6 @@ const ProjectsPage: React.FC = () => {
     } catch { addToast("error", "Error al cambiar estado"); }
   };
 
-  const filtered = projects.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
-      || (p.companyName ?? "").toLowerCase().includes(search.toLowerCase());
-    const matchStatus = !filterStatus || p.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
   const formatDate = (d?: string) => {
     if (!d) return null;
     return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
@@ -117,7 +123,7 @@ const ProjectsPage: React.FC = () => {
             <h3 className="text-xl font-bold tracking-tight">Proyectos</h3>
             <p className="text-sm text-slate-500 mt-0.5">
               {canManage
-                ? `${filtered.length} ${filtered.length === 1 ? "proyecto" : "proyectos"}`
+                ? `${totalCount} ${totalCount === 1 ? "proyecto" : "proyectos"}`
                 : "Tus proyectos asignados"}
             </p>
           </div>
@@ -147,14 +153,14 @@ const ProjectsPage: React.FC = () => {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               placeholder="Buscar por nombre o empresa..."
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
             />
           </div>
           <div className="flex gap-1">
             <button
-              onClick={() => setFilterStatus("")}
+              onClick={() => handleStatusFilter("")}
               className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${!filterStatus
                 ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
                 : "bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent"
@@ -165,7 +171,7 @@ const ProjectsPage: React.FC = () => {
             {(Object.keys(STATUS_CONFIG) as ProjectStatus[]).map((s) => (
               <button
                 key={s}
-                onClick={() => setFilterStatus(s)}
+                onClick={() => handleStatusFilter(s)}
                 className={`px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${filterStatus === s
                   ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].text} border ${STATUS_CONFIG[s].border}`
                   : "bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent"
@@ -197,8 +203,8 @@ const ProjectsPage: React.FC = () => {
         {/* Project Cards */}
         {loading ? (
           <CardsSkeleton count={6} />
-        ) : filtered.length === 0 ? (
-          projects.length === 0 ? (
+        ) : projects.length === 0 ? (
+          search.trim() === "" && !filterStatus ? (
             <EmptyState
               icon="📁"
               title="Sin proyectos"
@@ -215,7 +221,7 @@ const ProjectsPage: React.FC = () => {
           )
         ) : (
           <div className="space-y-2">
-            {filtered.map((p) => {
+            {projects.map((p: Project) => {
               const cfg = STATUS_CONFIG[p.status] ?? STATUS_CONFIG.Planned;
               return (
                 <div
@@ -290,6 +296,16 @@ const ProjectsPage: React.FC = () => {
                 </div>
               );
             })}
+
+            {!loading && totalCount > 0 && (
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                totalCount={totalCount}
+                onChangePage={setPage}
+                onChangePageSize={setPageSize}
+              />
+            )}
           </div>
         )}
 

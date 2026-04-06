@@ -1,8 +1,11 @@
+using CRMF360.Application.Common;
+
 namespace CRMF360.Application.Tasks;
 
 public interface ITaskService
 {
     Task<List<TaskDto>> GetAllAsync(CancellationToken ct = default);
+    Task<PagedResult<TaskDto>> GetPagedAsync(PaginationParams p, List<int>? allowedProjectIds = null, string? priority = null, int? assigneeId = null, bool? isOverdue = null, CancellationToken ct = default);
     Task<List<TaskDto>> GetByProjectAsync(int projectId, CancellationToken ct = default);
     Task<TaskDto?> GetByIdAsync(int id, CancellationToken ct = default);
     Task<TaskDto> CreateAsync(CreateTaskDto dto, CancellationToken ct = default);
