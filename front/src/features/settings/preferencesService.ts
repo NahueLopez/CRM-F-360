@@ -2,7 +2,7 @@ import { api } from "../../shared/api/apiClient";
 
 export interface UserPreferences {
     accentColor: string;
-    theme: "dark-blue" | "dark-gray" | "dark-black" | "light" | "light-warm" | "light-cool";
+    theme: "dark-blue" | "dark-gray" | "dark-black" | "dark-purple" | "dark-emerald" | "light" | "light-warm" | "light-cool" | "light-rose" | "light-mint";
     fontSize: "small" | "normal" | "large" | "xlarge";
 }
 

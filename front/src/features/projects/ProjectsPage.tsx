@@ -164,7 +164,7 @@ const ProjectsPage: React.FC = () => {
               onClick={() => handleStatusFilter("")}
               className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${!filterStatus
                 ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                : "bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent"
+                : "bg-slate-700/10 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
                 }`}
             >
               Todos
@@ -175,7 +175,7 @@ const ProjectsPage: React.FC = () => {
                 onClick={() => handleStatusFilter(s)}
                 className={`px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${filterStatus === s
                   ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].text} border ${STATUS_CONFIG[s].border}`
-                  : "bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent"
+                  : "bg-slate-700/10 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
                   }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[s].dot}`} />
@@ -264,7 +264,7 @@ const ProjectsPage: React.FC = () => {
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/board`); }}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
                       >
                         📋 Tablero
                       </button>
@@ -272,13 +272,13 @@ const ProjectsPage: React.FC = () => {
                         <>
                           <button
                             onClick={(e) => { e.stopPropagation(); setTeamProjectId(p.id); }}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
                           >
                             👥
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditClick(p); }}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
                           >
                             ✏️ Editar
                           </button>
@@ -349,7 +349,7 @@ const StatusDropdown = ({
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all"
+        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-all"
         title="Cambiar estado"
       >
         🔄 Estado
@@ -369,7 +369,7 @@ const StatusDropdown = ({
                 onClick={() => { onChangeStatus(s); setOpen(false); }}
                 className={`w-full text-left px-3 py-1.5 text-[11px] flex items-center gap-2 transition ${isActive
                   ? `${cfg.bg} ${cfg.text} font-medium`
-                  : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-200"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
               >
                 <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />

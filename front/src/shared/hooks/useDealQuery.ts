@@ -42,9 +42,28 @@ export const useMoveDeal = () => {
     return useMutation({
         mutationFn: ({ id, stage, sortOrder }: { id: number; stage: string; sortOrder: number }) =>
             dealService.move(id, stage, sortOrder),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: dealKeys.all });
+        onMutate: async ({ id, stage }) => {
+            await qc.cancelQueries({ queryKey: dealKeys.all });
+            const previousDeals = qc.getQueryData<Deal[]>(dealKeys.all);
+            
+            // The frontend handleDragOver already updates local cache, 
+            // but just in case, we apply it here as well
+            if (previousDeals) {
+                qc.setQueryData<Deal[]>(dealKeys.all, old => {
+                    if (!old) return [];
+                    return old.map(d => d.id === id ? { ...d, stage: stage as Deal["stage"] } : d);
+                });
+            }
+            return { previousDeals };
+        },
+        onError: (_err, _newDeal, context) => {
+            if (context?.previousDeals) {
+                qc.setQueryData(dealKeys.all, context.previousDeals);
+            }
+        },
+        onSettled: () => {
             qc.invalidateQueries({ queryKey: dealKeys.summary });
+            // Do not immediately invalidate deals.all to prevent flickering
         },
     });
 };

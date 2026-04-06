@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -16,7 +16,7 @@ import { useToast } from "../../shared/context/ToastContext";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import {
-    useDeals, useDealSummary, useCreateDeal,
+    useDeals, useDealSummary, useCreateDeal, useUpdateDeal,
     useDeleteDeal, useMoveDeal, useSetDealsCache,
 } from "../../shared/hooks/useDealQuery";
 import { useCompanies } from "../../shared/hooks/useCompanyQuery";
@@ -44,6 +44,7 @@ const PipelinePage = () => {
     const { data: summary = [] } = useDealSummary();
     const { data: companies = [] } = useCompanies();
     const createDeal = useCreateDeal();
+    const updateDeal = useUpdateDeal();
     const deleteDeal = useDeleteDeal();
     const moveDeal = useMoveDeal();
     const setDealsCache = useSetDealsCache();
@@ -53,6 +54,7 @@ const PipelinePage = () => {
     const [editDeal, setEditDeal] = useState<Deal | null>(null);
     const [form, setForm] = useState({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
     const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
+    const originalDealsRef = useRef<Deal[]>([]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -61,10 +63,22 @@ const PipelinePage = () => {
     const dealsByStage = (stage: DealStage) => deals.filter(d => d.stage === stage);
     const stageTotal = (stage: string) => summary.find(s => s.stage === stage);
 
+    const handleEditDealClick = (deal: Deal) => {
+        setForm({
+            title: deal.title,
+            companyId: deal.companyId?.toString() || "",
+            value: deal.value?.toString() || "",
+            notes: deal.notes || "",
+            expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : "",
+        });
+        setEditDeal(deal);
+    };
+
     // ── Drag & Drop ──
     const handleDragStart = (event: DragStartEvent) => {
         const deal = deals.find(d => d.id === event.active.id);
         setActiveDeal(deal ?? null);
+        originalDealsRef.current = deals; // Save snapshot for rollback
     };
 
     const handleDragOver = (event: DragOverEvent) => {
@@ -98,7 +112,11 @@ const PipelinePage = () => {
     const handleDragEnd = async (event: DragEndEvent) => {
         setActiveDeal(null);
         const { active, over } = event;
-        if (!over) return;
+        if (!over) {
+            // Revert optimistic drag-over cache if dropped outside
+            if (originalDealsRef.current.length > 0) setDealsCache(() => originalDealsRef.current);
+            return;
+        }
 
         const dealId = active.id as number;
         const overId = over.id;
@@ -117,15 +135,18 @@ const PipelinePage = () => {
         moveDeal.mutate(
             { id: dealId, stage: targetStage, sortOrder: 0 },
             {
-                onSuccess: () => addToast("success", `Deal movido a ${stageName}`),
-                onError: () => addToast("error", "Error al mover el deal"),
+                onSuccess: () => addToast("success", `Oportunidad movida a ${stageName}`),
+                onError: () => {
+                    addToast("error", "Error al mover la oportunidad");
+                    if (originalDealsRef.current.length > 0) setDealsCache(() => originalDealsRef.current);
+                },
             }
         );
     };
 
     const handleDragCancel = () => {
         setActiveDeal(null);
-        // React Query will refetch on next invalidation
+        if (originalDealsRef.current.length > 0) setDealsCache(() => originalDealsRef.current);
     };
 
     // ── CRUD ──
@@ -146,6 +167,30 @@ const PipelinePage = () => {
                     setShowCreate(false);
                 },
                 onError: () => addToast("error", "Error al crear la oportunidad"),
+            }
+        );
+    };
+
+    const handleUpdate = async () => {
+        if (!editDeal || !form.title.trim()) return;
+        updateDeal.mutate(
+            {
+                id: editDeal.id,
+                data: {
+                    title: form.title,
+                    companyId: form.companyId ? Number(form.companyId) : undefined,
+                    value: form.value ? Number(form.value) : undefined,
+                    notes: form.notes || undefined,
+                    expectedCloseDate: form.expectedCloseDate || undefined,
+                }
+            },
+            {
+                onSuccess: () => {
+                    addToast("success", "Oportunidad actualizada");
+                    setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+                    setEditDeal(null);
+                },
+                onError: () => addToast("error", "Error al actualizar"),
             }
         );
     };
@@ -182,7 +227,10 @@ const PipelinePage = () => {
                     <p className="text-[10px] text-slate-500">{deals.filter(d => d.stage === "ClosedWon").length} deals cerrados</p>
                 </div>
                 <div className="flex items-center justify-end">
-                    <button onClick={() => setShowCreate(true)}
+                    <button onClick={() => {
+                        setForm({ title: "", companyId: "", value: "", notes: "", expectedCloseDate: "" });
+                        setShowCreate(true);
+                    }}
                         className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition">
                         + Nueva oportunidad
                     </button>
@@ -205,7 +253,7 @@ const PipelinePage = () => {
                             stage={stg}
                             deals={dealsByStage(stg.value)}
                             summary={stageTotal(stg.value)}
-                            onEditDeal={setEditDeal}
+                            onEditDeal={handleEditDealClick}
                         />
                     ))}
                 </div>
@@ -233,33 +281,18 @@ const PipelinePage = () => {
 
             {/* Detail/Edit modal */}
             {editDeal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">{editDeal.title}</h3>
-                            <button onClick={() => setEditDeal(null)} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                            {editDeal.companyName && <p><span className="text-slate-400">Empresa:</span> {editDeal.companyName}</p>}
-                            {editDeal.contactName && <p><span className="text-slate-400">Contacto:</span> {editDeal.contactName}</p>}
-                            <p><span className="text-slate-400">Etapa:</span> {STAGES.find(s => s.value === editDeal.stage)?.label}</p>
-                            <p><span className="text-slate-400">Valor:</span> {fmt(editDeal.value, editDeal.currency)}</p>
-                            <p><span className="text-slate-400">Asignado a:</span> {editDeal.assignedToName}</p>
-                            {editDeal.expectedCloseDate && <p><span className="text-slate-400">Cierre esperado:</span> {new Date(editDeal.expectedCloseDate).toLocaleDateString("es-AR")}</p>}
-                            {editDeal.notes && <p className="text-slate-400 text-xs mt-2">{editDeal.notes}</p>}
-                        </div>
-
-                        <div className="flex justify-between pt-3 border-t border-slate-700">
-                            <button onClick={() => { handleDelete(editDeal.id); setEditDeal(null); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                           text-red-400/70 hover:text-red-400 hover:bg-red-500/10
-                                           transition-all duration-200">
-                                Eliminar
-                            </button>
-                            <button onClick={() => setEditDeal(null)} className="px-4 py-1.5 rounded-xl border border-slate-600/50 hover:bg-slate-700/50 text-sm transition">Cerrar</button>
-                        </div>
-                    </div>
-                </div>
+                <DealFormModal
+                    form={form}
+                    companies={companies}
+                    isEdit={true}
+                    onChange={setForm}
+                    onSubmit={handleUpdate}
+                    onClose={() => setEditDeal(null)}
+                    onDelete={() => {
+                        handleDelete(editDeal.id);
+                        setEditDeal(null);
+                    }}
+                />
             )}
             <ConfirmModal {...confirmProps} />
         </div>

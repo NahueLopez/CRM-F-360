@@ -179,7 +179,7 @@ const TasksPage: React.FC = () => {
           {activeFilters > 0 && (
             <button
               onClick={() => { handleSearch(""); setFilterPriority(""); setFilterAssignee(""); setFilterOverdue(false); setPage(1); }}
-              className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white border border-slate-700 hover:bg-slate-800 transition"
+              className="px-3 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               ✕ Limpiar ({activeFilters})
             </button>
@@ -203,13 +203,13 @@ const TasksPage: React.FC = () => {
           <div className="flex rounded-lg border border-slate-700 overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 text-xs transition ${viewMode === "list" ? "bg-indigo-600 text-white" : "bg-slate-900 text-slate-400 hover:bg-slate-800"}`}
+              className={`px-3 py-1.5 text-xs transition ${viewMode === "list" ? "bg-indigo-600 text-white" : "bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
             >
               ☰ Lista
             </button>
             <button
               onClick={() => setViewMode("grouped")}
-              className={`px-3 py-1.5 text-xs transition ${viewMode === "grouped" ? "bg-indigo-600 text-white" : "bg-slate-900 text-slate-400 hover:bg-slate-800"}`}
+              className={`px-3 py-1.5 text-xs transition ${viewMode === "grouped" ? "bg-indigo-600 text-white" : "bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
             >
               ▦ Agrupado
             </button>

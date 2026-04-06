@@ -31,8 +31,19 @@
 }
 
 /* Dark black: slate-950 */
+/* Dark black: slate-950 */
 [data-theme="dark-blue"] .bg-popup {
   background-color: #020617;
+}
+
+/* Dark purple */
+[data-theme="dark-purple"] .bg-popup {
+  background-color: #09031c;
+}
+
+/* Dark emerald */
+[data-theme="dark-emerald"] .bg-popup {
+  background-color: #011e17;
 }
 
 /* Dark blue: slate-950 */
@@ -42,6 +53,14 @@
 
 [data-light="light-cool"] .light .bg-popup {
   background-color: #f8fbff;
+}
+
+[data-light="light-rose"] .light .bg-popup {
+  background-color: #fffbfa;
+}
+
+[data-light="light-mint"] .light .bg-popup {
+  background-color: #fafffb;
 }
 
 /* ═══════════════════════════════════════════
@@ -221,6 +240,40 @@
 
 [data-theme="dark-black"] .bg-slate-950\/70 {
   background-color: rgba(9, 9, 11, 0.95) !important;
+}
+
+[data-theme="dark-purple"] .dark,
+[data-theme="dark-purple"].dark {
+  background-color: #09031c; /* Deepest violet */
+}
+
+[data-theme="dark-purple"] .bg-slate-950 {
+  background-color: #09031c !important;
+}
+
+[data-theme="dark-purple"] .bg-slate-900 {
+  background-color: #0f0728 !important; /* Base violet */
+}
+
+[data-theme="dark-purple"] .bg-slate-950\/70 {
+  background-color: rgba(9, 3, 28, 0.95) !important;
+}
+
+[data-theme="dark-emerald"] .dark,
+[data-theme="dark-emerald"].dark {
+  background-color: #011e17; /* Deepest emerald */
+}
+
+[data-theme="dark-emerald"] .bg-slate-950 {
+  background-color: #011e17 !important;
+}
+
+[data-theme="dark-emerald"] .bg-slate-900 {
+  background-color: #022c22 !important; /* Base emerald */
+}
+
+[data-theme="dark-emerald"] .bg-slate-950\/70 {
+  background-color: rgba(1, 30, 23, 0.95) !important;
 }
 
 /* Dark theme (default) */
@@ -823,6 +876,88 @@ html .light input.bg-transparent,
 
 [data-light="light-cool"] .light .border-slate-700\/30 {
   border-color: rgba(96, 165, 250, 0.2) !important;
+}
+
+[data-light="light-cool"] .light ::-webkit-scrollbar-track {
+  background: #eff6ff;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT ROSE — rose tinted variant
+   ═══════════════════════════════════════════ */
+[data-light="light-rose"] .light {
+  background-color: #fff1f2 !important;
+}
+
+[data-light="light-rose"] .light .bg-slate-950,
+[data-light="light-rose"] .light .bg-slate-900\/20 {
+  background-color: #fff1f2 !important;
+}
+
+[data-light="light-rose"] .light .bg-slate-900 {
+  background-color: #fffbfa !important;
+}
+
+[data-light="light-rose"] .light .bg-slate-800\/25,
+[data-light="light-rose"] .light .bg-slate-800\/30,
+[data-light="light-rose"] .light .bg-slate-800\/40 {
+  background-color: #fffafa !important;
+}
+
+[data-light="light-rose"] .light .bg-slate-800\/60 {
+  background-color: #ffe4e6 !important;
+}
+
+[data-light="light-rose"] .light .bg-slate-950\/70 {
+  background-color: #fffbfa !important;
+  border-right-color: #fecdd3;
+}
+
+[data-light="light-rose"] .light .border-slate-700\/30 {
+  border-color: rgba(251, 113, 133, 0.2) !important;
+}
+
+[data-light="light-rose"] .light ::-webkit-scrollbar-track {
+  background: #fff1f2;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MINT — mint tinted variant
+   ═══════════════════════════════════════════ */
+[data-light="light-mint"] .light {
+  background-color: #f0fdf4 !important;
+}
+
+[data-light="light-mint"] .light .bg-slate-950,
+[data-light="light-mint"] .light .bg-slate-900\/20 {
+  background-color: #f0fdf4 !important;
+}
+
+[data-light="light-mint"] .light .bg-slate-900 {
+  background-color: #fafffb !important;
+}
+
+[data-light="light-mint"] .light .bg-slate-800\/25,
+[data-light="light-mint"] .light .bg-slate-800\/30,
+[data-light="light-mint"] .light .bg-slate-800\/40 {
+  background-color: #f8fff9 !important;
+}
+
+[data-light="light-mint"] .light .bg-slate-800\/60 {
+  background-color: #dcfce7 !important;
+}
+
+[data-light="light-mint"] .light .bg-slate-950\/70 {
+  background-color: #fafffb !important;
+  border-right-color: #bbf7d0;
+}
+
+[data-light="light-mint"] .light .border-slate-700\/30 {
+  border-color: rgba(74, 222, 128, 0.2) !important;
+}
+
+[data-light="light-mint"] .light ::-webkit-scrollbar-track {
+  background: #f0fdf4;
 }
 
 [data-light="light-cool"] .light ::-webkit-scrollbar-track {

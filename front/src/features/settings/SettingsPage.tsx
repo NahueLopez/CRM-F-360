@@ -57,6 +57,18 @@ const THEMES: { value: UserPreferences["theme"]; label: string; icon: string; co
         colors: ["#eff6ff", "#f8fbff", "#bfdbfe"],
     },
     {
+        value: "light-rose",
+        label: "Claro Rosado",
+        icon: "🌸",
+        colors: ["#fff1f2", "#fffbfa", "#fecdd3"],
+    },
+    {
+        value: "light-mint",
+        label: "Claro Menta",
+        icon: "🍃",
+        colors: ["#f0fdf4", "#fafffb", "#bbf7d0"],
+    },
+    {
         value: "dark-blue",
         label: "Azul oscuro",
         icon: "🌌",
@@ -73,6 +85,18 @@ const THEMES: { value: UserPreferences["theme"]; label: string; icon: string; co
         label: "Negro puro",
         icon: "⬛",
         colors: ["#09090b", "#0f0f11", "#1a1a1e"],
+    },
+    {
+        value: "dark-purple",
+        label: "Oscuro Violeta",
+        icon: "🔮",
+        colors: ["#0f0728", "#1c133a", "#2e215e"],
+    },
+    {
+        value: "dark-emerald",
+        label: "Oscuro Esmeralda",
+        icon: "🌲",
+        colors: ["#022c22", "#064e3b", "#065f46"],
     },
 ];
 
