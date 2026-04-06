@@ -129,14 +129,13 @@ export const usePipelineWebSockets = () => {
         qc.invalidateQueries({ queryKey: dealKeys.summary });
       });
 
-      conn.on("DealMoved", (id: number, stage: string, sortOrder: number) => {
-        qc.setQueryData<Deal[]>(dealKeys.all, (old) => {
-          if (!old) return [];
-          return old.map((d) =>
-            d.id === id ? { ...d, stage: stage as Deal["stage"], sortOrder } : d,
-          );
-        });
-        qc.invalidateQueries({ queryKey: dealKeys.summary });
+      conn.on("DealMoved", () => {
+        // Delay refetch so the optimistic update stays visible while the
+        // backend finishes normalizing. Prevents the "bounce back" flash.
+        setTimeout(() => {
+          qc.invalidateQueries({ queryKey: dealKeys.all });
+          qc.invalidateQueries({ queryKey: dealKeys.summary });
+        }, 1500);
       });
 
       conn.on("DealDeleted", (id: number) => {

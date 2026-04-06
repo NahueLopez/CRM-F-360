@@ -341,7 +341,10 @@ const ContactsPage: React.FC = () => {
                     }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-linear-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 border border-slate-300/50 dark:border-slate-700/50 flex items-center justify-center text-slate-600 dark:text-slate-400 font-medium text-sm shadow-inner relative overflow-hidden">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium text-sm shadow-inner relative overflow-hidden"
+                      style={{ background: `linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000))` }}
+                    >
                       {c.fullName.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
@@ -394,7 +397,10 @@ const ContactsPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-xl shadow-inner relative overflow-hidden text-indigo-400">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner relative overflow-hidden text-white"
+                  style={{ background: `linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent) 15%, transparent))`, borderColor: `color-mix(in srgb, var(--accent) 30%, transparent)`, borderWidth: 1 }}
+                >
                   {selected.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div>

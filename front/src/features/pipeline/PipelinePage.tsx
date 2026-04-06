@@ -202,21 +202,40 @@ const PipelinePage = () => {
       const lastOrder = effectiveOrders.length > 0 ? effectiveOrders[effectiveOrders.length - 1] : 0;
       newSortOrder = lastOrder + 1000;
     } else {
-      // Dropped on a specific card — insert at that position
       const overIndex = stageDeals.findIndex((d) => d.id === overId);
       if (overIndex === -1) {
         // Target card not found — put at end
         const lastOrder = effectiveOrders.length > 0 ? effectiveOrders[effectiveOrders.length - 1] : 0;
         newSortOrder = lastOrder + 1000;
-      } else if (overIndex === 0) {
-        // Insert before the first card
-        newSortOrder = effectiveOrders[0] - 1000;
       } else {
-        // Between two cards
-        const prev = effectiveOrders[overIndex - 1];
-        const curr = effectiveOrders[overIndex];
-        newSortOrder = Math.round((prev + curr) / 2);
-        if (newSortOrder <= prev) newSortOrder = prev + 1;
+        // Determine drag direction for same-column moves
+        const isSameColumn = originalDeal && originalDeal.stage === targetStage;
+        const originalSortOrder = originalDeal?.sortOrder ?? 0;
+        const overCardSortOrder = effectiveOrders[overIndex];
+        const draggingDown = isSameColumn && originalSortOrder < overCardSortOrder;
+
+        if (draggingDown) {
+          // Dragging DOWN → insert AFTER the target card
+          if (overIndex < effectiveOrders.length - 1) {
+            const curr = effectiveOrders[overIndex];
+            const next = effectiveOrders[overIndex + 1];
+            newSortOrder = Math.round((curr + next) / 2);
+            if (newSortOrder <= curr) newSortOrder = curr + 1;
+          } else {
+            // Target is the last card — put after it
+            newSortOrder = effectiveOrders[overIndex] + 1000;
+          }
+        } else {
+          // Dragging UP or cross-column → insert BEFORE the target card
+          if (overIndex === 0) {
+            newSortOrder = effectiveOrders[0] - 1000;
+          } else {
+            const prev = effectiveOrders[overIndex - 1];
+            const curr = effectiveOrders[overIndex];
+            newSortOrder = Math.round((prev + curr) / 2);
+            if (newSortOrder <= prev) newSortOrder = prev + 1;
+          }
+        }
       }
     }
 
