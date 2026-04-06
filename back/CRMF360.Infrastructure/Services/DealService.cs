@@ -113,7 +113,24 @@ public class DealService : IDealService
             e.Stage = stage;
             e.SortOrder = dto.SortOrder;
             await _db.SaveChangesAsync(ct);
-            await _hub.Clients.All.SendAsync("DealMoved", id, dto.Stage, dto.SortOrder, ct);
+
+            // Normalize ALL cards in the target stage so sort orders are sequential.
+            // This prevents "all cards at 0" from breaking relative ordering.
+            var stageDeals = await _db.Deals
+                .Where(d => d.Stage == stage && !d.IsDeleted)
+                .OrderBy(d => d.SortOrder)
+                .ThenBy(d => d.Id)
+                .ToListAsync(ct);
+
+            for (int i = 0; i < stageDeals.Count; i++)
+            {
+                stageDeals[i].SortOrder = i * 1000;
+            }
+            await _db.SaveChangesAsync(ct);
+
+            // Broadcast the final sortOrder (after normalization)
+            var finalSortOrder = stageDeals.FirstOrDefault(d => d.Id == id)?.SortOrder ?? dto.SortOrder;
+            await _hub.Clients.All.SendAsync("DealMoved", id, dto.Stage, finalSortOrder, ct);
             return true;
         }
         return false;

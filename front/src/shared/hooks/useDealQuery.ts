@@ -64,10 +64,10 @@ export const useMoveDeal = () => {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: dealKeys.summary });
-      // Refetch deals after a short delay to sync with server-sorted data
+      // Refetch deals quickly to sync with server-normalized sort orders
       setTimeout(() => {
         qc.invalidateQueries({ queryKey: dealKeys.all });
-      }, 1000);
+      }, 300);
     },
   });
 };

@@ -149,46 +149,48 @@ const PipelinePage = () => {
 
     if (!targetStage) return;
 
-    // Check if the card actually moved
-    const draggedDeal = deals.find((d) => d.id === dealId);
-    if (!draggedDeal) return;
+    // Use the original snapshot to check the card's REAL stage (before handleDragOver changed it)
+    const originalDeal = originalDealsRef.current.find((d) => d.id === dealId);
+    const currentDeal = deals.find((d) => d.id === dealId);
+    if (!originalDeal && !currentDeal) return;
 
-    // If dropped back on same position (same stage + same card), skip
-    if (draggedDeal.stage === targetStage && overId === dealId) return;
+    // If dropped back on itself in the same original stage, skip
+    if (originalDeal && originalDeal.stage === targetStage && overId === dealId) return;
 
     // Get other cards in the target stage, sorted by sortOrder
+    // Use the freshest deals array, which may have handleDragOver's optimistic stage update
     const stageDeals = deals
       .filter((d) => d.stage === targetStage && d.id !== dealId)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-    // Normalize sortOrders if they're all the same (unseeded data)
-    const allSame = stageDeals.length > 1 && stageDeals.every((d) => (d.sortOrder ?? 0) === (stageDeals[0].sortOrder ?? 0));
-    if (allSame) {
-      stageDeals.forEach((d, i) => (d.sortOrder = i * 1000));
-    }
+    // If all sortOrders are the same (common for unseeded data), space them out locally
+    // to allow proper fractional computation. The backend normalizes after save.
+    const sortOrders = stageDeals.map((d) => d.sortOrder ?? 0);
+    const allSame = stageDeals.length > 1 && sortOrders.every((v) => v === sortOrders[0]);
+    const effectiveOrders = allSame
+      ? stageDeals.map((_, i) => i * 1000)
+      : sortOrders;
 
     let newSortOrder: number;
     if (typeof overId === "string" && overId.startsWith("stage-")) {
       // Dropped on empty area — put at the end
-      const lastOrder = stageDeals.length > 0 ? (stageDeals[stageDeals.length - 1].sortOrder ?? 0) : 0;
+      const lastOrder = effectiveOrders.length > 0 ? effectiveOrders[effectiveOrders.length - 1] : 0;
       newSortOrder = lastOrder + 1000;
     } else {
       // Dropped on a specific card — insert at that position
       const overIndex = stageDeals.findIndex((d) => d.id === overId);
       if (overIndex === -1) {
-        // Target card not found (shouldn't happen) — put at end
-        const lastOrder = stageDeals.length > 0 ? (stageDeals[stageDeals.length - 1].sortOrder ?? 0) : 0;
+        // Target card not found — put at end
+        const lastOrder = effectiveOrders.length > 0 ? effectiveOrders[effectiveOrders.length - 1] : 0;
         newSortOrder = lastOrder + 1000;
       } else if (overIndex === 0) {
         // Insert before the first card
-        const firstOrder = stageDeals[0].sortOrder ?? 0;
-        newSortOrder = firstOrder - 1000;
+        newSortOrder = effectiveOrders[0] - 1000;
       } else {
         // Between two cards
-        const prev = stageDeals[overIndex - 1].sortOrder ?? 0;
-        const curr = stageDeals[overIndex].sortOrder ?? 0;
+        const prev = effectiveOrders[overIndex - 1];
+        const curr = effectiveOrders[overIndex];
         newSortOrder = Math.round((prev + curr) / 2);
-        // If collision (e.g. consecutive integers), offset
         if (newSortOrder <= prev) newSortOrder = prev + 1;
       }
     }
