@@ -1,9 +1,17 @@
 services:
-  crmf360.api:
-    image: ${DOCKER_REGISTRY-}crmf360api
+  api:
     build:
       context: .
       dockerfile: CRMF360.Api/Dockerfile
+    ports:
+      - "5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__pg=Host=postgres;Port=5432;Database=crmf360_db;Username=crmf360_user;Password=crmf360_password
+      - Jwt__Key=esta_clave_es_muy_segura_y_tiene_mas_de_32_chars!
+      - Jwt__Issuer=CRMF360
+      - Jwt__Audience=CRMF360-BackOffice
+      - Cors__Origins=http://localhost:5173,http://localhost:3000,http://localhost:5174,https://front-crm.fundacion360.online
     depends_on:
       - postgres
     networks:

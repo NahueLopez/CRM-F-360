@@ -1,4 +1,4 @@
-﻿using CRMF360.Application.Abstractions;
+using CRMF360.Application.Abstractions;
 using CRMF360.Application.Auth;
 using CRMF360.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -45,10 +45,24 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        var token = GenerateJwtToken(user, null);
+        // Determine initial tenant selection:
+        // - SuperAdmin: never auto-select → goes to admin panel first
+        // - Regular user with 1 workspace: auto-select that workspace
+        // - Regular user with 0 or many: null → goes to workspace selector
+        int? autoTenantId = null;
+        if (!user.IsSuperAdmin)
+        {
+            var distinctTenantIds = user.UserRoles
+                .Select(ur => ur.TenantId)
+                .Distinct()
+                .ToList();
+            autoTenantId = distinctTenantIds.Count == 1 ? distinctTenantIds[0] : null;
+        }
+
+        var token = GenerateJwtToken(user, autoTenantId);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken, null);
+        return await MapToResponse(user, token, refreshToken, autoTenantId);
     }
 
     public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId, int? currentTenantId)
@@ -68,7 +82,7 @@ public class AuthService : IAuthService
         var token = GenerateJwtToken(user, currentTenantId);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken, currentTenantId);
+        return await MapToResponse(user, token, refreshToken, currentTenantId);
     }
     
     public async Task<LoginResponseDto?> SwitchWorkspaceAsync(int userId, int tenantId)
@@ -82,13 +96,16 @@ public class AuthService : IAuthService
                 .ThenInclude(ur => ur.Tenant)
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
 
-        if (user == null || !user.UserRoles.Any(ur => ur.TenantId == tenantId))
+        if (user == null) return null;
+
+        // SuperAdmin can enter ANY workspace; regular users need a UserRole in the target tenant
+        if (!user.IsSuperAdmin && !user.UserRoles.Any(ur => ur.TenantId == tenantId))
             return null;
 
         var token = GenerateJwtToken(user, tenantId);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken, tenantId);
+        return await MapToResponse(user, token, refreshToken, tenantId);
     }
 
     public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshTokenValue, int? currentTenantId)
@@ -116,7 +133,7 @@ public class AuthService : IAuthService
         var newJwt = GenerateJwtToken(user, currentTenantId);
         var newRefreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, newJwt, newRefreshToken, currentTenantId);
+        return await MapToResponse(user, newJwt, newRefreshToken, currentTenantId);
     }
 
     public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto request)
@@ -167,10 +184,63 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(bytes);
     }
 
-    private static LoginResponseDto MapToResponse(User user, string token, string refreshToken, int? currentTenantId)
+    private async Task<List<WorkspaceDto>> GetAvailableWorkspacesAsync(User user)
+    {
+        if (user.IsSuperAdmin)
+        {
+            // SuperAdmin sees ALL workspaces
+            return await _db.Tenants.AsNoTracking()
+                .Where(t => t.Active)
+                .Select(t => new WorkspaceDto { Id = t.Id, Name = t.Name })
+                .ToListAsync();
+        }
+
+        return user.UserRoles
+            .Where(ur => ur.Tenant != null)
+            .Select(ur => new WorkspaceDto { Id = ur.TenantId, Name = ur.Tenant.Name })
+            .DistinctBy(w => w.Id)
+            .ToList();
+    }
+
+    private async Task<LoginResponseDto> MapToResponse(User user, string token, string refreshToken, int? currentTenantId)
     {
         var currentTenant = user.UserRoles.FirstOrDefault(ur => ur.TenantId == currentTenantId)?.Tenant;
-        
+
+        // For SuperAdmin inside a tenant, grant Admin-level roles/permissions
+        List<string> roles;
+        List<string> permissions;
+
+        if (currentTenantId.HasValue)
+        {
+            var tenantRoles = user.UserRoles
+                .Where(ur => ur.TenantId == currentTenantId && ur.Role != null)
+                .ToList();
+
+            if (user.IsSuperAdmin && !tenantRoles.Any())
+            {
+                // SuperAdmin entering a workspace they don't have a UserRole in → grant Admin
+                roles = new List<string> { "Admin" };
+                permissions = new List<string>(); // Admin bypasses all permission checks anyway
+            }
+            else
+            {
+                roles = tenantRoles.Select(ur => ur.Role.Name).ToList();
+                permissions = tenantRoles
+                    .SelectMany(ur => ur.Role.RolePermissions)
+                    .Where(rp => rp.Permission != null)
+                    .Select(rp => rp.Permission.Name)
+                    .Distinct()
+                    .ToList();
+            }
+        }
+        else
+        {
+            roles = new List<string>();
+            permissions = new List<string>();
+        }
+
+        var availableWorkspaces = await GetAvailableWorkspacesAsync(user);
+
         return new LoginResponseDto
         {
             Id = user.Id,
@@ -181,23 +251,11 @@ public class AuthService : IAuthService
             Phone = user.Phone,
             Token = token,
             RefreshToken = refreshToken,
-            Roles = user.UserRoles
-                .Where(ur => ur.TenantId == currentTenantId && ur.Role != null)
-                .Select(ur => ur.Role.Name)
-                .ToList(),
+            IsSuperAdmin = user.IsSuperAdmin,
+            Roles = roles,
             Preferences = user.Preferences,
-            Permissions = user.UserRoles
-                .Where(ur => ur.TenantId == currentTenantId && ur.Role != null)
-                .SelectMany(ur => ur.Role.RolePermissions)
-                .Where(rp => rp.Permission != null)
-                .Select(rp => rp.Permission.Name)
-                .Distinct()
-                .ToList(),
-            AvailableWorkspaces = user.UserRoles
-                .Where(ur => ur.Tenant != null)
-                .Select(ur => new WorkspaceDto { Id = ur.TenantId, Name = ur.Tenant.Name })
-                .DistinctBy(w => w.Id)
-                .ToList()
+            Permissions = permissions,
+            AvailableWorkspaces = availableWorkspaces
         };
     }
 
@@ -226,12 +284,23 @@ public class AuthService : IAuthService
             var roles = user.UserRoles
                 .Where(ur => ur.TenantId == currentTenantId.Value && ur.Role != null)
                 .Select(ur => ur.Role.Name)
-                .Distinct();
+                .Distinct()
+                .ToList();
+
+            // SuperAdmin gets Admin role even without explicit UserRole
+            if (user.IsSuperAdmin && !roles.Any())
+                roles.Add("Admin");
                 
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
+        }
+
+        // SuperAdmin claim — global, not tenant-specific
+        if (user.IsSuperAdmin)
+        {
+            claims.Add(new Claim("isSuperAdmin", "true"));
         }
 
         var token = new JwtSecurityToken(

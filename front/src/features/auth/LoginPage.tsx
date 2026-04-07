@@ -1,16 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { authStore } from "../../shared/auth/authStore";
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
-  const [switching, setSwitching] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,38 +20,18 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      const workspaces = authStore.user?.availableWorkspaces || [];
-      if (workspaces.length === 1) {
-        // Single workspace — switch to it automatically (no "default")
-        await authStore.switchWorkspace(workspaces[0].id);
-        // switchWorkspace redirects to "/"
-      } else if (workspaces.length > 1) {
-        // Multi-workspace user: ask them which one to use
-        setShowWorkspaceSelector(true);
+      // Use window.location.replace for a full page reload.
+      // authStore is not reactive, so React Router guards won't re-evaluate
+      // without a full reload that re-initializes authStore from localStorage.
+      if (authStore.user?.tenantId) {
+        window.location.replace("/");
       } else {
-        // No workspaces at all (shouldn't happen, but fallback)
-        navigate("/", { replace: true });
+        window.location.replace("/select-workspace");
       }
     } catch {
       setError("Error de conexión con el servidor");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSelectWorkspace = async (tenantId: number) => {
-    setSwitching(true);
-    setError("");
-    try {
-      const ok = await authStore.switchWorkspace(tenantId);
-      if (!ok) {
-        setError("No se pudo acceder a esa empresa");
-        setSwitching(false);
-      }
-      // switchWorkspace does a window.location.replace("/") on success
-    } catch {
-      setError("Error de conexión");
-      setSwitching(false);
     }
   };
 
@@ -154,45 +130,8 @@ const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {showWorkspaceSelector ? (
-            <>
-              <div className="space-y-2 mb-6">
-                <h2 className="text-2xl font-bold text-white">Seleccioná tu empresa</h2>
-                <p className="text-sm text-slate-500">
-                  Hola <span className="text-indigo-400 font-medium">{authStore.user?.fullName}</span>, elegí con qué empresa querés trabajar.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {(authStore.user?.availableWorkspaces || []).map((ws) => (
-                  <button
-                    key={ws.id}
-                    onClick={() => handleSelectWorkspace(ws.id)}
-                    disabled={switching}
-                    className="w-full text-left p-4 rounded-xl bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:border-indigo-500/50 transition-all group disabled:opacity-50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">🏢</span>
-                        <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
-                          {ws.name}
-                        </span>
-                      </div>
-                      <span className="text-slate-600 group-hover:text-indigo-400 transition-colors text-sm">→</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {switching && (
-                <div className="flex items-center justify-center gap-2 mt-6 text-sm text-slate-400">
-                  <span className="w-4 h-4 border-2 border-slate-600 border-t-indigo-400 rounded-full animate-spin" />
-                  Cambiando de empresa...
-                </div>
-              )}
-            </>
-          ) : (
-            <>
+          {/* Login form */}
+          <>
               <div className="space-y-2 mb-8">
                 <h2 className="text-2xl font-bold text-white">Bienvenido</h2>
                 <p className="text-sm text-slate-500">Ingresá tus credenciales para continuar</p>
@@ -253,7 +192,6 @@ const LoginPage: React.FC = () => {
                 </button>
               </form>
             </>
-          )}
 
           <p className="text-[11px] text-slate-600 text-center mt-8">
             Al iniciar sesión aceptás los términos de servicio

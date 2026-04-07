@@ -1,6 +1,5 @@
 import { api } from "../api/apiClient";
 import { applyPreferences } from "../theme/themeEngine";
-import type { UserPreferences } from "../../features/settings/preferencesService";
 import { DEFAULT_PREFERENCES } from "../../features/settings/preferencesService";
 
 export interface AuthUser {
@@ -10,6 +9,7 @@ export interface AuthUser {
   fullName: string;
   email: string;
   phone?: string;
+  isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];
   availableWorkspaces: { id: number; name: string }[];
@@ -24,6 +24,7 @@ interface LoginResponse {
   phone?: string;
   token: string;
   refreshToken: string;
+  isSuperAdmin: boolean;
   roles: string[];
   preferences?: string;
   permissions: string[];
@@ -63,6 +64,7 @@ class AuthStore {
   }
 
   hasPermission(permission: string): boolean {
+    if (this.user?.isSuperAdmin) return true;
     if (this.hasRole("Admin")) return true;
     return this.user?.permissions?.includes(permission) ?? false;
   }
@@ -92,16 +94,25 @@ class AuthStore {
     }
   }
 
-  async switchWorkspace(tenantId: number): Promise<boolean> {
+  async switchWorkspace(tenantId: number, redirectUrl: string = "/"): Promise<boolean> {
     try {
       const res = await api.post<LoginResponse>("/auth/switch-workspace", { tenantId });
       this._setSession(res);
       // Reload UI cleanly so the entire app query cache picks up the new TenantId via endpoints automatically
-      window.location.replace("/");
+      window.location.replace(redirectUrl);
       return true;
     } catch {
       return false;
     }
+  }
+
+  /** Exit current workspace and return to the admin panel / workspace selection */
+  exitWorkspace() {
+    if (!this.user) return;
+    // Clear tenantId from user state → ProtectedRoute will redirect to /select-workspace
+    this.user = { ...this.user, tenantId: 0 as any, tenantName: "" };
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(this.user));
+    window.location.replace("/select-workspace");
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
@@ -132,6 +143,7 @@ class AuthStore {
       fullName: res.fullName,
       email: res.email,
       phone: res.phone,
+      isSuperAdmin: res.isSuperAdmin || false,
       roles: res.roles,
       permissions: res.permissions ?? [],
       availableWorkspaces: res.availableWorkspaces || [],
@@ -139,13 +151,19 @@ class AuthStore {
 
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(this.user));
 
-    let prefs: UserPreferences = DEFAULT_PREFERENCES;
+    // Only overwrite theme if the API actually returned preferences.
+    // Otherwise, keep whatever is already in localStorage (user's saved prefs).
     if (res.preferences) {
       try {
-        prefs = { ...DEFAULT_PREFERENCES, ...JSON.parse(res.preferences) };
-      } catch { }
+        const prefs = { ...DEFAULT_PREFERENCES, ...JSON.parse(res.preferences) };
+        applyPreferences(prefs);
+      } catch {
+        applyPreferences();  // fallback → reads from localStorage
+      }
+    } else {
+      // No preferences in API response → re-apply from localStorage (don't reset)
+      applyPreferences();
     }
-    applyPreferences(prefs);
   }
 }
 

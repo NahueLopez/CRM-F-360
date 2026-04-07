@@ -23,9 +23,7 @@ export const allItems: NavItem[] = [
   { to: "/reminders", label: "Recordatorios", icon: "⏰", permission: "reminders.view" },
   { to: "/reports", label: "Reportes", icon: "📈", permission: "reports.view" },
   { to: "/users", label: "Usuarios", icon: "👥", permission: "users.view" },
-  { to: "/workspaces", label: "Sucursales", icon: "🏢", permission: "roles.manage" },
   { to: "/audit-logs", label: "Auditoría", icon: "📋", permission: "audit.view" },
-  { to: "/roles-permissions", label: "Roles y Permisos", icon: "🔐", permission: "roles.manage" },
   { to: "/rooms", label: "Salas", icon: "🚪", permission: "rooms.view" },
   { to: "/settings", label: "Preferencias", icon: "⚙️", permission: null },
 ];
@@ -135,7 +133,14 @@ const Sidebar: React.FC = () => {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
   const items = allItems.filter(
-    (item) => item.permission === null || authStore.hasPermission(item.permission),
+    (item) => {
+      // SuperAdmin-only items
+      if (item.permission === "__superadmin__") return authStore.user?.isSuperAdmin ?? false;
+      // Items with no permission: always visible
+      if (item.permission === null) return true;
+      // Permission-based items
+      return authStore.hasPermission(item.permission);
+    },
   );
 
   // Close mobile sidebar on route change

@@ -6,7 +6,7 @@ namespace CRMF360.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize]
 public class WorkspacesController : ControllerBase
 {
     private readonly IWorkspaceService _service;

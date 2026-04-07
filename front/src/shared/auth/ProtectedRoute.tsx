@@ -11,6 +11,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles, required
     return <Navigate to="/login" replace />;
   }
 
+  // User must have an active workspace (tenantId) to access the CRM
+  if (!authStore.user?.tenantId) {
+    return <Navigate to="/select-workspace" replace />;
+  }
+
   if (requiredRoles && !requiredRoles.some((r) => authStore.hasRole(r))) {
     return <Navigate to="/" replace />;
   }

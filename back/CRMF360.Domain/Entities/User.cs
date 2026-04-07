@@ -1,4 +1,4 @@
-﻿namespace CRMF360.Domain.Entities;
+namespace CRMF360.Domain.Entities;
 
 public class User
 {
@@ -7,6 +7,7 @@ public class User
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public bool Active { get; set; } = true;
+    public bool IsSuperAdmin { get; set; } = false;
     public string PasswordHash { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

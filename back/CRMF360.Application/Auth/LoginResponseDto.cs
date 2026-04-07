@@ -1,4 +1,4 @@
-﻿namespace CRMF360.Application.Auth;
+namespace CRMF360.Application.Auth;
 
 public class WorkspaceDto
 {
@@ -16,6 +16,7 @@ public class LoginResponseDto
     public string? Phone { get; set; }
     public string Token { get; set; } = null!;
     public string RefreshToken { get; set; } = null!;
+    public bool IsSuperAdmin { get; set; }
     public List<string> Roles { get; set; } = new();
     public string? Preferences { get; set; }
     public List<string> Permissions { get; set; } = new();

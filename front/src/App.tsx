@@ -29,8 +29,14 @@ const UsersPage = lazy(() => import("./features/users/UsersPage"));
 const AuditLogsPage = lazy(() => import("./features/audit/AuditLogsPage"));
 const RoomsPage = lazy(() => import("./features/rooms/RoomsPage"));
 const SettingsPage = lazy(() => import("./features/settings/SettingsPage"));
-const RolesPermissionsPage = lazy(() => import("./features/roles/RolesPermissionsPage"));
-const WorkspacesPage = lazy(() => import("./features/workspaces/WorkspacesPage"));
+const WorkspaceSelectPage = lazy(() => import("./features/workspaces/WorkspaceSelectPage"));
+
+// ── SuperAdmin pages ──
+const SuperAdminLayout = lazy(() => import("./shared/layout/SuperAdminLayout"));
+const AdminCompaniesPage = lazy(() => import("./features/admin/AdminCompaniesPage"));
+const AdminUsersPage = lazy(() => import("./features/admin/AdminUsersPage"));
+const AdminRolesPage = lazy(() => import("./features/admin/AdminRolesPage"));
+const AdminSettingsPage = lazy(() => import("./features/admin/AdminSettingsPage"));
 
 // ── Suspense fallback ──
 const PageLoader = () => (
@@ -41,6 +47,23 @@ const PageLoader = () => (
     </div>
   </div>
 );
+
+/** Guard: redirect authenticated users away from /login */
+const LoginGuard = () => {
+  if (authStore.isAuthenticated) {
+    // If user has tenantId → dashboard, else → workspace selection
+    if (authStore.user?.tenantId) return <Navigate to="/" replace />;
+    return <Navigate to="/select-workspace" replace />;
+  }
+  return <LoginPage />;
+};
+
+/** Guard: only SuperAdmin can access /admin routes */
+const SuperAdminGuard = () => {
+  if (!authStore.isAuthenticated) return <Navigate to="/login" replace />;
+  if (!authStore.user?.isSuperAdmin) return <Navigate to="/" replace />;
+  return <SuperAdminLayout />;
+};
 
 const App = () => {
   return (
@@ -53,8 +76,26 @@ const App = () => {
                 {/* Public */}
                 <Route
                   path="/login"
-                  element={authStore.isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+                  element={<LoginGuard />}
                 />
+
+                {/* Workspace Selection (no sidebar) */}
+                <Route
+                  path="/select-workspace"
+                  element={
+                    authStore.isAuthenticated
+                      ? <WorkspaceSelectPage />
+                      : <Navigate to="/login" replace />
+                  }
+                />
+
+                {/* SuperAdmin Panel (→ /admin) */}
+                <Route element={<SuperAdminGuard />}>
+                  <Route path="admin" element={<AdminCompaniesPage />} />
+                  <Route path="admin/users" element={<AdminUsersPage />} />
+                  <Route path="admin/roles" element={<AdminRolesPage />} />
+                  <Route path="admin/settings" element={<AdminSettingsPage />} />
+                </Route>
 
                 {/* Protected */}
                 <Route element={<ProtectedRoute />}>
@@ -88,13 +129,6 @@ const App = () => {
                 <Route element={<ProtectedRoute requiredPermissions={["audit.view"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="audit-logs" element={<AuditLogsPage />} />
-                  </Route>
-                </Route>
-
-                <Route element={<ProtectedRoute requiredPermissions={["roles.manage"]} />}>
-                  <Route element={<DashboardLayout />}>
-                    <Route path="roles-permissions" element={<RolesPermissionsPage />} />
-                    <Route path="workspaces" element={<WorkspacesPage />} />
                   </Route>
                 </Route>
 

@@ -1,4 +1,4 @@
-﻿using CRMF360.Domain.Entities;
+using CRMF360.Domain.Entities;
 using CRMF360.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -225,6 +225,7 @@ public static class DataSeeder
                 Email = adminEmail,
                 Phone = null,
                 Active = true,
+                IsSuperAdmin = true,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
                 CreatedAt = DateTime.UtcNow
             };

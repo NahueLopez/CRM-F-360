@@ -29,18 +29,36 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         var userId = context.User.FindFirst("id")?.Value;
         if (userId is null) return;
 
-        // Admin bypasses all permission checks
+        // SuperAdmin bypasses all permission checks
+        var isSuperAdmin = context.User.FindFirst("isSuperAdmin")?.Value;
+        if (isSuperAdmin == "true")
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
+        // Admin role bypasses all permission checks (within their tenant)
         if (context.User.IsInRole("Admin"))
         {
             context.Succeed(requirement);
             return;
         }
 
+        // Get current tenant from JWT
+        var tenantIdClaim = context.User.FindFirst("tenantId")?.Value;
+        int? tenantId = int.TryParse(tenantIdClaim, out var tid) ? tid : null;
+
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
-        var hasPermission = await db.UserRoles
-            .Where(ur => ur.UserId == int.Parse(userId))
+        var query = db.UserRoles
+            .Where(ur => ur.UserId == int.Parse(userId));
+
+        // Scope to current tenant if available
+        if (tenantId.HasValue)
+            query = query.Where(ur => ur.TenantId == tenantId.Value);
+
+        var hasPermission = await query
             .SelectMany(ur => ur.Role.RolePermissions)
             .AnyAsync(rp => rp.Permission.Name == requirement.Permission);
 

@@ -6,7 +6,7 @@ import { CardsSkeleton } from "../../shared/ui/Skeleton";
 import Modal from "../../shared/ui/Modal";
 import WorkspaceForm from "./components/WorkspaceForm";
 import WorkspaceUsersModal from "./components/WorkspaceUsersModal";
-
+import { authStore } from "../../shared/auth/authStore";
 const WorkspacesPage: React.FC = () => {
     const { data: workspaces = [], isLoading } = useWorkspaces();
     const [showForm, setShowForm] = useState(false);
@@ -83,6 +83,12 @@ const WorkspacesPage: React.FC = () => {
                                 <div className="mt-auto pt-4 border-t border-slate-700/50 flex items-center justify-between">
                                     <span className="text-xs text-slate-400 font-medium">Plan: {w.plan}</span>
                                     <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => authStore.switchWorkspace(w.id)}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
+                                        >
+                                            🚀 Ingresar
+                                        </button>
                                         <button
                                             onClick={() => handleManageUsers(w)}
                                             className="px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all"

@@ -1388,6 +1388,9 @@ namespace CRMF360.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp without time zone");
 
