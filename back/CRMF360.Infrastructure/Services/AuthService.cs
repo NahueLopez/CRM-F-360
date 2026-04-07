@@ -45,11 +45,10 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        var currentTenantId = user.UserRoles.FirstOrDefault()?.TenantId;
-        var token = GenerateJwtToken(user, currentTenantId);
+        var token = GenerateJwtToken(user, null);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken, currentTenantId);
+        return MapToResponse(user, token, refreshToken, null);
     }
 
     public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId, int? currentTenantId)

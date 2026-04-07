@@ -55,13 +55,13 @@ public static class DataSeeder
 
         await context.Database.MigrateAsync();
 
-        // 1) Default Tenant
+        // 1) Tenant Inicial (ya no existe concepto de "default")
         if (!await context.Set<Tenant>().AnyAsync())
         {
             context.Set<Tenant>().Add(new Tenant
             {
-                Name = "Default",
-                Slug = "default",
+                Name = "Empresa Principal",
+                Slug = "empresa-principal",
                 Plan = "Pro",
                 Active = true,
                 CreatedAt = DateTime.UtcNow
@@ -69,7 +69,7 @@ public static class DataSeeder
             await context.SaveChangesAsync();
         }
 
-        var tenant = await context.Set<Tenant>().FirstAsync(t => t.Slug == "default");
+        var tenant = await context.Set<Tenant>().FirstAsync();
 
         // 2) Roles
         if (!await context.Roles.IgnoreQueryFilters().AnyAsync())

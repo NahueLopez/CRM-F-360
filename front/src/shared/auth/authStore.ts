@@ -12,6 +12,7 @@ export interface AuthUser {
   phone?: string;
   roles: string[];
   permissions: string[];
+  availableWorkspaces: { id: number; name: string }[];
 }
 
 interface LoginResponse {
@@ -26,6 +27,7 @@ interface LoginResponse {
   roles: string[];
   preferences?: string;
   permissions: string[];
+  availableWorkspaces: { id: number; name: string }[];
 }
 
 const AUTH_TOKEN_KEY = "auth_token";
@@ -61,7 +63,6 @@ class AuthStore {
   }
 
   hasPermission(permission: string): boolean {
-    // Admin bypasses all permission checks
     if (this.hasRole("Admin")) return true;
     return this.user?.permissions?.includes(permission) ?? false;
   }
@@ -80,7 +81,6 @@ class AuthStore {
     }
   }
 
-  /** Refresh user data + token from the server */
   async refreshSession(): Promise<boolean> {
     try {
       const res = await api.get<LoginResponse>("/auth/me");
@@ -92,13 +92,21 @@ class AuthStore {
     }
   }
 
-  /** Change password for current user */
+  async switchWorkspace(tenantId: number): Promise<boolean> {
+    try {
+      const res = await api.post<LoginResponse>("/auth/switch-workspace", { tenantId });
+      this._setSession(res);
+      // Reload UI cleanly so the entire app query cache picks up the new TenantId via endpoints automatically
+      window.location.replace("/");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
     try {
-      await api.put<void>("/auth/change-password", {
-        currentPassword,
-        newPassword,
-      });
+      await api.put<void>("/auth/change-password", { currentPassword, newPassword });
       return true;
     } catch {
       return false;
@@ -126,16 +134,16 @@ class AuthStore {
       phone: res.phone,
       roles: res.roles,
       permissions: res.permissions ?? [],
+      availableWorkspaces: res.availableWorkspaces || [],
     };
 
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(this.user));
 
-    // Apply theme preferences
     let prefs: UserPreferences = DEFAULT_PREFERENCES;
     if (res.preferences) {
       try {
         prefs = { ...DEFAULT_PREFERENCES, ...JSON.parse(res.preferences) };
-      } catch {}
+      } catch { }
     }
     applyPreferences(prefs);
   }

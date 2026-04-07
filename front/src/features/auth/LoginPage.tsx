@@ -9,6 +9,8 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +23,39 @@ const LoginPage: React.FC = () => {
         setError("Credenciales incorrectas");
         return;
       }
-      navigate("/", { replace: true });
+
+      const workspaces = authStore.user?.availableWorkspaces || [];
+      if (workspaces.length === 1) {
+        // Single workspace — switch to it automatically (no "default")
+        await authStore.switchWorkspace(workspaces[0].id);
+        // switchWorkspace redirects to "/"
+      } else if (workspaces.length > 1) {
+        // Multi-workspace user: ask them which one to use
+        setShowWorkspaceSelector(true);
+      } else {
+        // No workspaces at all (shouldn't happen, but fallback)
+        navigate("/", { replace: true });
+      }
     } catch {
       setError("Error de conexión con el servidor");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectWorkspace = async (tenantId: number) => {
+    setSwitching(true);
+    setError("");
+    try {
+      const ok = await authStore.switchWorkspace(tenantId);
+      if (!ok) {
+        setError("No se pudo acceder a esa empresa");
+        setSwitching(false);
+      }
+      // switchWorkspace does a window.location.replace("/") on success
+    } catch {
+      setError("Error de conexión");
+      setSwitching(false);
     }
   };
 
@@ -101,7 +131,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Panel — Login Form */}
+      {/* Right Panel — Login Form OR Workspace Selector */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm">
           {/* Mobile header */}
@@ -117,11 +147,6 @@ const LoginPage: React.FC = () => {
             <p className="text-sm text-slate-500 mt-1">Gestión integral de negocios</p>
           </div>
 
-          <div className="space-y-2 mb-8">
-            <h2 className="text-2xl font-bold text-white">Bienvenido</h2>
-            <p className="text-sm text-slate-500">Ingresá tus credenciales para continuar</p>
-          </div>
-
           {error && (
             <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-6">
               <span className="text-sm">⚠️</span>
@@ -129,60 +154,106 @@ const LoginPage: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="tu@email.com"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
-                Contraseña
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all pr-12"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </button>
+          {showWorkspaceSelector ? (
+            <>
+              <div className="space-y-2 mb-6">
+                <h2 className="text-2xl font-bold text-white">Seleccioná tu empresa</h2>
+                <p className="text-sm text-slate-500">
+                  Hola <span className="text-indigo-400 font-medium">{authStore.user?.fullName}</span>, elegí con qué empresa querés trabajar.
+                </p>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 active:scale-[0.98]"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Ingresando...
-                </span>
-              ) : (
-                "Iniciar sesión"
+              <div className="space-y-2">
+                {(authStore.user?.availableWorkspaces || []).map((ws) => (
+                  <button
+                    key={ws.id}
+                    onClick={() => handleSelectWorkspace(ws.id)}
+                    disabled={switching}
+                    className="w-full text-left p-4 rounded-xl bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:border-indigo-500/50 transition-all group disabled:opacity-50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🏢</span>
+                        <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
+                          {ws.name}
+                        </span>
+                      </div>
+                      <span className="text-slate-600 group-hover:text-indigo-400 transition-colors text-sm">→</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {switching && (
+                <div className="flex items-center justify-center gap-2 mt-6 text-sm text-slate-400">
+                  <span className="w-4 h-4 border-2 border-slate-600 border-t-indigo-400 rounded-full animate-spin" />
+                  Cambiando de empresa...
+                </div>
               )}
-            </button>
-          </form>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2 mb-8">
+                <h2 className="text-2xl font-bold text-white">Bienvenido</h2>
+                <p className="text-sm text-slate-500">Ingresá tus credenciales para continuar</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="tu@email.com"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all pr-12"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Ingresando...
+                    </span>
+                  ) : (
+                    "Iniciar sesión"
+                  )}
+                </button>
+              </form>
+            </>
+          )}
 
           <p className="text-[11px] text-slate-600 text-center mt-8">
             Al iniciar sesión aceptás los términos de servicio

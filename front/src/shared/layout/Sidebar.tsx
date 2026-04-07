@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { authStore } from "../auth/authStore";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
 
 interface NavItem {
   to: string;
@@ -155,6 +156,7 @@ const Sidebar: React.FC = () => {
       .slice(0, 2)
       .toUpperCase() ?? "??";
 
+  // ... Inside header:
   const header = (
     <div className="p-4 border-b border-slate-800">
       <div className="flex items-center justify-between">
@@ -172,7 +174,7 @@ const Sidebar: React.FC = () => {
           ✕
         </button>
       </div>
-      <p className="text-xs text-slate-400 mt-1">Empresas, proyectos y horas.</p>
+      <WorkspaceSwitcher />
     </div>
   );
 
