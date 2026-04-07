@@ -56,6 +56,7 @@ const AdminSettingsPage = () => {
   const [prefs, setPrefs] = useState<UserPreferences>(loadPreferences);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const isLight = prefs.theme.startsWith("light");
 
   // Load from API on mount (if available)
   useEffect(() => {
@@ -82,14 +83,12 @@ const AdminSettingsPage = () => {
     setSaving(true);
     try {
       applyPreferences(prefs);
-      // Save to API
       await api.put<void>("/auth/preferences", {
         preferences: JSON.stringify(prefs),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      // Fallback: at least localStorage is saved by applyPreferences
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -102,20 +101,34 @@ const AdminSettingsPage = () => {
     applyPreferences(DEFAULT_PREFERENCES);
   };
 
+  // Theme-aware class helpers
+  const sectionCls = isLight
+    ? "bg-white border border-slate-200 shadow-sm"
+    : "bg-slate-800/25 border border-slate-700/30";
+  const headingCls = isLight ? "text-slate-700" : "text-slate-200";
+  const subCls = isLight ? "text-slate-400" : "text-slate-500";
+  const btnBorder = isLight
+    ? "border-slate-200 hover:border-slate-300"
+    : "border-slate-700/30 hover:border-slate-600/50";
+  const btnBorderActive = isLight ? "border-slate-800/60 shadow-md" : "border-white/50 shadow-lg";
+  const labelCls = isLight ? "text-slate-600" : "text-slate-300";
+  const dimCls = isLight ? "text-slate-400" : "text-slate-600";
+  const previewBg = isLight ? "bg-slate-50 border-slate-200" : "bg-slate-800/40 border-slate-700/30";
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Preferencias</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <h2 className={`text-2xl font-bold tracking-tight ${isLight ? "text-slate-800" : "text-white"}`}>Preferencias</h2>
+          <p className={`text-sm mt-1 ${subCls}`}>
             Personalizá la apariencia del panel de administración
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleReset}
-            className="px-3 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-800/40 transition"
+            className={`px-3 py-2 rounded-xl text-xs transition ${isLight ? "text-slate-500 hover:text-slate-700 hover:bg-slate-100" : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/40"}`}
           >
             ↺ Restablecer
           </button>
@@ -140,12 +153,12 @@ const AdminSettingsPage = () => {
       </div>
 
       {/* ── Theme ── */}
-      <section className="bg-slate-800/25 border border-slate-700/30 rounded-2xl p-5">
+      <section className={`${sectionCls} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">🎨</span>
-          <h3 className="text-sm font-semibold text-slate-200">Tema</h3>
+          <h3 className={`text-sm font-semibold ${headingCls}`}>Tema</h3>
         </div>
-        <p className="text-[11px] text-slate-500 mb-4">
+        <p className={`text-[11px] ${subCls} mb-4`}>
           Elegí entre modo claro y variantes oscuras. Se aplica a todo el sistema.
         </p>
 
@@ -157,19 +170,17 @@ const AdminSettingsPage = () => {
                 key={t.value}
                 onClick={() => updatePref("theme", t.value)}
                 className={`group flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                  selected
-                    ? "border-white/50 shadow-lg scale-[1.02]"
-                    : "border-slate-700/30 hover:border-slate-600/50"
+                  selected ? btnBorderActive + " scale-[1.02]" : btnBorder
                 }`}
               >
-                <div className="w-full h-10 rounded-lg overflow-hidden flex border border-slate-700/30">
+                <div className={`w-full h-10 rounded-lg overflow-hidden flex border ${isLight ? "border-slate-200" : "border-slate-700/30"}`}>
                   {t.colors.map((c, i) => (
                     <div key={i} className="flex-1" style={{ backgroundColor: c }} />
                   ))}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px]">{t.icon}</span>
-                  <span className="text-[10px] text-slate-300 font-medium">{t.label}</span>
+                  <span className={`text-[10px] font-medium ${labelCls}`}>{t.label}</span>
                 </div>
                 {selected && (
                   <div
@@ -186,12 +197,12 @@ const AdminSettingsPage = () => {
       </section>
 
       {/* ── Accent Color ── */}
-      <section className="bg-slate-800/25 border border-slate-700/30 rounded-2xl p-5">
+      <section className={`${sectionCls} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">💎</span>
-          <h3 className="text-sm font-semibold text-slate-200">Color de acento</h3>
+          <h3 className={`text-sm font-semibold ${headingCls}`}>Color de acento</h3>
         </div>
-        <p className="text-[11px] text-slate-500 mb-4">
+        <p className={`text-[11px] ${subCls} mb-4`}>
           Se aplica a botones, links y elementos interactivos en todo el sistema
         </p>
 
@@ -209,7 +220,7 @@ const AdminSettingsPage = () => {
                   <div
                     className={`w-8 h-8 rounded-xl transition-all shadow-sm ${
                       selected
-                        ? "ring-2 ring-white/60 ring-offset-2 ring-offset-slate-900 scale-110"
+                        ? `ring-2 ring-offset-2 scale-110 ${isLight ? "ring-slate-400 ring-offset-white" : "ring-white/60 ring-offset-slate-900"}`
                         : "group-hover:scale-110"
                     }`}
                     style={{ backgroundColor: c.value }}
@@ -222,7 +233,7 @@ const AdminSettingsPage = () => {
                 </div>
                 <span
                   className={`text-[8px] transition ${
-                    selected ? "text-slate-300" : "text-slate-600 group-hover:text-slate-400"
+                    selected ? labelCls : `${dimCls} group-hover:${labelCls}`
                   }`}
                 >
                   {c.label}
@@ -233,8 +244,8 @@ const AdminSettingsPage = () => {
         </div>
 
         {/* Preview */}
-        <div className="mt-4 p-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
-          <p className="text-[9px] text-slate-500 uppercase tracking-wider mb-2.5">Vista previa</p>
+        <div className={`mt-4 p-3 rounded-xl border ${previewBg}`}>
+          <p className={`text-[9px] uppercase tracking-wider mb-2.5 ${subCls}`}>Vista previa</p>
           <div className="flex items-center gap-3 flex-wrap">
             <button
               className="px-4 py-2 rounded-xl text-sm font-medium text-white transition shadow-sm"
@@ -260,12 +271,12 @@ const AdminSettingsPage = () => {
       </section>
 
       {/* ── Font Size ── */}
-      <section className="bg-slate-800/25 border border-slate-700/30 rounded-2xl p-5">
+      <section className={`${sectionCls} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">🔤</span>
-          <h3 className="text-sm font-semibold text-slate-200">Tamaño de fuente</h3>
+          <h3 className={`text-sm font-semibold ${headingCls}`}>Tamaño de fuente</h3>
         </div>
-        <p className="text-[11px] text-slate-500 mb-4">
+        <p className={`text-[11px] ${subCls} mb-4`}>
           Ajustá el tamaño base del texto en toda la app
         </p>
 
@@ -277,16 +288,14 @@ const AdminSettingsPage = () => {
                 key={f.value}
                 onClick={() => updatePref("fontSize", f.value)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                  selected
-                    ? "border-white/50 shadow-lg"
-                    : "border-slate-700/30 hover:border-slate-600/50"
+                  selected ? btnBorderActive : btnBorder
                 }`}
               >
-                <span className="font-bold text-slate-200" style={{ fontSize: f.px }}>
+                <span className={`font-bold ${headingCls}`} style={{ fontSize: f.px }}>
                   Aa
                 </span>
-                <span className="text-[11px] text-slate-300 font-medium">{f.label}</span>
-                <span className="text-[9px] text-slate-600">{f.px}</span>
+                <span className={`text-[11px] font-medium ${labelCls}`}>{f.label}</span>
+                <span className={`text-[9px] ${dimCls}`}>{f.px}</span>
                 {selected && (
                   <div
                     className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white"
@@ -302,16 +311,16 @@ const AdminSettingsPage = () => {
       </section>
 
       {/* ── Animation toggle ── */}
-      <section className="bg-slate-800/25 border border-slate-700/30 rounded-2xl p-5">
+      <section className={`${sectionCls} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">✨</span>
-          <h3 className="text-sm font-semibold text-slate-200">Animaciones</h3>
+          <h3 className={`text-sm font-semibold ${headingCls}`}>Animaciones</h3>
         </div>
-        <p className="text-[11px] text-slate-500 mb-4">
+        <p className={`text-[11px] ${subCls} mb-4`}>
           Las animaciones hacen que la interfaz se sienta más viva y moderna
         </p>
 
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-700/30 bg-slate-800/40">
+        <div className={`flex items-center gap-4 p-4 rounded-xl border ${previewBg}`}>
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -323,8 +332,8 @@ const AdminSettingsPage = () => {
               />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-200">Animaciones activas</p>
-              <p className="text-[11px] text-slate-500">Transiciones suaves, hover effects y micro-animaciones habilitadas</p>
+              <p className={`text-sm font-medium ${headingCls}`}>Animaciones activas</p>
+              <p className={`text-[11px] ${subCls}`}>Transiciones suaves, hover effects y micro-animaciones habilitadas</p>
             </div>
           </div>
         </div>
