@@ -1,0 +1,12 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CRMF360.Domain -> d:\Code\Crm\back\CRMF360.Domain\bin\Debug\net8.0\CRMF360.Domain.dll
+  CRMF360.Application -> d:\Code\Crm\back\CRMF360.Application\bin\Debug\net8.0\CRMF360.Application.dll
+  CRMF360.Infrastructure -> d:\Code\Crm\back\CRMF360.Infrastructure\bin\Debug\net8.0\CRMF360.Infrastructure.dll
+  CRMF360.Tests -> d:\Code\Crm\back\CRMF360.Tests\bin\Debug\net8.0\CRMF360.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.70

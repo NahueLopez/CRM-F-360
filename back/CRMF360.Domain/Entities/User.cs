@@ -1,9 +1,8 @@
 ﻿namespace CRMF360.Domain.Entities;
 
-public class User : ITenantEntity
+public class User
 {
     public int Id { get; set; }
-    public int TenantId { get; set; }
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
@@ -13,8 +12,9 @@ public class User : ITenantEntity
     public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public string? Preferences { get; set; } // JSON: { accentColor, theme, fontSize }
+    public int? DepartmentId { get; set; }
 
-    public Tenant Tenant { get; set; } = null!;
+    public Department? Department { get; set; }
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<ProjectMember> ProjectMembers { get; set; } = new List<ProjectMember>();
 }

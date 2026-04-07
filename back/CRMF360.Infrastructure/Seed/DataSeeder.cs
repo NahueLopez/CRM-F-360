@@ -221,7 +221,6 @@ public static class DataSeeder
         {
             var adminUser = new User
             {
-                TenantId = tenant.Id,
                 FullName = "Super Admin",
                 Email = adminEmail,
                 Phone = null,
@@ -233,7 +232,7 @@ public static class DataSeeder
             await context.SaveChangesAsync();
 
             var adminRole = await context.Roles.IgnoreQueryFilters().FirstAsync(r => r.Name == "Admin");
-            context.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = adminRole.Id });
+            context.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = adminRole.Id, TenantId = tenant.Id });
             await context.SaveChangesAsync();
         }
     }

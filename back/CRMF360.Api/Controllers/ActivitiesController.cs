@@ -41,4 +41,16 @@ public class ActivitiesController : ControllerBase
     [Authorize(Policy = "ManagerOrAdmin")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
         => await _service.DeleteAsync(id, ct) ? NoContent() : NotFound();
+
+    [HttpGet("by-deal/{dealId:int}")]
+    public async Task<IActionResult> GetByDeal(int dealId, CancellationToken ct)
+        => Ok(await _service.GetByDealAsync(dealId, ct));
+
+    [HttpGet("timeline")]
+    public async Task<IActionResult> GetTimeline(
+        [FromQuery] int? companyId,
+        [FromQuery] int? contactId,
+        [FromQuery] int? dealId,
+        CancellationToken ct)
+        => Ok(await _service.GetTimelineAsync(companyId, contactId, dealId, ct));
 }

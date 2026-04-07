@@ -23,10 +23,10 @@ public static class DemoDataSeeder
 
         var users = new List<User>
         {
-            new() { TenantId = tenantId, FullName = "María García", Email = "maria.garcia@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-30) },
-            new() { TenantId = tenantId, FullName = "Carlos López", Email = "carlos.lopez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-28) },
-            new() { TenantId = tenantId, FullName = "Ana Rodríguez", Email = "ana.rodriguez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-25) },
-            new() { TenantId = tenantId, FullName = "Lucas Fernández", Email = "lucas.fernandez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-20) },
+            new() { FullName = "María García", Email = "maria.garcia@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-30) },
+            new() { FullName = "Carlos López", Email = "carlos.lopez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-28) },
+            new() { FullName = "Ana Rodríguez", Email = "ana.rodriguez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-25) },
+            new() { FullName = "Lucas Fernández", Email = "lucas.fernandez@crm-f360.test", Active = true, PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo123!"), CreatedAt = now.AddDays(-20) },
         };
         context.Users.AddRange(users);
         await context.SaveChangesAsync();
@@ -38,10 +38,10 @@ public static class DemoDataSeeder
         var userRole = roles.First(r => r.Name == "User");
 
         context.UserRoles.AddRange(
-            new UserRole { UserId = users[0].Id, RoleId = managerRole.Id },   // María = Manager
-            new UserRole { UserId = users[1].Id, RoleId = salesRepRole.Id },   // Carlos = SalesRep
-            new UserRole { UserId = users[2].Id, RoleId = salesRepRole.Id },   // Ana = SalesRep
-            new UserRole { UserId = users[3].Id, RoleId = userRole.Id }        // Lucas = User
+            new UserRole { UserId = users[0].Id, RoleId = managerRole.Id, TenantId = tenantId },   // María = Manager
+            new UserRole { UserId = users[1].Id, RoleId = salesRepRole.Id, TenantId = tenantId },   // Carlos = SalesRep
+            new UserRole { UserId = users[2].Id, RoleId = salesRepRole.Id, TenantId = tenantId },   // Ana = SalesRep
+            new UserRole { UserId = users[3].Id, RoleId = userRole.Id, TenantId = tenantId }        // Lucas = User
         );
         await context.SaveChangesAsync();
 

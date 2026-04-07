@@ -18,4 +18,5 @@ public class Contact : ISoftDeletable, IConcurrencyAware
 
     public Company Company { get; set; } = null!;
     public ICollection<ActivityLog> Activities { get; set; } = new List<ActivityLog>();
+    public ICollection<ContactTag> ContactTags { get; set; } = new List<ContactTag>();
 }

@@ -1,0 +1,4 @@
+﻿  Determining projects to restore...
+d:\Code\Crm\back\CRMF360.Tests\CRMF360.Tests.csproj : error NU1101: Unable to find package FluentValidation.TestHelper. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org
+  Failed to restore d:\Code\Crm\back\CRMF360.Tests\CRMF360.Tests.csproj (in 1,83 sec).
+  3 of 4 projects are up-to-date for restore.

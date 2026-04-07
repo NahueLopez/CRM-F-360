@@ -31,6 +31,14 @@ public interface IApplicationDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<Room> Rooms { get; }
     DbSet<RoomReservation> RoomReservations { get; }
+    DbSet<Department> Departments { get; }
+    DbSet<Tag> Tags { get; }
+    DbSet<CompanyTag> CompanyTags { get; }
+    DbSet<ContactTag> ContactTags { get; }
+    DbSet<DealTag> DealTags { get; }
+    DbSet<CustomFieldDefinition> CustomFieldDefinitions { get; }
+    DbSet<CustomFieldValue> CustomFieldValues { get; }
+    DbSet<Attachment> Attachments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

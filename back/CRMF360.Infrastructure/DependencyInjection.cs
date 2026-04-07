@@ -20,6 +20,12 @@ using CRMF360.Application.Deals;
 using CRMF360.Application.Leads;
 using CRMF360.Application.Search;
 using CRMF360.Application.Chat;
+using CRMF360.Application.Departments;
+using CRMF360.Application.Tags;
+using CRMF360.Application.CustomFields;
+using CRMF360.Application.Csv;
+using CRMF360.Application.Attachments;
+using CRMF360.Application.Workspaces;
 using CRMF360.Infrastructure.Persistence;
 using CRMF360.Infrastructure.Services;
 using CRMF360.Domain.Events;
@@ -74,6 +80,12 @@ public static class DependencyInjection
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<ICustomFieldService, CustomFieldService>();
+        services.AddScoped<ICsvService, CsvService>();
+        services.AddScoped<IAttachmentService, AttachmentService>();
+        services.AddScoped<IWorkspaceService, WorkspaceService>();
 
         // Domain Events
         services.AddScoped<IDomainEventDispatcher, CRMF360.Infrastructure.Events.DomainEventDispatcher>();

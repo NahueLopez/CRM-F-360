@@ -1,0 +1,8 @@
+﻿D:\Code\Crm\back\CRMF360.Infrastructure\Services\CustomFieldService.cs(83,18): error CS0104: 'Task' es una referencia ambigua entre 'CRMF360.Domain.Entities.Task' y 'System.Threading.Tasks.Task' [D:\Code\Crm\back\CRMF360.Infrastructure\CRMF360.Infrastructure.csproj]
+D:\Code\Crm\back\CRMF360.Infrastructure\Services\CustomFieldService.cs(8,35): error CS0738: 'CustomFieldService' no implementa el miembro de interfaz 'ICustomFieldService.SetValuesAsync(string, int, List<SetCustomFieldValueDto>, CancellationToken)'. 'CustomFieldService.SetValuesAsync(string, int, List<SetCustomFieldValueDto>, CancellationToken)' no puede implementar 'ICustomFieldService.SetValuesAsync(string, int, List<SetCustomFieldValueDto>, CancellationToken)' porque no tiene el tipo de valor devuelto coincidente de 'Task'. [D:\Code\Crm\back\CRMF360.Infrastructure\CRMF360.Infrastructure.csproj]
+
+ERROR al compilar.
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:01.69

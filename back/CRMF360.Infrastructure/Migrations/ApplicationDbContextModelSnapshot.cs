@@ -78,6 +78,58 @@ namespace CRMF360.Infrastructure.Migrations
                     b.ToTable("ActivityLogs", (string)null);
                 });
 
+            modelBuilder.Entity("CRMF360.Domain.Entities.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.ToTable("Attachments", (string)null);
+                });
+
             modelBuilder.Entity("CRMF360.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -319,6 +371,21 @@ namespace CRMF360.Infrastructure.Migrations
                     b.ToTable("Companies", (string)null);
                 });
 
+            modelBuilder.Entity("CRMF360.Domain.Entities.CompanyTag", b =>
+                {
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CompanyId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("CompanyTags", (string)null);
+                });
+
             modelBuilder.Entity("CRMF360.Domain.Entities.Contact", b =>
                 {
                     b.Property<int>("Id")
@@ -377,6 +444,102 @@ namespace CRMF360.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("Contacts", (string)null);
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.ContactTag", b =>
+                {
+                    b.Property<int>("ContactId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ContactId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("ContactTags", (string)null);
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.CustomFieldDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("FieldType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Options")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "EntityType", "Name")
+                        .IsUnique();
+
+                    b.ToTable("CustomFieldDefinitions", (string)null);
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.CustomFieldValue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefinitionId", "EntityType", "EntityId")
+                        .IsUnique();
+
+                    b.ToTable("CustomFieldValues", (string)null);
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Deal", b =>
@@ -457,6 +620,65 @@ namespace CRMF360.Infrastructure.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Deals", (string)null);
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.DealTag", b =>
+                {
+                    b.Property<int>("DealId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("DealId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("DealTags", (string)null);
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Lead", b =>
@@ -946,6 +1168,37 @@ namespace CRMF360.Infrastructure.Migrations
                     b.ToTable("RoomReservations");
                 });
 
+            modelBuilder.Entity("CRMF360.Domain.Entities.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags", (string)null);
+                });
+
             modelBuilder.Entity("CRMF360.Domain.Entities.Task", b =>
                 {
                     b.Property<int>("Id")
@@ -1122,6 +1375,9 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1145,17 +1401,14 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Property<string>("Preferences")
                         .HasColumnType("text");
 
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("DepartmentId");
 
-                    b.HasIndex("TenantId", "Email")
+                    b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
@@ -1169,9 +1422,14 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId", "TenantId");
 
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("UserRoles", (string)null);
                 });
@@ -1213,6 +1471,17 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.Attachment", b =>
+                {
+                    b.HasOne("CRMF360.Domain.Entities.User", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.AuditLog", b =>
@@ -1286,6 +1555,25 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CRMF360.Domain.Entities.CompanyTag", b =>
+                {
+                    b.HasOne("CRMF360.Domain.Entities.Company", "Company")
+                        .WithMany("CompanyTags")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CRMF360.Domain.Entities.Tag", "Tag")
+                        .WithMany("CompanyTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("CRMF360.Domain.Entities.Contact", b =>
                 {
                     b.HasOne("CRMF360.Domain.Entities.Company", "Company")
@@ -1295,6 +1583,36 @@ namespace CRMF360.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.ContactTag", b =>
+                {
+                    b.HasOne("CRMF360.Domain.Entities.Contact", "Contact")
+                        .WithMany("ContactTags")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CRMF360.Domain.Entities.Tag", "Tag")
+                        .WithMany("ContactTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.CustomFieldValue", b =>
+                {
+                    b.HasOne("CRMF360.Domain.Entities.CustomFieldDefinition", "Definition")
+                        .WithMany("Values")
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Definition");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Deal", b =>
@@ -1319,6 +1637,25 @@ namespace CRMF360.Infrastructure.Migrations
                     b.Navigation("Company");
 
                     b.Navigation("Contact");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.DealTag", b =>
+                {
+                    b.HasOne("CRMF360.Domain.Entities.Deal", "Deal")
+                        .WithMany("DealTags")
+                        .HasForeignKey("DealId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CRMF360.Domain.Entities.Tag", "Tag")
+                        .WithMany("DealTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deal");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Lead", b =>
@@ -1539,13 +1876,12 @@ namespace CRMF360.Infrastructure.Migrations
 
             modelBuilder.Entity("CRMF360.Domain.Entities.User", b =>
                 {
-                    b.HasOne("CRMF360.Domain.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("CRMF360.Domain.Entities.Department", "Department")
+                        .WithMany("Users")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Tenant");
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.UserRole", b =>
@@ -1556,6 +1892,12 @@ namespace CRMF360.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CRMF360.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("CRMF360.Domain.Entities.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
@@ -1563,6 +1905,8 @@ namespace CRMF360.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+
+                    b.Navigation("Tenant");
 
                     b.Navigation("User");
                 });
@@ -1583,6 +1927,8 @@ namespace CRMF360.Infrastructure.Migrations
                 {
                     b.Navigation("Activities");
 
+                    b.Navigation("CompanyTags");
+
                     b.Navigation("Contacts");
 
                     b.Navigation("Projects");
@@ -1591,6 +1937,23 @@ namespace CRMF360.Infrastructure.Migrations
             modelBuilder.Entity("CRMF360.Domain.Entities.Contact", b =>
                 {
                     b.Navigation("Activities");
+
+                    b.Navigation("ContactTags");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.CustomFieldDefinition", b =>
+                {
+                    b.Navigation("Values");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.Deal", b =>
+                {
+                    b.Navigation("DealTags");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.Department", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Permission", b =>
@@ -1617,6 +1980,15 @@ namespace CRMF360.Infrastructure.Migrations
             modelBuilder.Entity("CRMF360.Domain.Entities.Room", b =>
                 {
                     b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("CRMF360.Domain.Entities.Tag", b =>
+                {
+                    b.Navigation("CompanyTags");
+
+                    b.Navigation("ContactTags");
+
+                    b.Navigation("DealTags");
                 });
 
             modelBuilder.Entity("CRMF360.Domain.Entities.Task", b =>

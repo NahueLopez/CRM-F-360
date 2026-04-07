@@ -33,4 +33,5 @@ public class Deal : ISoftDeletable, ITenantEntity, IConcurrencyAware
     public Company? Company { get; set; }
     public Contact? Contact { get; set; }
     public User? AssignedTo { get; set; }
+    public ICollection<DealTag> DealTags { get; set; } = new List<DealTag>();
 }

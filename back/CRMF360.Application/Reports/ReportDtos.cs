@@ -90,3 +90,48 @@ public class DealStageCountDto
     public int Count { get; set; }
     public decimal TotalValue { get; set; }
 }
+
+public class UserPerformanceDto
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = null!;
+    public string? DepartmentName { get; set; }
+    public int DealsWon { get; set; }
+    public decimal DealsTotalValue { get; set; }
+    public int LeadsGenerated { get; set; }
+    public int ActivitiesCount { get; set; }
+    public int TasksCompleted { get; set; }
+    public decimal HoursLogged { get; set; }
+}
+
+public class DepartmentPerformanceDto
+{
+    public int DepartmentId { get; set; }
+    public string DepartmentName { get; set; } = null!;
+    public int UserCount { get; set; }
+    public int DealsWon { get; set; }
+    public decimal DealsTotalValue { get; set; }
+    public int ActivitiesCount { get; set; }
+    public decimal HoursLogged { get; set; }
+}
+
+public class TopClientDto
+{
+    public int CompanyId { get; set; }
+    public string CompanyName { get; set; } = null!;
+    public int DealsCount { get; set; }
+    public decimal TotalValue { get; set; }
+    public int ContactsCount { get; set; }
+}
+
+public class ConversionFunnelDto
+{
+    public int TotalLeads { get; set; }
+    public int ContactedLeads { get; set; }
+    public int ProposalsSent { get; set; }
+    public int Negotiations { get; set; }
+    public int ClosedWon { get; set; }
+    public int ClosedLost { get; set; }
+    public decimal ConversionRate { get; set; } // ClosedWon / TotalLeads * 100
+    public decimal AverageDealValue { get; set; }
+}

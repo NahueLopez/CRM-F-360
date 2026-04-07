@@ -172,4 +172,105 @@ public class ReportService : IReportService
             RecentActivity = recent,
         };
     }
+
+    public async Task<List<UserPerformanceDto>> GetUserPerformanceAsync(CancellationToken ct = default)
+    {
+        var users = await _db.Users.AsNoTracking()
+            .Include(u => u.Department)
+            .Where(u => u.Active)
+            .ToListAsync(ct);
+
+        var result = new List<UserPerformanceDto>();
+        foreach (var u in users)
+        {
+            var dealsWon = await _db.Deals.CountAsync(d => d.AssignedToId == u.Id && d.Stage == Domain.Entities.DealStage.ClosedWon, ct);
+            var dealsValue = await _db.Deals.Where(d => d.AssignedToId == u.Id && d.Stage == Domain.Entities.DealStage.ClosedWon).SumAsync(d => d.Value ?? 0, ct);
+            var activities = await _db.ActivityLogs.CountAsync(a => a.UserId == u.Id, ct);
+            var hours = await _db.TimeEntries.Where(t => t.UserId == u.Id).SumAsync(t => t.Hours, ct);
+
+            result.Add(new UserPerformanceDto
+            {
+                UserId = u.Id,
+                UserName = u.FullName,
+                DepartmentName = u.Department?.Name,
+                DealsWon = dealsWon,
+                DealsTotalValue = dealsValue,
+                ActivitiesCount = activities,
+                HoursLogged = hours
+            });
+        }
+        return result.OrderByDescending(u => u.DealsTotalValue).ToList();
+    }
+
+    public async Task<List<DepartmentPerformanceDto>> GetDepartmentPerformanceAsync(CancellationToken ct = default)
+    {
+        var departments = await _db.Departments.AsNoTracking()
+            .Include(d => d.Users)
+            .ToListAsync(ct);
+
+        var result = new List<DepartmentPerformanceDto>();
+        foreach (var d in departments)
+        {
+            var userIds = d.Users.Select(u => u.Id).ToList();
+            var dealsWon = await _db.Deals.CountAsync(de => de.AssignedToId.HasValue && userIds.Contains(de.AssignedToId.Value) && de.Stage == Domain.Entities.DealStage.ClosedWon, ct);
+            var dealsValue = await _db.Deals.Where(de => de.AssignedToId.HasValue && userIds.Contains(de.AssignedToId.Value) && de.Stage == Domain.Entities.DealStage.ClosedWon).SumAsync(de => de.Value ?? 0, ct);
+            var activities = await _db.ActivityLogs.CountAsync(a => userIds.Contains(a.UserId), ct);
+            var hours = await _db.TimeEntries.Where(t => userIds.Contains(t.UserId)).SumAsync(t => t.Hours, ct);
+
+            result.Add(new DepartmentPerformanceDto
+            {
+                DepartmentId = d.Id,
+                DepartmentName = d.Name,
+                UserCount = d.Users.Count,
+                DealsWon = dealsWon,
+                DealsTotalValue = dealsValue,
+                ActivitiesCount = activities,
+                HoursLogged = hours
+            });
+        }
+        return result.OrderByDescending(d => d.DealsTotalValue).ToList();
+    }
+
+    public async Task<List<TopClientDto>> GetTopClientsAsync(int count = 10, CancellationToken ct = default)
+    {
+        return await _db.Companies.AsNoTracking()
+            .Select(c => new TopClientDto
+            {
+                CompanyId = c.Id,
+                CompanyName = c.Name,
+                DealsCount = _db.Deals.Count(d => d.CompanyId == c.Id && d.Stage == Domain.Entities.DealStage.ClosedWon),
+                TotalValue = _db.Deals.Where(d => d.CompanyId == c.Id && d.Stage == Domain.Entities.DealStage.ClosedWon).Sum(d => d.Value ?? 0),
+                ContactsCount = c.Contacts.Count
+            })
+            .OrderByDescending(c => c.TotalValue)
+            .Take(count)
+            .ToListAsync(ct);
+    }
+
+    public async Task<ConversionFunnelDto> GetConversionFunnelAsync(CancellationToken ct = default)
+    {
+        var stages = await _db.Deals.AsNoTracking()
+            .GroupBy(d => d.Stage)
+            .Select(g => new { Stage = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var totalDeals = stages.Sum(s => s.Count);
+        var closedWon = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.ClosedWon)?.Count ?? 0;
+        var closedLost = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.ClosedLost)?.Count ?? 0;
+        var avgValue = totalDeals > 0
+            ? await _db.Deals.Where(d => d.Stage == Domain.Entities.DealStage.ClosedWon).AverageAsync(d => d.Value ?? 0, ct)
+            : 0;
+
+        return new ConversionFunnelDto
+        {
+            TotalLeads = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.Lead)?.Count ?? 0,
+            ContactedLeads = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.Contacted)?.Count ?? 0,
+            ProposalsSent = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.Proposal)?.Count ?? 0,
+            Negotiations = stages.FirstOrDefault(s => s.Stage == Domain.Entities.DealStage.Negotiation)?.Count ?? 0,
+            ClosedWon = closedWon,
+            ClosedLost = closedLost,
+            ConversionRate = totalDeals > 0 ? Math.Round((decimal)closedWon / totalDeals * 100, 1) : 0,
+            AverageDealValue = avgValue
+        };
+    }
 }

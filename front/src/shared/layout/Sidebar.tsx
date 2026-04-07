@@ -10,7 +10,7 @@ interface NavItem {
   permission: string | null;
 }
 
-const allItems: NavItem[] = [
+export const allItems: NavItem[] = [
   { to: "/", label: "Dashboard", icon: "📊", permission: null },
   { to: "/companies", label: "Empresas", icon: "🏢", permission: "companies.view" },
   { to: "/contacts", label: "Contactos", icon: "👤", permission: "contacts.view" },
@@ -22,6 +22,7 @@ const allItems: NavItem[] = [
   { to: "/reminders", label: "Recordatorios", icon: "⏰", permission: "reminders.view" },
   { to: "/reports", label: "Reportes", icon: "📈", permission: "reports.view" },
   { to: "/users", label: "Usuarios", icon: "👥", permission: "users.view" },
+  { to: "/workspaces", label: "Sucursales", icon: "🏢", permission: "roles.manage" },
   { to: "/audit-logs", label: "Auditoría", icon: "📋", permission: "audit.view" },
   { to: "/roles-permissions", label: "Roles y Permisos", icon: "🔐", permission: "roles.manage" },
   { to: "/rooms", label: "Salas", icon: "🚪", permission: "rooms.view" },
@@ -35,7 +36,7 @@ interface SidebarContextType {
 }
 const SidebarContext = createContext<SidebarContextType>({
   mobileOpen: false,
-  setMobileOpen: () => {},
+  setMobileOpen: () => { },
 });
 export const useSidebar = () => useContext(SidebarContext);
 
@@ -92,10 +93,9 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-                isActive
-                  ? "bg-indigo-500/10 text-white font-medium"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isActive
+                ? "bg-indigo-500/10 text-white font-medium"
+                : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
               }`
             }
             aria-current={undefined}

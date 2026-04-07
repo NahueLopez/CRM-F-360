@@ -52,6 +52,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<RoomReservation> RoomReservations => Set<RoomReservation>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<CompanyTag> CompanyTags => Set<CompanyTag>();
+    public DbSet<ContactTag> ContactTags => Set<ContactTag>();
+    public DbSet<DealTag> DealTags => Set<DealTag>();
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
+    public DbSet<Attachment> Attachments => Set<Attachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,13 +76,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<Room>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
 
         // Root entities with TenantId only (no soft-delete)
-        modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<ActivityLog>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<Reminder>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<ChatConversation>().HasQueryFilter(e => e.TenantId == _currentTenantId);
         modelBuilder.Entity<RoomReservation>().HasQueryFilter(e => e.TenantId == _currentTenantId);
+        modelBuilder.Entity<Department>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _currentTenantId);
+        modelBuilder.Entity<Tag>().HasQueryFilter(e => e.TenantId == _currentTenantId);
+        modelBuilder.Entity<CustomFieldDefinition>().HasQueryFilter(e => e.TenantId == _currentTenantId);
+        modelBuilder.Entity<CustomFieldValue>().HasQueryFilter(e => e.TenantId == _currentTenantId);
+        modelBuilder.Entity<Attachment>().HasQueryFilter(e => e.TenantId == _currentTenantId);
 
         // Child entities with SoftDelete only (tenant isolation inherited via FK)
         modelBuilder.Entity<Contact>().HasQueryFilter(e => !e.IsDeleted);

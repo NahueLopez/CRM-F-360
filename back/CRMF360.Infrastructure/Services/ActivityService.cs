@@ -37,6 +37,7 @@ public class ActivityService : IActivityService
             CompanyId = dto.CompanyId,
             ContactId = dto.ContactId,
             ProjectId = dto.ProjectId,
+            DealId = dto.DealId,
             UserId = dto.UserId,
             Type = dto.Type,
             Description = dto.Description,
@@ -63,7 +64,59 @@ public class ActivityService : IActivityService
             .Include(a => a.Company)
             .Include(a => a.Contact)
             .Include(a => a.Project)
+            .Include(a => a.Deal)
             .Include(a => a.User);
+
+    public async Task<List<ActivityLogDto>> GetByDealAsync(int dealId, CancellationToken ct = default)
+        => await Query().Where(a => a.DealId == dealId)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => Map(a)).ToListAsync(ct);
+
+    public async Task<List<TimelineItemDto>> GetTimelineAsync(int? companyId, int? contactId, int? dealId, CancellationToken ct = default)
+    {
+        // Activities
+        var activityQuery = Query();
+        if (companyId.HasValue) activityQuery = activityQuery.Where(a => a.CompanyId == companyId);
+        if (contactId.HasValue) activityQuery = activityQuery.Where(a => a.ContactId == contactId);
+        if (dealId.HasValue) activityQuery = activityQuery.Where(a => a.DealId == dealId);
+
+        var activities = await activityQuery
+            .OrderByDescending(a => a.CreatedAt).Take(50)
+            .Select(a => new TimelineItemDto
+            {
+                Id = a.Id,
+                Source = "activity",
+                Type = a.Type,
+                Description = a.Description,
+                UserId = a.UserId,
+                UserName = a.User != null ? a.User.FullName : "—",
+                CreatedAt = a.CreatedAt
+            }).ToListAsync(ct);
+
+        // Audit logs
+        var auditQuery = _db.AuditLogs.AsNoTracking().Include(al => al.User).AsQueryable();
+        if (companyId.HasValue) auditQuery = auditQuery.Where(al => al.EntityType == "Company" && al.EntityId == companyId);
+        if (contactId.HasValue) auditQuery = auditQuery.Where(al => al.EntityType == "Contact" && al.EntityId == contactId);
+        if (dealId.HasValue) auditQuery = auditQuery.Where(al => al.EntityType == "Deal" && al.EntityId == dealId);
+
+        var audits = await auditQuery
+            .OrderByDescending(al => al.CreatedAt).Take(50)
+            .Select(al => new TimelineItemDto
+            {
+                Id = al.Id,
+                Source = "audit",
+                Type = al.Action,
+                Description = al.Details ?? $"{al.Action} {al.EntityType}",
+                UserId = al.UserId,
+                UserName = al.User != null ? al.User.FullName : "—",
+                CreatedAt = al.CreatedAt
+            }).ToListAsync(ct);
+
+        return activities.Concat(audits)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(100)
+            .ToList();
+    }
 
     private static ActivityLogDto Map(ActivityLog a) => new()
     {

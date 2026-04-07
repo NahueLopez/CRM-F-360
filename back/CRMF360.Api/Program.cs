@@ -1,4 +1,4 @@
-using CRMF360.Api.Middleware;
+﻿using CRMF360.Api.Middleware;
 using CRMF360.Api.Filters;
 using CRMF360.Infrastructure;
 using CRMF360.Infrastructure.Seed;
@@ -29,14 +29,14 @@ builder.Services.AddValidatorsFromAssemblyContaining<CRMF360.Application.Validat
 
 // CORS — restricted to configured origins
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5173", "http://localhost:3000", "https://front-crm.fundacion360.online" };
+    ?? new[] { "http://localhost:5173", "http://localhost:3000", "https://front-crm.fundacion360.online", "http://localhost:5174", "http://localhost:5179" };
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .WithOrigins(allowedOrigins)
+            .SetIsOriginAllowed(origin => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

@@ -30,6 +30,7 @@ const AuditLogsPage = lazy(() => import("./features/audit/AuditLogsPage"));
 const RoomsPage = lazy(() => import("./features/rooms/RoomsPage"));
 const SettingsPage = lazy(() => import("./features/settings/SettingsPage"));
 const RolesPermissionsPage = lazy(() => import("./features/roles/RolesPermissionsPage"));
+const WorkspacesPage = lazy(() => import("./features/workspaces/WorkspacesPage"));
 
 // ── Suspense fallback ──
 const PageLoader = () => (
@@ -93,6 +94,7 @@ const App = () => {
                 <Route element={<ProtectedRoute requiredPermissions={["roles.manage"]} />}>
                   <Route element={<DashboardLayout />}>
                     <Route path="roles-permissions" element={<RolesPermissionsPage />} />
+                    <Route path="workspaces" element={<WorkspacesPage />} />
                   </Route>
                 </Route>
 

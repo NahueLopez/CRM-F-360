@@ -36,7 +36,8 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request)
     {
-        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+        var tenantId = GetCurrentTenantId();
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken, tenantId);
 
         if (result is null)
             return Unauthorized(new { message = "Refresh token inválido o expirado" });
@@ -50,11 +51,27 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Me()
     {
         var userId = GetCurrentUserId();
+        var tenantId = GetCurrentTenantId();
+        
         if (userId is null)
             return Unauthorized();
 
-        var result = await _authService.GetCurrentUserAsync(userId.Value);
+        var result = await _authService.GetCurrentUserAsync(userId.Value, tenantId);
         return result is null ? Unauthorized() : Ok(result);
+    }
+    
+    [HttpPost("switch-workspace")]
+    [Authorize]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SwitchWorkspace([FromBody] SwitchWorkspaceRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null) return Unauthorized();
+        
+        var result = await _authService.SwitchWorkspaceAsync(userId.Value, request.TenantId);
+        if (result is null) return Unauthorized(new { message = "No perteneces a este workspace" });
+        
+        return Ok(result);
     }
 
     [HttpPut("change-password")]
@@ -105,9 +122,20 @@ public class AuthController : ControllerBase
 
         return int.TryParse(idClaim, out var id) ? id : null;
     }
+    
+    private int? GetCurrentTenantId()
+    {
+        var tenantIdClaim = User.FindFirstValue("tenantId");
+        return int.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
+    }
 }
 
 public class UpdatePreferencesRequest
 {
     public string Preferences { get; set; } = null!;
+}
+
+public class SwitchWorkspaceRequest
+{
+    public int TenantId { get; set; }
 }

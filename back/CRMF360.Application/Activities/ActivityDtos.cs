@@ -23,7 +23,19 @@ public class CreateActivityDto
     public int? CompanyId { get; set; }
     public int? ContactId { get; set; }
     public int? ProjectId { get; set; }
+    public int? DealId { get; set; }
     [Required] public int UserId { get; set; }
     [Required][MaxLength(50)] public string Type { get; set; } = "Note";
     [Required][MaxLength(4000)] public string Description { get; set; } = null!;
+}
+
+public class TimelineItemDto
+{
+    public int Id { get; set; }
+    public string Source { get; set; } = null!; // "activity" or "audit"
+    public string Type { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public int UserId { get; set; }
+    public string UserName { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
 }

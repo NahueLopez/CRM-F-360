@@ -29,7 +29,8 @@ public class AuthService : IAuthService
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.RolePermissions)
                         .ThenInclude(rp => rp.Permission)
-            .Include(u => u.Tenant)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Tenant)
             .FirstOrDefaultAsync(u =>
                 u.Email == request.Email &&
                 u.Active);
@@ -44,41 +45,64 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        var token = GenerateJwtToken(user);
+        var currentTenantId = user.UserRoles.FirstOrDefault()?.TenantId;
+        var token = GenerateJwtToken(user, currentTenantId);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken);
+        return MapToResponse(user, token, refreshToken, currentTenantId);
     }
 
-    public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId)
+    public async Task<LoginResponseDto?> GetCurrentUserAsync(int userId, int? currentTenantId)
     {
-        var user = await _db.Users
+        var user = await _db.Users.IgnoreQueryFilters()
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.RolePermissions)
                         .ThenInclude(rp => rp.Permission)
-            .Include(u => u.Tenant)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Tenant)
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
 
         if (user == null)
             return null;
 
-        var token = GenerateJwtToken(user);
+        var token = GenerateJwtToken(user, currentTenantId);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, token, refreshToken);
+        return MapToResponse(user, token, refreshToken, currentTenantId);
+    }
+    
+    public async Task<LoginResponseDto?> SwitchWorkspaceAsync(int userId, int tenantId)
+    {
+        var user = await _db.Users.IgnoreQueryFilters()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Tenant)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
+
+        if (user == null || !user.UserRoles.Any(ur => ur.TenantId == tenantId))
+            return null;
+
+        var token = GenerateJwtToken(user, tenantId);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id);
+
+        return MapToResponse(user, token, refreshToken, tenantId);
     }
 
-    public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshTokenValue)
+    public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshTokenValue, int? currentTenantId)
     {
-        var storedToken = await _db.RefreshTokens
+        var storedToken = await _db.RefreshTokens.IgnoreQueryFilters()
             .Include(rt => rt.User)
                 .ThenInclude(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
             .Include(rt => rt.User)
-                .ThenInclude(u => u.Tenant)
+                .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Tenant)
             .FirstOrDefaultAsync(rt => rt.Token == refreshTokenValue);
 
         if (storedToken == null || !storedToken.IsActive)
@@ -88,30 +112,22 @@ public class AuthService : IAuthService
         if (!user.Active)
             return null;
 
-        // Revoke the old refresh token (rotation)
         storedToken.RevokedAt = DateTime.UtcNow;
 
-        // Generate new tokens
-        var newJwt = GenerateJwtToken(user);
+        var newJwt = GenerateJwtToken(user, currentTenantId);
         var newRefreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return MapToResponse(user, newJwt, newRefreshToken);
+        return MapToResponse(user, newJwt, newRefreshToken, currentTenantId);
     }
 
     public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto request)
     {
         var user = await _db.Users
             .FirstOrDefaultAsync(u => u.Id == userId && u.Active);
-
-        if (user == null)
-            return false;
-
-        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
-            return false;
-
+        if (user == null) return false;
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash)) return false;
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         await _db.SaveChangesAsync();
-
         return true;
     }
 
@@ -125,19 +141,15 @@ public class AuthService : IAuthService
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Active);
         if (user == null) return false;
-
         user.Preferences = preferencesJson;
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return true;
     }
 
-    // ── Private helpers ─────────────────────────────────────
-
     private async Task<string> CreateRefreshTokenAsync(int userId)
     {
         var expireDays = int.TryParse(_configuration["Jwt:RefreshExpireDays"], out var d) ? d : 7;
-
         var token = new RefreshToken
         {
             UserId = userId,
@@ -145,10 +157,8 @@ public class AuthService : IAuthService
             ExpiresAt = DateTime.UtcNow.AddDays(expireDays),
             CreatedAt = DateTime.UtcNow
         };
-
         _db.RefreshTokens.Add(token);
         await _db.SaveChangesAsync();
-
         return token.Token;
     }
 
@@ -158,34 +168,43 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(bytes);
     }
 
-    private static LoginResponseDto MapToResponse(User user, string token, string refreshToken) => new()
+    private static LoginResponseDto MapToResponse(User user, string token, string refreshToken, int? currentTenantId)
     {
-        Id = user.Id,
-        TenantId = user.TenantId,
-        TenantName = user.Tenant?.Name ?? "Default",
-        FullName = user.FullName,
-        Email = user.Email,
-        Phone = user.Phone,
-        Token = token,
-        RefreshToken = refreshToken,
-        Roles = user.UserRoles
-            .Where(ur => ur.Role != null)
-            .Select(ur => ur.Role.Name)
-            .ToList(),
-        Preferences = user.Preferences,
-        Permissions = user.UserRoles
-            .Where(ur => ur.Role != null)
-            .SelectMany(ur => ur.Role.RolePermissions)
-            .Where(rp => rp.Permission != null)
-            .Select(rp => rp.Permission.Name)
-            .Distinct()
-            .ToList()
-    };
+        var currentTenant = user.UserRoles.FirstOrDefault(ur => ur.TenantId == currentTenantId)?.Tenant;
+        
+        return new LoginResponseDto
+        {
+            Id = user.Id,
+            TenantId = currentTenantId,
+            TenantName = currentTenant?.Name,
+            FullName = user.FullName,
+            Email = user.Email,
+            Phone = user.Phone,
+            Token = token,
+            RefreshToken = refreshToken,
+            Roles = user.UserRoles
+                .Where(ur => ur.TenantId == currentTenantId && ur.Role != null)
+                .Select(ur => ur.Role.Name)
+                .ToList(),
+            Preferences = user.Preferences,
+            Permissions = user.UserRoles
+                .Where(ur => ur.TenantId == currentTenantId && ur.Role != null)
+                .SelectMany(ur => ur.Role.RolePermissions)
+                .Where(rp => rp.Permission != null)
+                .Select(rp => rp.Permission.Name)
+                .Distinct()
+                .ToList(),
+            AvailableWorkspaces = user.UserRoles
+                .Where(ur => ur.Tenant != null)
+                .Select(ur => new WorkspaceDto { Id = ur.TenantId, Name = ur.Tenant.Name })
+                .DistinctBy(w => w.Id)
+                .ToList()
+        };
+    }
 
-    private string GenerateJwtToken(User user)
+    private string GenerateJwtToken(User user, int? currentTenantId)
     {
-        var jwtKey = _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Jwt:Key not configured");
+        var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "CRMF360";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "CRMF360-BackOffice";
         var expiresMinutes = int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var m) ? m : 30;
@@ -198,15 +217,21 @@ public class AuthService : IAuthService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("fullName", user.FullName),
-            new Claim("id", user.Id.ToString()),
-            new Claim("tenantId", user.TenantId.ToString())
+            new Claim("id", user.Id.ToString())
         };
 
-        foreach (var ur in user.UserRoles)
+        if (currentTenantId.HasValue)
         {
-            if (ur.Role != null)
+            claims.Add(new Claim("tenantId", currentTenantId.Value.ToString()));
+            
+            var roles = user.UserRoles
+                .Where(ur => ur.TenantId == currentTenantId.Value && ur.Role != null)
+                .Select(ur => ur.Role.Name)
+                .Distinct();
+                
+            foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, ur.Role.Name));
+                claims.Add(new Claim(ClaimTypes.Role, role));
             }
         }
 

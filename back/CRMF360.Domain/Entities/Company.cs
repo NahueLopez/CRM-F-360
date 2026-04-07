@@ -22,4 +22,5 @@ public class Company : ISoftDeletable, ITenantEntity, IConcurrencyAware
     public ICollection<Project> Projects { get; set; } = new List<Project>();
     public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
     public ICollection<ActivityLog> Activities { get; set; } = new List<ActivityLog>();
+    public ICollection<CompanyTag> CompanyTags { get; set; } = new List<CompanyTag>();
 }
