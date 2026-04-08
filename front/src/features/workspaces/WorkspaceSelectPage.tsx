@@ -66,47 +66,64 @@ const WorkspaceSelectPage: React.FC = () => {
         <div className="min-h-screen flex flex-col overflow-hidden relative bg-transparent">
 
 
-            {/* ═══════════════ TOP BAR ═══════════════ */}
-            <header className={`relative z-10 border-b backdrop-blur-sm ${isLight ? "border-slate-200/80 bg-white/70" : "border-slate-800/50 bg-slate-950/80"}`}>
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            {/* ═══════════════ TOP BAR (PREMIUM) ═══════════════ */}
+            <header className="relative z-30 pt-4 px-4 sm:px-6">
+                <div className={`max-w-6xl mx-auto h-16 rounded-2xl border flex items-center justify-between px-4 sm:px-6 shadow-sm backdrop-blur-xl transition-all duration-300 ${isLight ? "bg-white/90 border-slate-200/80 shadow-slate-200/50" : "bg-slate-900/80 border-slate-700/50 shadow-black/20"}`}>
+                    
+                    {/* Brand / Logo */}
                     <div className="flex items-center gap-3">
                         <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-md"
-                            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+                            className="w-10 h-10 rounded-[14px] flex items-center justify-center text-lg font-bold text-white shadow-lg relative overflow-hidden group"
+                            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)` }}
                         >
-                            F
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                            <span className="relative z-10">F</span>
                         </div>
-                        <div>
-                            <h1 className={`text-sm font-bold ${isLight ? "text-slate-800" : "text-white"}`}>
+                        <div className="hidden sm:flex flex-col justify-center">
+                            <h1 className={`text-[15px] leading-tight font-extrabold tracking-tight ${isLight ? "text-slate-800" : "text-white"}`}>
                                 CRM <span style={{ color: accent }}>F360</span>
                             </h1>
-                            <p className={`text-[10px] ${isLight ? "text-slate-400" : "text-slate-500"}`}>Gestión integral de negocios</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">Gestión Inteligente</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                            <div
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
-                                style={{ backgroundColor: accent }}
-                            >
-                                {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+
+                    {/* User Actions */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        
+                        {/* Elegant Profile Pill */}
+                        <div className={`flex items-center gap-3 pl-3 pr-1.5 py-1.5 rounded-full border transition-all duration-300 shadow-sm ${isLight ? "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md" : "bg-slate-950/50 border-slate-700 hover:border-slate-600 hover:bg-slate-800"}`}>
+                            <div className="text-right hidden md:block">
+                                <p className={`text-[13px] font-bold leading-tight ${isLight ? "text-slate-800" : "text-slate-200"}`}>{user?.fullName}</p>
+                                <p className="text-[9px] uppercase tracking-wider font-bold mt-0.5" style={{ color: accent }}>{user?.roles?.[0]}</p>
                             </div>
-                            <span className={`text-xs font-medium ${isLight ? "text-slate-600" : "text-slate-400"}`}>
-                                {user.fullName}
-                            </span>
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-inner"
+                                style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+                            >
+                                {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
                         </div>
+
+                        {/* Divider */}
+                        <div className={`hidden sm:block w-[1px] h-6 ${isLight ? "bg-slate-200" : "bg-slate-700"}`} />
+
+                        {/* Polished Logout Button */}
                         <button
                             onClick={() => authStore.logout()}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${isLight ? "text-slate-500 hover:text-slate-700 bg-white hover:bg-slate-50 border-slate-200" : "text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border-slate-700"}`}
+                            className={`flex items-center justify-center w-10 h-10 sm:w-auto sm:px-4 sm:h-10 rounded-xl font-medium text-sm transition-all duration-300 active:scale-95 group ${isLight ? "text-slate-500 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"}`}
+                            aria-label="Cerrar sesión"
                         >
-                            Salir
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:mr-2 transition-transform group-hover:translate-x-0.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                            <span className="hidden sm:inline">Salir</span>
                         </button>
                     </div>
                 </div>
             </header>
 
             {/* ═══════════════ MAIN CONTENT ═══════════════ */}
-            <main className="relative z-10 flex-1 flex items-center justify-center p-6">
+            <main className="relative z-10 flex-1 flex items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-both">
                 <div className="w-full max-w-3xl space-y-8">
                     {/* Heading */}
                     <div className="text-center space-y-3">
@@ -130,15 +147,25 @@ const WorkspaceSelectPage: React.FC = () => {
                         <div className="flex justify-center">
                             <button
                                 onClick={() => window.location.replace("/admin")}
-                                className="px-6 py-3 text-sm font-semibold rounded-xl border transition-all flex items-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98]"
+                                className={`group relative px-7 py-3.5 text-sm font-bold rounded-2xl border transition-all duration-500 flex items-center gap-3 overflow-hidden shadow-sm active:scale-95 ${isLight ? "border-slate-200 hover:shadow-lg hover:-translate-y-0.5" : "border-slate-800 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5"}`}
                                 style={{
-                                    backgroundColor: accent + "15",
-                                    borderColor: accent + "30",
+                                    backgroundColor: isLight ? "#ffffff" : accent + "10",
                                     color: accent,
                                 }}
                             >
-                                <span>⚙️</span>
-                                Administrar Empresas
+                                <div 
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                    style={{
+                                        background: `linear-gradient(90deg, transparent, ${accent}15, transparent)`,
+                                    }}
+                                />
+                                <span className="text-lg transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-180 drop-shadow-sm">⚙️</span>
+                                <span className="relative z-10 tracking-wide drop-shadow-sm">Administrar Empresas</span>
+                                
+                                {/* Glow effect */}
+                                <div className="absolute inset-0 border-2 rounded-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-300 group-hover:animate-pulse pointer-events-none" 
+                                    style={{ borderColor: accent }}
+                                />
                             </button>
                         </div>
                     )}

@@ -91,6 +91,7 @@ const App = () => {
                   <Route path="admin/users" element={<AdminUsersPage />} />
                   <Route path="admin/roles" element={<AdminRolesPage />} />
                   <Route path="admin/settings" element={<AdminSettingsPage />} />
+                  <Route path="admin/profile" element={<ProfilePage />} />
                 </Route>
 
                 {/* Protected */}
