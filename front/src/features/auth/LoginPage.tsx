@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { authStore } from "../../shared/auth/authStore";
+import { loadPreferences } from "../../shared/theme/themeEngine";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -7,6 +8,22 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [prefs, setPrefs] = useState(loadPreferences());
+  const isLight = prefs.theme.startsWith("light");
+
+  useEffect(() => {
+    const handlePreferencesUpdated = (e: Event) => {
+        const customEvent = e as CustomEvent;
+        if (customEvent.detail) {
+            setPrefs(customEvent.detail);
+        } else {
+            setPrefs(loadPreferences());
+        }
+    };
+    window.addEventListener("preferences-updated", handlePreferencesUpdated);
+    return () => window.removeEventListener("preferences-updated", handlePreferencesUpdated);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +37,6 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Use window.location.replace for a full page reload.
-      // authStore is not reactive, so React Router guards won't re-evaluate
-      // without a full reload that re-initializes authStore from localStorage.
       if (authStore.user?.tenantId) {
         window.location.replace("/");
       } else {
@@ -36,47 +50,33 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-transparent">
       {/* Left Panel — Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
-
-        {/* Grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        {/* Glow orbs */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 rounded-full bg-indigo-400/20 blur-3xl" />
-
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black/10 dark:bg-black/20 backdrop-blur-sm">
         {/* Content */}
-        <div className="relative flex flex-col justify-between p-12 z-10">
+
+        <div className="relative flex flex-col justify-between p-12 z-10 w-full h-full">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="CRM F360"
-              className="w-12 h-12 rounded-2xl shadow-xl border border-white/10"
+              className="w-12 h-12 rounded-2xl shadow-xl border border-white/20 bg-white/10 backdrop-blur"
             />
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
-                CRM <span className="text-indigo-200">F360</span>
+              <h1 className={`text-3xl font-bold tracking-tight ${isLight ? "text-slate-800" : "text-white"}`}>
+                CRM <span style={{ color: isLight ? prefs.accentColor : "#fff" }}>F360</span>
               </h1>
-              <p className="text-indigo-200/60 text-sm mt-1">Gestión integral de negocios</p>
+              <p className={`text-sm mt-1 font-medium ${isLight ? "text-slate-700/80" : "text-white/80"}`}>
+                Gestión integral de negocios
+              </p>
             </div>
           </div>
 
           <div className="space-y-8">
-            <h2 className="text-4xl font-bold text-white leading-tight max-w-md">
+            <h2 className={`text-4xl font-bold leading-tight max-w-md ${isLight ? "text-slate-900" : "text-white"}`}>
               Todo tu negocio en un solo lugar
             </h2>
-            <p className="text-lg text-indigo-100/70 max-w-md leading-relaxed">
+            <p className={`text-lg max-w-md leading-relaxed font-medium ${isLight ? "text-slate-800/80" : "text-white/90"}`}>
               Empresas, contactos, proyectos, tareas, pipeline de ventas y reportes — organizá tu
               equipo con una herramienta pensada para crecer.
             </p>
@@ -93,7 +93,11 @@ const LoginPage: React.FC = () => {
               ].map((f) => (
                 <span
                   key={f}
-                  className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur text-sm text-white/80 border border-white/10"
+                  className={`px-3 py-1.5 rounded-full backdrop-blur text-sm font-semibold border ${
+                    isLight 
+                       ? "bg-white/40 text-slate-800 border-slate-500/20 shadow-sm" 
+                       : "bg-white/10 text-white/90 border-white/20"
+                  }`}
                 >
                   {f}
                 </span>
@@ -101,7 +105,7 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-xs text-indigo-200/40">
+          <p className={`text-xs font-semibold tracking-wide ${isLight ? "text-slate-600/70" : "text-white/60"}`}>
             © {new Date().getFullYear()} CRM F360 — Todos los derechos reservados
           </p>
         </div>

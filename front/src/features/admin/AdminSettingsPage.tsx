@@ -310,31 +310,83 @@ const AdminSettingsPage = () => {
         </div>
       </section>
 
-      {/* ── Animation toggle ── */}
+      {/* ── Animaciones y Fondo ── */}
       <section className={`${sectionCls} rounded-2xl p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">✨</span>
-          <h3 className={`text-sm font-semibold ${headingCls}`}>Animaciones</h3>
+          <h3 className={`text-sm font-semibold ${headingCls}`}>Estilo y Animaciones</h3>
         </div>
         <p className={`text-[11px] ${subCls} mb-4`}>
-          Las animaciones hacen que la interfaz se sienta más viva y moderna
+          Elegí el estilo de fondo para tu interfaz y activá o desactivá las animaciones
         </p>
 
-        <div className={`flex items-center gap-4 p-4 rounded-xl border ${previewBg}`}>
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: prefs.accentColor + "20" }}
-            >
+        <div className="space-y-5">
+          {/* Background Style */}
+          <div>
+            <p className={`text-[10px] font-medium uppercase tracking-wider mb-2.5 ${subCls}`}>Estilo de fondo global</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "particles", label: "Red / Vectores", icon: "🌌" },
+                { value: "polygons", label: "Cristales", icon: "💎" },
+                { value: "none", label: "Ninguno", icon: "⚪" },
+              ].map((bg) => {
+                const selected = prefs.background === bg.value;
+                return (
+                  <button
+                    key={bg.value}
+                    onClick={() => updatePref("background", bg.value as any)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                      selected ? btnBorderActive : btnBorder
+                    }`}
+                  >
+                    <span className="text-xl">{bg.icon}</span>
+                    <span className={`text-[11px] font-medium ${labelCls}`}>{bg.label}</span>
+                    {selected && (
+                      <div
+                        className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white"
+                        style={{ backgroundColor: prefs.accentColor }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Toggle Animations */}
+          <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${prefs.animations ? previewBg : (isLight ? "bg-white border-slate-200" : "bg-slate-800/20 border-slate-700/30")}`}>
+            <div className="flex items-center gap-3">
               <div
-                className="w-5 h-5 rounded-full animate-pulse"
-                style={{ backgroundColor: prefs.accentColor }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${prefs.animations ? "" : "grayscale opacity-50"}`}
+                style={{ backgroundColor: prefs.accentColor + "20" }}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full ${prefs.animations ? "animate-pulse" : ""}`}
+                  style={{ backgroundColor: prefs.accentColor }}
+                />
+              </div>
+              <div>
+                <p className={`text-sm font-medium ${headingCls}`}>
+                  {prefs.animations ? "Animaciones activadas" : "Animaciones desactivadas"}
+                </p>
+                <p className={`text-[11px] ${subCls}`}>
+                  Movimiento de fondos, transiciones y micro-animaciones
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => updatePref("animations", !prefs.animations)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${prefs.animations ? "" : "bg-slate-300 dark:bg-slate-600"}`}
+              style={prefs.animations ? { backgroundColor: prefs.accentColor } : {}}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  prefs.animations ? "translate-x-6" : "translate-x-1"
+                }`}
               />
-            </div>
-            <div>
-              <p className={`text-sm font-medium ${headingCls}`}>Animaciones activas</p>
-              <p className={`text-[11px] ${subCls}`}>Transiciones suaves, hover effects y micro-animaciones habilitadas</p>
-            </div>
+            </button>
           </div>
         </div>
       </section>

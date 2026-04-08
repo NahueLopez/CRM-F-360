@@ -216,7 +216,7 @@ const Sidebar: React.FC = () => {
     <>
       {/* Desktop sidebar */}
       <aside
-        className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-hidden"
+        className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-hidden animate-sidebar-in"
         aria-label="Barra lateral"
       >
         {header}

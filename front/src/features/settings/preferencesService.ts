@@ -14,12 +14,16 @@ export interface UserPreferences {
     | "light-rose"
     | "light-mint";
   fontSize: "small" | "normal" | "large" | "xlarge";
+  animations: boolean;
+  background: "particles" | "polygons" | "none";
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   accentColor: "#818cf8",
   theme: "dark-blue",
   fontSize: "normal",
+  animations: true,
+  background: "particles",
 };
 
 export const preferencesService = {

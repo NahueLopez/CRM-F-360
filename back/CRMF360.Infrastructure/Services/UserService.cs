@@ -71,7 +71,7 @@ public class UserService : IUserService
             }
         }
 
-        return MapToDto(user);
+        return MapToDto(user, _currentTenantId);
     }
 
     public async Task<IReadOnlyList<UserDto>> GetAllAsync()
@@ -88,7 +88,7 @@ public class UserService : IUserService
         }
 
         var users = await query.OrderBy(u => u.FullName).ToListAsync();
-        return users.Select(MapToDto).ToList();
+        return users.Select(u => MapToDto(u, _currentTenantId)).ToList();
     }
 
     public async Task<PagedResult<UserDto>> GetPagedAsync(PaginationParams p, System.Threading.CancellationToken ct = default)
@@ -120,11 +120,12 @@ public class UserService : IUserService
         };
 
         var totalCount = await query.CountAsync(ct);
-        var items = await query
+        var pagedUsers = await query
             .Skip((p.Page - 1) * p.PageSize)
             .Take(p.PageSize)
-            .Select(u => MapToDto(u))
             .ToListAsync(ct);
+
+        var items = pagedUsers.Select(u => MapToDto(u, _currentTenantId)).ToList();
 
         return new PagedResult<UserDto>
         {
@@ -149,7 +150,7 @@ public class UserService : IUserService
         if (_currentTenantId.HasValue && !user.UserRoles.Any(ur => ur.TenantId == _currentTenantId.Value))
             return null;
 
-        return MapToDto(user);
+        return MapToDto(user, _currentTenantId);
     }
 
     public async Task<UserDto?> UpdateAsync(int id, UpdateUserDto dto)
@@ -193,7 +194,7 @@ public class UserService : IUserService
                 .ThenInclude(ur => ur.Role)
             .FirstAsync(u => u.Id == id);
 
-        return MapToDto(updated);
+        return MapToDto(updated, _currentTenantId);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -221,11 +222,11 @@ public class UserService : IUserService
         return true;
     }
 
-    private UserDto MapToDto(User user)
+    private static UserDto MapToDto(User user, int? currentTenantId)
     {
         // Get the role for the current tenant only
-        UserRole? relevantRole = _currentTenantId.HasValue
-            ? user.UserRoles?.FirstOrDefault(ur => ur.TenantId == _currentTenantId.Value)
+        UserRole? relevantRole = currentTenantId.HasValue
+            ? user.UserRoles?.FirstOrDefault(ur => ur.TenantId == currentTenantId.Value)
             : user.UserRoles?.FirstOrDefault();
 
         return new UserDto

@@ -28,10 +28,10 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 light:bg-slate-50 light:text-slate-900">
+      <div className="min-h-screen flex text-slate-100 dark:text-slate-100 light:text-slate-900 relative bg-transparent">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <main className="flex-1 flex flex-col overflow-hidden min-w-0 z-10 relative">
           <Topbar title={title} />
           <section className="flex-1 p-4 sm:p-6 overflow-auto">
             <div key={location.pathname} className="animate-page-in">

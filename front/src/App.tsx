@@ -8,6 +8,7 @@ import { ToastProvider } from "./shared/context/ToastContext";
 import { QueryProvider } from "./shared/api/queryProvider";
 import { authStore } from "./shared/auth/authStore";
 import ErrorBoundary from "./shared/ui/ErrorBoundary";
+import AnimatedBackground from "./shared/ui/AnimatedBackground";
 
 // ── Feature pages (lazy loaded — each gets its own chunk) ──
 const LoginPage = lazy(() => import("./features/auth/LoginPage"));
@@ -40,18 +41,13 @@ const AdminSettingsPage = lazy(() => import("./features/admin/AdminSettingsPage"
 
 // ── Suspense fallback ──
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-[60vh]">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      <span className="text-sm text-slate-500">Cargando…</span>
-    </div>
-  </div>
+  // Empty invisible div, let the AnimatedBackground keep running behind it smoothly
+  <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" />
 );
 
 /** Guard: redirect authenticated users away from /login */
 const LoginGuard = () => {
   if (authStore.isAuthenticated) {
-    // If user has tenantId → dashboard, else → workspace selection
     if (authStore.user?.tenantId) return <Navigate to="/" replace />;
     return <Navigate to="/select-workspace" replace />;
   }
@@ -71,13 +67,13 @@ const App = () => {
       <QueryProvider>
         <ToastProvider>
           <BrowserRouter>
+            {/* Global background - ensures it NEVER unmounts during chunk fetches */}
+            <AnimatedBackground />
+
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public */}
-                <Route
-                  path="/login"
-                  element={<LoginGuard />}
-                />
+                <Route path="/login" element={<LoginGuard />} />
 
                 {/* Workspace Selection (no sidebar) */}
                 <Route

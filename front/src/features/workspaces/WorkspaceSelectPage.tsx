@@ -1,15 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { authStore } from "../../shared/auth/authStore";
 import { Navigate } from "react-router-dom";
 import { loadPreferences } from "../../shared/theme/themeEngine";
-
-/** Convert hex to RGB components */
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-        ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-        : { r: 99, g: 102, b: 241 }; // fallback indigo
-}
 
 const WorkspaceSelectPage: React.FC = () => {
     const user = authStore.user;
@@ -17,7 +9,6 @@ const WorkspaceSelectPage: React.FC = () => {
     const prefs = loadPreferences();
     const isLight = prefs.theme.startsWith("light");
     const accent = prefs.accentColor;
-    const rgb = useMemo(() => hexToRgb(accent), [accent]);
 
     if (!user) return <Navigate to="/login" replace />;
 
@@ -32,7 +23,7 @@ const WorkspaceSelectPage: React.FC = () => {
     // ── No workspaces assigned (regular user) ──
     if (workspaces.length === 0 && !isSuperAdmin) {
         return (
-            <div className={`min-h-screen flex items-center justify-center p-4 ${isLight ? "bg-white" : "bg-slate-950"}`}>
+            <div className={`min-h-screen flex items-center justify-center p-4 ${isLight ? "bg-white" : "bg-slate-900"}`}>
                 <div className="max-w-md w-full text-center space-y-6">
                     <div className={`w-20 h-20 mx-auto rounded-2xl flex items-center justify-center text-4xl border ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900 border-slate-800"}`}>
                         🏢
@@ -71,122 +62,9 @@ const WorkspaceSelectPage: React.FC = () => {
             { bg: "from-purple-500/20 to-fuchsia-500/10", border: "border-purple-500/30", icon: "bg-purple-500/20 text-purple-400" },
         ];
 
-    // Accent-derived colors for SVG shapes
-    const accentOpacity = isLight ? 0.15 : 0.08;
-    const accentFill = `rgba(${rgb.r},${rgb.g},${rgb.b},${isLight ? 0.04 : 0.02})`;
-    const accentStroke = `rgba(${rgb.r},${rgb.g},${rgb.b},${accentOpacity})`;
-    const accentStrokeMed = `rgba(${rgb.r},${rgb.g},${rgb.b},${accentOpacity * 0.7})`;
-    const accentGlow = `rgba(${rgb.r},${rgb.g},${rgb.b},${isLight ? 0.08 : 0.05})`;
-
     return (
-        <div className={`min-h-screen flex flex-col overflow-hidden relative ${isLight ? "bg-white" : "bg-slate-950"}`}>
+        <div className="min-h-screen flex flex-col overflow-hidden relative bg-transparent">
 
-            {/* ═══════════════ ANIMATED BACKGROUND ═══════════════ */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                {/* Large accent glow orbs */}
-                <div
-                    className="absolute rounded-full blur-[100px]"
-                    style={{
-                        width: 500, height: 500,
-                        top: "10%", left: "-5%",
-                        background: `radial-gradient(circle, ${accentGlow}, transparent 70%)`,
-                        animation: "wsOrb1 20s ease-in-out infinite",
-                    }}
-                />
-                <div
-                    className="absolute rounded-full blur-[80px]"
-                    style={{
-                        width: 400, height: 400,
-                        bottom: "5%", right: "-3%",
-                        background: `radial-gradient(circle, rgba(${rgb.r},${rgb.g},${rgb.b},${isLight ? 0.06 : 0.04}), transparent 70%)`,
-                        animation: "wsOrb2 25s ease-in-out infinite",
-                    }}
-                />
-                <div
-                    className="absolute rounded-full blur-[60px]"
-                    style={{
-                        width: 300, height: 300,
-                        top: "50%", left: "60%",
-                        background: `radial-gradient(circle, rgba(${rgb.r},${rgb.g},${rgb.b},${isLight ? 0.05 : 0.03}), transparent 70%)`,
-                        animation: "wsOrb3 30s ease-in-out infinite",
-                    }}
-                />
-
-                {/* SVG geometric shapes — accent color based */}
-                <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    {/* Large rotating ring */}
-                    <circle cx="12%" cy="25%" r="60" fill={accentFill} stroke={accentStroke} strokeWidth="2" style={{ animation: "wsShape1 22s ease-in-out infinite" }} />
-                    <circle cx="88%" cy="35%" r="35" fill="none" stroke={accentStrokeMed} strokeWidth="1.5" strokeDasharray="6,4" style={{ animation: "wsShape2 18s ease-in-out infinite" }} />
-                    <circle cx="45%" cy="85%" r="75" fill="none" stroke={accentStroke} strokeWidth="1" style={{ animation: "wsShape3 28s ease-in-out infinite" }} />
-                    <circle cx="70%" cy="15%" r="20" fill={accentFill} stroke={accentStrokeMed} strokeWidth="1" style={{ animation: "wsShape1 14s ease-in-out infinite" }} />
-
-                    {/* Diamonds */}
-                    <g style={{ animation: "wsShape2 16s ease-in-out infinite" }}>
-                        <rect x="80" y="500" width="35" height="35" rx="4" fill={accentFill} stroke={accentStroke} strokeWidth="1.5" transform="rotate(45, 97.5, 517.5)" />
-                    </g>
-                    <g style={{ animation: "wsShape3 20s ease-in-out infinite" }}>
-                        <rect x="1100" y="150" width="25" height="25" rx="3" fill="none" stroke={accentStrokeMed} strokeWidth="1.5" transform="rotate(45, 1112.5, 162.5)" />
-                    </g>
-
-                    {/* Triangles */}
-                    <polygon points="200,100 220,65 240,100" fill={accentFill} stroke={accentStroke} strokeWidth="1.5" style={{ animation: "wsShape1 24s ease-in-out infinite" }} />
-                    <polygon points="900,450 915,425 930,450" fill="none" stroke={accentStrokeMed} strokeWidth="1" style={{ animation: "wsShape2 19s ease-in-out infinite" }} />
-
-                    {/* Small floating dots */}
-                    <circle cx="30%" cy="45%" r="4" fill={accentStroke} style={{ animation: "wsDot1 8s ease-in-out infinite" }} />
-                    <circle cx="65%" cy="55%" r="3" fill={accentStrokeMed} style={{ animation: "wsDot2 10s ease-in-out infinite" }} />
-                    <circle cx="20%" cy="80%" r="3.5" fill={accentStroke} style={{ animation: "wsDot1 12s ease-in-out infinite" }} />
-                    <circle cx="80%" cy="70%" r="2.5" fill={accentStrokeMed} style={{ animation: "wsDot2 9s ease-in-out infinite" }} />
-                    <circle cx="55%" cy="20%" r="3" fill={accentStroke} style={{ animation: "wsDot1 11s ease-in-out infinite" }} />
-
-                    {/* Connecting lines */}
-                    <line x1="15%" y1="30%" x2="35%" y2="50%" stroke={accentStrokeMed} strokeWidth="0.5" strokeDasharray="8,6" style={{ animation: "wsShape3 20s ease-in-out infinite" }} />
-                    <line x1="70%" y1="20%" x2="85%" y2="40%" stroke={accentStrokeMed} strokeWidth="0.5" strokeDasharray="8,6" style={{ animation: "wsShape1 25s ease-in-out infinite" }} />
-                </svg>
-            </div>
-
-            {/* CSS Keyframe animations */}
-            <style>{`
-                @keyframes wsOrb1 {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    33% { transform: translate(40px, -30px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.95); }
-                }
-                @keyframes wsOrb2 {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    33% { transform: translate(-35px, 25px) scale(1.05); }
-                    66% { transform: translate(30px, -15px) scale(0.9); }
-                }
-                @keyframes wsOrb3 {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    50% { transform: translate(-50px, -30px) scale(1.15); }
-                }
-                @keyframes wsShape1 {
-                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                    25% { transform: translate(20px, -25px) rotate(8deg); }
-                    50% { transform: translate(-15px, -40px) rotate(-5deg); }
-                    75% { transform: translate(25px, -15px) rotate(10deg); }
-                }
-                @keyframes wsShape2 {
-                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                    25% { transform: translate(-25px, 20px) rotate(-8deg); }
-                    50% { transform: translate(20px, 35px) rotate(5deg); }
-                    75% { transform: translate(-15px, 12px) rotate(-10deg); }
-                }
-                @keyframes wsShape3 {
-                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                    33% { transform: translate(30px, -30px) rotate(12deg); }
-                    66% { transform: translate(-20px, 25px) rotate(-6deg); }
-                }
-                @keyframes wsDot1 {
-                    0%, 100% { transform: translate(0, 0); opacity: 0.6; }
-                    50% { transform: translate(10px, -15px); opacity: 1; }
-                }
-                @keyframes wsDot2 {
-                    0%, 100% { transform: translate(0, 0); opacity: 0.5; }
-                    50% { transform: translate(-12px, 10px); opacity: 0.9; }
-                }
-            `}</style>
 
             {/* ═══════════════ TOP BAR ═══════════════ */}
             <header className={`relative z-10 border-b backdrop-blur-sm ${isLight ? "border-slate-200/80 bg-white/70" : "border-slate-800/50 bg-slate-950/80"}`}>

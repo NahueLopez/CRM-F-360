@@ -1,7 +1,8 @@
-import React from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { authStore } from "../auth/authStore";
-import { loadPreferences } from "../theme/themeEngine";
+import { loadPreferences, applyPreferences } from "../theme/themeEngine";
+
 
 const adminNavItems = [
     { to: "/admin", label: "Empresas", icon: "🏢", end: true },
@@ -12,13 +13,29 @@ const adminNavItems = [
 
 const SuperAdminLayout: React.FC = () => {
     const user = authStore.user;
-    const prefs = loadPreferences();
+    const location = useLocation();
+    const [prefs, setPrefs] = React.useState(loadPreferences());
     const isLight = prefs.theme.startsWith("light");
-
+    
+    // Apply preferences on mount
+    useEffect(() => {
+        applyPreferences(prefs);
+        const handlePreferencesUpdated = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail) {
+                setPrefs(customEvent.detail);
+            } else {
+                setPrefs(loadPreferences());
+            }
+        };
+        window.addEventListener("preferences-updated", handlePreferencesUpdated);
+        return () => window.removeEventListener("preferences-updated", handlePreferencesUpdated);
+    }, []);
     return (
-        <div className={`flex h-screen ${isLight ? "bg-slate-50 text-slate-800" : "bg-slate-950 text-slate-200"}`}>
+        <div className={`flex h-screen relative bg-transparent ${isLight ? "text-slate-800" : "text-slate-200"}`}>
+
             {/* Sidebar — fixed height, internal scroll */}
-            <aside className={`w-64 border-r flex flex-col shrink-0 h-screen sticky top-0 ${isLight ? "border-slate-200 bg-white" : "border-slate-800 bg-slate-950"}`}>
+            <aside className={`w-64 border-r flex flex-col shrink-0 h-screen sticky top-0 z-10 animate-sidebar-in ${isLight ? "border-slate-200 bg-white/80 backdrop-blur-md" : "border-slate-800 bg-slate-950/80 backdrop-blur-md"}`}>
                 {/* Header */}
                 <div className={`p-5 border-b shrink-0 ${isLight ? "border-slate-200" : "border-slate-800"}`}>
                     <div className="flex items-center gap-3">
@@ -103,9 +120,11 @@ const SuperAdminLayout: React.FC = () => {
             </aside>
 
             {/* Main content — scrolls independently */}
-            <main className="flex-1 overflow-y-auto">
-                <div className="max-w-7xl mx-auto p-6 lg:p-8">
-                    <Outlet />
+            <main className="flex-1 overflow-y-auto z-10 relative">
+                <div className="max-w-7xl mx-auto p-6 lg:p-8 animate-layout-in">
+                    <div key={location.pathname} className="animate-page-in">
+                        <Outlet />
+                    </div>
                 </div>
             </main>
         </div>

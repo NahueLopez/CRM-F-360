@@ -105,7 +105,7 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
   }, []);
 
   return (
-    <header className="h-14 border-b border-slate-800 flex items-center justify-between px-3 sm:px-6 bg-slate-950 gap-2 sm:gap-4 relative z-40">
+    <header className="h-14 border-b border-slate-800 flex items-center justify-between px-3 sm:px-6 bg-slate-950 gap-2 sm:gap-4 relative z-40 animate-topbar-in">
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}

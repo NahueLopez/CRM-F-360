@@ -41,8 +41,18 @@ export function applyPreferences(prefs?: UserPreferences | null) {
   // ── Font size ──
   root.style.fontSize = FONT_SIZE_MAP[p.fontSize] || "16px";
 
+  // ── Animations ──
+  if (p.animations !== false) {
+    root.setAttribute("data-animations", "true");
+  } else {
+    root.removeAttribute("data-animations");
+  }
+
   // Store locally for instant load
   localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+  
+  // Dispatch a custom event so layouts can update React state
+  window.dispatchEvent(new CustomEvent("preferences-updated", { detail: p }));
 }
 
 export function loadPreferences(): UserPreferences {
