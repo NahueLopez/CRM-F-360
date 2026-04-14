@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import type { Company } from "../types";
+import type { User } from "../../users/types";
+import { userService } from "../../users/userService";
 import { companySchema, validateForm } from "../../../shared/schemas/formSchemas";
 import { useIsLight } from "../../../shared/hooks/useIsLight";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Sin estado" },
-  { value: "Prospecto", label: "Prospecto" },
-  { value: "Contactado", label: "Contactado" },
-  { value: "En negociación", label: "En negociación" },
-  { value: "Cliente activo", label: "Cliente activo" },
-  { value: "Pausado", label: "Pausado" },
-  { value: "Perdido", label: "Perdido" },
+  { value: "Contacto", label: "📞 Contacto" },
+  { value: "Interesado", label: "💡 Interesado" },
+  { value: "Cierre", label: "🤝 Cierre" },
+  { value: "Implementación", label: "🚀 Implementación" },
+  { value: "Fidelización", label: "⭐ Fidelización" },
+  { value: "Perdido", label: "❌ Perdido" },
 ];
 
 interface Props {
@@ -40,6 +42,11 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel, onError }) 
   });
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    userService.getAll().then(setUsers).catch(() => setUsers([]));
+  }, []);
 
   useEffect(() => {
     setForm({
@@ -120,13 +127,17 @@ const CompanyForm: React.FC<Props> = ({ initial, onSubmit, onCancel, onError }) 
             <label className={`text-[11px] font-medium mb-1 block ${labelCls}`}>
               Comercial asignado
             </label>
-            <input
+            <select
               name="commercialAgent"
               value={form.commercialAgent ?? ""}
               onChange={handleChange}
-              placeholder="Vendedor / Comercial"
               className={`w-full px-3 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${inputCls}`}
-            />
+            >
+              <option value="">— Sin asignar —</option>
+              {users.filter(u => u.active).map((u) => (
+                <option key={u.id} value={u.fullName}>{u.fullName}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={`text-[11px] font-medium mb-1 block ${labelCls}`}>

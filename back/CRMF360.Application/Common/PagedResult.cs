@@ -31,4 +31,9 @@ public class PaginationParams
     public string? Search { get; set; }
     public string? SortBy { get; set; }
     public bool Descending { get; set; }
+
+    // ── CRM Filters (server-side) ──
+    public string? Status { get; set; }
+    public string? CommercialAgent { get; set; }
+    public string? Month { get; set; }  // Format: "2026-04"
 }

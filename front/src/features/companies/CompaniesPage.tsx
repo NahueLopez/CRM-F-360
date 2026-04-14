@@ -4,6 +4,7 @@ import type { ActivityLog } from "../activities/types";
 import type { Contact } from "../contacts/types";
 import { activityService } from "../activities/activityService";
 import { contactService } from "../contacts/contactService";
+import { userService } from "../users/userService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
 import {
@@ -46,16 +47,63 @@ const COLORS = [
   "text-fuchsia-400 border-fuchsia-500/20",
 ];
 
+const FUNNEL_STAGES = [
+  { value: "", label: "Todos los estados" },
+  { value: "Contacto", label: "📞 Contacto", color: "bg-sky-500/15 text-sky-400 border-sky-500/20" },
+  { value: "Interesado", label: "💡 Interesado", color: "bg-indigo-500/15 text-indigo-400 border-indigo-500/20" },
+  { value: "Cierre", label: "🤝 Cierre", color: "bg-amber-500/15 text-amber-400 border-amber-500/20" },
+  { value: "Implementación", label: "🚀 Implementación", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" },
+  { value: "Fidelización", label: "⭐ Fidelización", color: "bg-violet-500/15 text-violet-400 border-violet-500/20" },
+  { value: "Perdido", label: "❌ Perdido", color: "bg-red-500/15 text-red-400 border-red-500/20" },
+];
+
+const getStatusColor = (status?: string) => {
+  const stage = FUNNEL_STAGES.find(s => s.value === status);
+  return stage?.color ?? "bg-slate-500/15 text-slate-400 border-slate-500/20";
+};
+
 const CompaniesPage: React.FC = () => {
   // ── React Query ──
-  const { page, pageSize, search, handleSearch, params, setPage, setPageSize } = usePagination();
-  const { data, isLoading: loading } = useCompaniesPaged(params);
+  const { page, pageSize, search, handleSearch, setPage, setPageSize } = usePagination();
+
+  // Status + agent + month filters (sent to server)
+  const [statusFilter, setStatusFilter] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [agentFilter, setAgentFilter] = useState("");
+
+  // Build params including CRM filters — sent to backend for server-side filtering
+  const queryParams = {
+    page,
+    pageSize,
+    search,
+    status: statusFilter,
+    commercialAgent: agentFilter,
+    month: monthFilter,
+  };
+
+  const { data, isLoading: loading } = useCompaniesPaged(queryParams);
   const companies = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
+
+  // Fetch ALL companies (unfiltered) for status counters only
+  const { data: allCompaniesData } = useCompaniesPaged({ page: 1, pageSize: 200 });
+  const allCompanies = allCompaniesData?.items ?? [];
+
+  // Load real system users for agent filter
+  const [allUsers, setAllUsers] = useState<{fullName: string}[]>([]);
+  useEffect(() => {
+    userService.getAll().then(u => setAllUsers(u.filter((x: any) => x.active))).catch(() => {});
+  }, []);
 
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
   const deleteMutation = useDeleteCompany();
+
+  // When filters change, reset to page 1
+  const handleStatusFilter = (val: string) => { setStatusFilter(val); setPage(1); };
+  const handleAgentFilter = (val: string) => { setAgentFilter(val); setPage(1); };
+  const handleMonthFilter = (val: string) => { setMonthFilter(val); setPage(1); };
+  const handleClearFilters = () => { setStatusFilter(""); setAgentFilter(""); setMonthFilter(""); setPage(1); };
 
   const [editing, setEditing] = useState<Company | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -184,7 +232,11 @@ const CompaniesPage: React.FC = () => {
             <div>
               <h3 className="text-xl font-bold tracking-tight">Empresas</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                {totalCount} {totalCount === 1 ? "empresa registrada" : "empresas registradas"}
+                {statusFilter || monthFilter || agentFilter ? (
+                  <>{companies.length} de {totalCount} empresas{statusFilter ? ` · ${statusFilter}` : ""}{agentFilter ? ` · ${agentFilter}` : ""}{monthFilter ? ` · ${new Date(monthFilter + "-01").toLocaleDateString("es-AR", { month: "long", year: "numeric" })}` : ""}</>
+                ) : (
+                  <>{totalCount} {totalCount === 1 ? "empresa registrada" : "empresas registradas"}</>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -238,9 +290,61 @@ const CompaniesPage: React.FC = () => {
             <input
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Buscar por nombre, CUIT o email..."
+              placeholder="Buscar por nombre, cliente, comercial o email..."
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
             />
+          </div>
+
+          {/* Status filter pills */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-wrap gap-1.5 flex-1">
+              {FUNNEL_STAGES.map((stage) => (
+                <button
+                  key={stage.value}
+                  onClick={() => handleStatusFilter(stage.value)}
+                  className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all border ${
+                    statusFilter === stage.value
+                      ? stage.value
+                        ? stage.color
+                        : "bg-indigo-500/15 text-indigo-400 border-indigo-500/30"
+                      : "bg-slate-800/40 text-slate-500 border-slate-700/30 hover:text-slate-300 hover:border-slate-600/50"
+                  }`}
+                >
+                  {stage.value ? stage.label : "Todos"}
+                  {stage.value && (() => {
+                    const count = allCompanies.filter((c: Company) => c.status === stage.value).length;
+                    return count > 0 ? ` (${count})` : "";
+                  })()}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                value={agentFilter}
+                onChange={(e) => handleAgentFilter(e.target.value)}
+                className="px-2.5 py-1 rounded-lg bg-slate-800/40 border border-slate-700/30 text-[11px] text-slate-400 focus:outline-none focus:border-indigo-500/40 transition"
+              >
+                <option value="">👤 Todos los comerciales</option>
+                {allUsers.map((u) => (
+                  <option key={u.fullName} value={u.fullName}>{u.fullName}</option>
+                ))}
+              </select>
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => handleMonthFilter(e.target.value)}
+                className="px-2.5 py-1 rounded-lg bg-slate-800/40 border border-slate-700/30 text-[11px] text-slate-400 focus:outline-none focus:border-indigo-500/40 transition"
+              />
+              {(statusFilter || agentFilter || monthFilter) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="text-[10px] text-red-400/70 hover:text-red-400 transition px-1.5 py-1 rounded-lg hover:bg-red-500/10"
+                  title="Limpiar filtros"
+                >
+                  ✕ Limpiar
+                </button>
+              )}
+            </div>
           </div>
 
           <Modal
@@ -301,14 +405,7 @@ const CompaniesPage: React.FC = () => {
                         </p>
                       </div>
                       {c.status && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                          c.status === "Cliente activo" ? "bg-emerald-500/15 text-emerald-400" :
-                          c.status === "Prospecto" ? "bg-sky-500/15 text-sky-400" :
-                          c.status === "En negociación" ? "bg-amber-500/15 text-amber-400" :
-                          c.status === "Contactado" ? "bg-indigo-500/15 text-indigo-400" :
-                          c.status === "Perdido" ? "bg-red-500/15 text-red-400" :
-                          "bg-slate-500/15 text-slate-400"
-                        }`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 border ${getStatusColor(c.status)}`}>
                           {c.status}
                         </span>
                       )}
@@ -336,9 +433,15 @@ const CompaniesPage: React.FC = () => {
                             e.stopPropagation();
                             handleDelete(c.id);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          title="Eliminar empresa"
                         >
-                          Eliminar
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                          </svg>
                         </button>
                       )}
                     </div>
@@ -397,14 +500,7 @@ const CompaniesPage: React.FC = () => {
               {selected.status && (
                 <div className="flex items-center gap-2">
                   <span className="text-slate-600 text-xs w-20">Estado</span>
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                    selected.status === "Cliente activo" ? "bg-emerald-500/15 text-emerald-400" :
-                    selected.status === "Prospecto" ? "bg-sky-500/15 text-sky-400" :
-                    selected.status === "En negociación" ? "bg-amber-500/15 text-amber-400" :
-                    selected.status === "Contactado" ? "bg-indigo-500/15 text-indigo-400" :
-                    selected.status === "Perdido" ? "bg-red-500/15 text-red-400" :
-                    "bg-slate-500/15 text-slate-400"
-                  }`}>{selected.status}</span>
+                  <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium border ${getStatusColor(selected.status)}`}>{selected.status}</span>
                 </div>
               )}
               {selected.clientName && (
@@ -459,6 +555,14 @@ const CompaniesPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-slate-600 text-xs w-20">📍 Ubicación</span>
                   <span className="text-slate-300">{selected.location}</span>
+                </div>
+              )}
+              {selected.createdAt && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Fecha alta</span>
+                  <span className="text-slate-400 text-xs tabular-nums">
+                    {new Date(selected.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
                 </div>
               )}
               {selected.followUp && (

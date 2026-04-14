@@ -36,6 +36,23 @@ public class CompanyService : ICompanyService
                 || (c.CommercialAgent != null && EF.Functions.ILike(c.CommercialAgent, pattern)));
         }
 
+        // ── CRM Filters (server-side) ──
+        if (!string.IsNullOrWhiteSpace(p.Status))
+            query = query.Where(c => c.Status == p.Status);
+
+        if (!string.IsNullOrWhiteSpace(p.CommercialAgent))
+            query = query.Where(c => c.CommercialAgent == p.CommercialAgent);
+
+        if (!string.IsNullOrWhiteSpace(p.Month) && p.Month.Length == 7) // "2026-04"
+        {
+            if (int.TryParse(p.Month[..4], out var year) && int.TryParse(p.Month[5..], out var month))
+            {
+                var from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+                var to = from.AddMonths(1);
+                query = query.Where(c => c.CreatedAt >= from && c.CreatedAt < to);
+            }
+        }
+
         // Sort
         query = p.SortBy?.ToLower() switch
         {
