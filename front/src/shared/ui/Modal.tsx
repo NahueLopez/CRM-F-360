@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   open: boolean;
@@ -39,15 +40,15 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, maxWidth 
     "5xl": "max-w-5xl",
   }[maxWidth];
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 sm:px-0 h-dvh w-full"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-md animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -55,7 +56,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, maxWidth 
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className={`relative w-full ${maxWClass} bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in`}
+        className={`relative w-full ${maxWClass} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-2xl shadow-indigo-500/10 dark:shadow-black/50 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in my-auto mx-auto`}
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-700/40 bg-slate-800/50 flex items-center justify-between shrink-0">
@@ -82,7 +83,8 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, maxWidth 
         {/* Body */}
         <div className="p-5 overflow-y-auto min-h-0">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

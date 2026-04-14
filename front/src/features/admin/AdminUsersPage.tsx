@@ -7,7 +7,7 @@ import UsersPage from "../users/UsersPage";
  * the backend returns ALL users across all companies.
  */
 const AdminUsersPage: React.FC = () => {
-    return <UsersPage />;
+    return <UsersPage isGlobalMode={true} />;
 };
 
 export default AdminUsersPage;

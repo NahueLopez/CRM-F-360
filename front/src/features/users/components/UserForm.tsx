@@ -13,17 +13,19 @@ interface UserFormData {
   active: boolean;
   password?: string;
   roleId?: number;
+  isSuperAdmin: boolean;
 }
 
 interface Props {
   initial?: Partial<User>;
   isEditing?: boolean;
+  isGlobalMode?: boolean;
   roles?: RoleOption[];
   onSubmit: (values: Partial<UserFormData>) => void;
   onCancel?: () => void;
 }
 
-const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, onCancel }) => {
+const UserForm: React.FC<Props> = ({ initial, isEditing, isGlobalMode, roles = [], onSubmit, onCancel }) => {
   const [form, setForm] = useState<UserFormData>({
     fullName: initial?.fullName ?? "",
     email: initial?.email ?? "",
@@ -31,6 +33,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
     active: initial?.active ?? true,
     password: "",
     roleId: initial?.roleId ?? undefined,
+    isSuperAdmin: initial?.isSuperAdmin ?? false,
   });
 
   useEffect(() => {
@@ -41,6 +44,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
       active: initial?.active ?? true,
       password: "",
       roleId: initial?.roleId ?? undefined,
+      isSuperAdmin: initial?.isSuperAdmin ?? false,
     });
   }, [initial]);
 
@@ -67,8 +71,8 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
       alert("La contraseña es obligatoria");
       return;
     }
-    if (!isEditing && !form.roleId) {
-      alert("Debe seleccionar un rol");
+    if (!isEditing && !form.roleId && !form.isSuperAdmin) {
+      alert("Debe seleccionar un rol o marcar como Administrador General");
       return;
     }
 
@@ -77,6 +81,7 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
       email: form.email,
       phone: form.phone || undefined,
       active: form.active,
+      isSuperAdmin: form.isSuperAdmin,
     };
 
     if (form.password && form.password.trim() !== "") {
@@ -128,8 +133,21 @@ const UserForm: React.FC<Props> = ({ initial, isEditing, roles = [], onSubmit, o
         />
       )}
 
-      {/* Role selector — always visible */}
-      {roles.length > 0 && (
+      {isGlobalMode && (
+        <label className="inline-flex items-center gap-2 text-sm text-amber-500 font-medium mb-3 mt-1 bg-amber-500/10 px-3 py-2 rounded-lg border border-amber-500/20">
+          <input
+            name="isSuperAdmin"
+            type="checkbox"
+            checked={form.isSuperAdmin}
+            onChange={handleChange}
+            className="rounded border-amber-500/50 bg-slate-800 text-amber-500 focus:ring-amber-500"
+          />
+          ⚡ Es Administrador General (SuperAdmin)
+        </label>
+      )}
+
+      {/* Role selector — hidden if user is marked as SuperAdmin */}
+      {roles.length > 0 && !form.isSuperAdmin && (
         <select
           name="roleId"
           value={form.roleId ?? ""}

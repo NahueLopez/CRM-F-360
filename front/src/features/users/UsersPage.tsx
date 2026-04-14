@@ -35,7 +35,11 @@ const AVATAR_COLORS = [
   { text: "text-indigo-400", border: "border-indigo-500/20" },
 ];
 
-const UsersPage: React.FC = () => {
+interface Props {
+  isGlobalMode?: boolean;
+}
+
+const UsersPage: React.FC<Props> = ({ isGlobalMode }) => {
   const [editing, setEditing] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
   const { addToast } = useToast();
@@ -157,6 +161,7 @@ const UsersPage: React.FC = () => {
             initial={editing ?? {}}
             isEditing={!!editing}
             roles={roles}
+            isGlobalMode={isGlobalMode}
             onSubmit={editing ? handleUpdate : handleCreate}
             onCancel={handleCancelForm}
           />
@@ -202,7 +207,12 @@ const UsersPage: React.FC = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-slate-200 truncate">{u.fullName}</p>
+                        <p className="text-sm font-medium text-slate-200 truncate pr-2">{u.fullName}</p>
+                        {u.isSuperAdmin && (
+                          <span title="Administrador General" className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-amber-500/10 text-amber-500 shrink-0 border border-amber-500/20 mr-1 shadow-[0_0_8px_rgba(245,158,11,0.15)] flex items-center gap-1">
+                            ⚡ SuperAdmin
+                          </span>
+                        )}
                         {u.active !== false ? (
                           <span
                             className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"

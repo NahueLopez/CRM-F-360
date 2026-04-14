@@ -7,4 +7,5 @@ public class UpdateUserDto
     public string? Phone { get; set; }
     public bool Active { get; set; } = true;
     public int? RoleId { get; set; }
+    public bool IsSuperAdmin { get; set; }
 }

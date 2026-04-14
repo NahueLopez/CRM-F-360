@@ -47,7 +47,8 @@ public class UserService : IUserService
                 Phone = dto.Phone,
                 PasswordHash = HashPassword(dto.Password),
                 Active = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsSuperAdmin = !_currentTenantId.HasValue && dto.IsSuperAdmin
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -59,12 +60,12 @@ public class UserService : IUserService
             var existing = await _context.UserRoles.IgnoreQueryFilters()
                 .AnyAsync(ur => ur.UserId == user.Id && ur.TenantId == _currentTenantId.Value);
 
-            if (!existing)
+            if (!existing && dto.RoleId.HasValue)
             {
                 _context.UserRoles.Add(new UserRole
                 {
                     UserId = user.Id,
-                    RoleId = dto.RoleId,
+                    RoleId = dto.RoleId.Value,
                     TenantId = _currentTenantId.Value
                 });
                 await _context.SaveChangesAsync();
@@ -166,6 +167,11 @@ public class UserService : IUserService
         user.Phone = dto.Phone;
         user.Active = dto.Active;
 
+        if (!_currentTenantId.HasValue)
+        {
+            user.IsSuperAdmin = dto.IsSuperAdmin;
+        }
+
         // Update role ONLY for the current tenant — don't touch other tenants
         if (dto.RoleId.HasValue && _currentTenantId.HasValue)
         {
@@ -240,6 +246,7 @@ public class UserService : IUserService
             LastLoginAt = user.LastLoginAt,
             RoleId = relevantRole?.RoleId,
             RoleName = relevantRole?.Role?.Name,
+            IsSuperAdmin = user.IsSuperAdmin,
         };
     }
 

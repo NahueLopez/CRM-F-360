@@ -12,4 +12,5 @@ public class UserDto
     public DateTime? LastLoginAt { get; set; }
     public int? RoleId { get; set; }
     public string? RoleName { get; set; }
+    public bool IsSuperAdmin { get; set; }
 }

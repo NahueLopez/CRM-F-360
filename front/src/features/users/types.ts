@@ -8,4 +8,5 @@ export interface User {
   lastLoginAt?: string;
   roleId?: number;
   roleName?: string;
+  isSuperAdmin?: boolean;
 }
