@@ -6,6 +6,7 @@ import { searchService } from "../../features/search/searchService";
 import type { Notification } from "../../features/notifications/types";
 import type { SearchResult } from "../../features/search/types";
 import { useSidebar } from "./Sidebar";
+import { useIsLight } from "../hooks/useIsLight";
 
 interface TopbarProps {
   title: string;
@@ -32,6 +33,7 @@ const NOTIF_ICONS: Record<string, string> = {
 const Topbar: React.FC<TopbarProps> = ({ title }) => {
   const navigate = useNavigate();
   const { setMobileOpen } = useSidebar();
+  const isLight = useIsLight();
 
   // ── Search ──
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,12 +106,44 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // ── Theme-aware classes ──
+  const headerBg = isLight
+    ? "bg-white/90 backdrop-blur-md border-slate-200"
+    : "bg-slate-950 border-slate-800";
+  const titleCls = isLight ? "text-slate-800" : "text-white";
+  const searchBg = isLight
+    ? "bg-slate-100 border-slate-200"
+    : "bg-slate-800/60 border-slate-700/50";
+  const searchInputCls = isLight
+    ? "text-slate-800 placeholder:text-slate-400"
+    : "text-white placeholder:text-slate-500";
+  const dropdownBg = isLight
+    ? "bg-white border-slate-200 shadow-xl shadow-slate-200/80"
+    : "bg-slate-800 border-slate-700 shadow-xl shadow-black/40";
+
+  // Notification theme
+  const bg = isLight ? "#ffffff" : "#0f172a";
+  const bgHover = isLight ? "#f1f5f9" : "#1e293b";
+  const bgUnread = isLight ? "#eef2ff" : "#1e1b4b";
+  const textTitle = isLight ? "#1e293b" : "#f1f5f9";
+  const textTitleRead = isLight ? "#475569" : "#cbd5e1";
+  const textMsg = isLight ? "#64748b" : "#94a3b8";
+  const textTime = isLight ? "#94a3b8" : "#64748b";
+  const textEmpty = isLight ? "#94a3b8" : "#64748b";
+  const borderColor = isLight ? "#e2e8f0" : "#334155";
+  const borderItem = isLight ? "rgba(226,232,240,0.5)" : "rgba(51,65,85,0.3)";
+  const accentColor =
+    getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() ||
+    "#818cf8";
+
   return (
-    <header className="h-14 border-b border-slate-800 flex items-center justify-between px-3 sm:px-6 bg-slate-950 gap-2 sm:gap-4 relative z-40 animate-topbar-in">
+    <header className={`h-14 border-b flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 relative z-40 animate-topbar-in ${headerBg}`}>
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition"
+        className={`lg:hidden p-1.5 rounded-lg transition ${
+          isLight ? "text-slate-500 hover:text-slate-700 hover:bg-slate-100" : "text-slate-400 hover:text-white hover:bg-slate-800"
+        }`}
         aria-label="Abrir menú"
       >
         <svg
@@ -123,18 +157,18 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
           <path d="M3 6h14M3 10h14M3 14h14" />
         </svg>
       </button>
-      <h2 className="text-lg font-semibold shrink-0 truncate">{title}</h2>
+      <h2 className={`text-lg font-semibold shrink-0 truncate ${titleCls}`}>{title}</h2>
 
       {/* Search bar */}
       <div ref={searchRef} className="relative flex-1 max-w-md hidden sm:block">
-        <div className="flex items-center bg-slate-800/60 rounded-lg border border-slate-700/50 px-3 py-1.5">
-          <span className="text-slate-500 text-sm mr-2">🔍</span>
+        <div className={`flex items-center rounded-lg border px-3 py-1.5 ${searchBg}`}>
+          <span className={`text-sm mr-2 ${isLight ? "text-slate-400" : "text-slate-500"}`}>🔍</span>
           <input
             value={searchQuery}
             onChange={(e) => onSearchInput(e.target.value)}
             onFocus={() => searchResults.length > 0 && setShowSearch(true)}
             placeholder="Buscar empresas, contactos, proyectos..."
-            className="bg-transparent text-sm outline-none w-full placeholder:text-slate-500"
+            className={`bg-transparent text-sm outline-none w-full ${searchInputCls}`}
             aria-label="Buscar en el CRM"
           />
           {searchQuery && (
@@ -144,7 +178,9 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
                 setSearchResults([]);
                 setShowSearch(false);
               }}
-              className="text-slate-500 hover:text-slate-300 text-xs ml-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className={`text-xs ml-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                isLight ? "text-slate-400 hover:text-slate-600" : "text-slate-500 hover:text-slate-300"
+              }`}
               aria-label="Limpiar búsqueda"
             >
               ✕
@@ -153,7 +189,7 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
         </div>
 
         {showSearch && searchResults.length > 0 && (
-          <div className="absolute top-full mt-1 left-0 right-0 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+          <div className={`absolute top-full mt-1 left-0 right-0 rounded-xl border z-50 max-h-80 overflow-y-auto ${dropdownBg}`}>
             {searchResults.map((r, i) => (
               <button
                 key={`${r.type}-${r.id}-${i}`}
@@ -162,12 +198,14 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
                   setShowSearch(false);
                   setSearchQuery("");
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/50 transition text-left"
+                className={`w-full flex items-center gap-3 px-4 py-2.5 transition text-left ${
+                  isLight ? "hover:bg-slate-50" : "hover:bg-slate-700/50"
+                }`}
               >
                 <span className="text-lg">{TYPE_ICONS[r.type] ?? "📄"}</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{r.title}</p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className={`text-sm font-medium truncate ${isLight ? "text-slate-800" : "text-white"}`}>{r.title}</p>
+                  <p className={`text-[10px] ${isLight ? "text-slate-400" : "text-slate-500"}`}>
                     {r.type}
                     {r.subtitle && ` · ${r.subtitle}`}
                   </p>
@@ -183,7 +221,9 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
         <div ref={notifsRef} className="relative">
           <button
             onClick={() => setShowNotifs(!showNotifs)}
-            className="p-2 rounded-lg hover:bg-slate-700/50 transition text-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className={`p-2 rounded-lg transition text-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              isLight ? "hover:bg-slate-100" : "hover:bg-slate-700/50"
+            }`}
             aria-label={`Notificaciones${unreadCount > 0 ? `, ${unreadCount} sin leer` : ""}`}
             aria-expanded={showNotifs}
           >
@@ -195,131 +235,122 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
             )}
           </button>
 
-          {showNotifs &&
-            (() => {
-              const isLight = document.body.classList.contains("light");
-              const bg = isLight ? "#ffffff" : "#0f172a";
-              const bgHover = isLight ? "#f1f5f9" : "#1e293b";
-              const bgUnread = isLight ? "#eef2ff" : "#1e1b4b";
-              const textTitle = isLight ? "#1e293b" : "#f1f5f9";
-              const textTitleRead = isLight ? "#475569" : "#cbd5e1";
-              const textMsg = isLight ? "#64748b" : "#94a3b8";
-              const textTime = isLight ? "#94a3b8" : "#64748b";
-              const textEmpty = isLight ? "#94a3b8" : "#64748b";
-              const borderColor = isLight ? "#e2e8f0" : "#334155";
-              const borderItem = isLight ? "rgba(226,232,240,0.5)" : "rgba(51,65,85,0.3)";
-              const accentColor =
-                getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() ||
-                "#818cf8";
-              return (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0"
-                    style={{ background: "rgba(0,0,0,0.15)", zIndex: 9998 }}
-                    onClick={() => setShowNotifs(false)}
-                  />
-                  <div
-                    className="absolute right-0 top-full mt-1 w-80 rounded-xl shadow-2xl max-h-96 flex flex-col overflow-hidden"
-                    style={{
-                      background: bg,
-                      border: `1px solid ${borderColor}`,
-                      isolation: "isolate",
-                      zIndex: 9999,
-                    }}
-                  >
-                    <div
-                      className="flex items-center justify-between px-4 py-3"
-                      style={{ background: bg, borderBottom: `1px solid ${borderColor}` }}
+          {showNotifs && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0"
+                style={{ background: "rgba(0,0,0,0.15)", zIndex: 9998 }}
+                onClick={() => setShowNotifs(false)}
+              />
+              <div
+                className="absolute right-0 top-full mt-1 w-80 rounded-xl shadow-2xl max-h-96 flex flex-col overflow-hidden"
+                style={{
+                  background: bg,
+                  border: `1px solid ${borderColor}`,
+                  isolation: "isolate",
+                  zIndex: 9999,
+                }}
+              >
+                <div
+                  className="flex items-center justify-between px-4 py-3"
+                  style={{ background: bg, borderBottom: `1px solid ${borderColor}` }}
+                >
+                  <h4 className="text-sm font-semibold" style={{ color: textTitle }}>
+                    Notificaciones
+                  </h4>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      className="text-[10px] hover:underline transition"
+                      style={{ color: accentColor }}
                     >
-                      <h4 className="text-sm font-semibold" style={{ color: textTitle }}>
-                        Notificaciones
-                      </h4>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllRead}
-                          className="text-[10px] hover:underline transition"
-                          style={{ color: accentColor }}
-                        >
-                          Marcar todas leídas
-                        </button>
-                      )}
-                    </div>
-                    <div className="overflow-y-auto flex-1" style={{ background: bg }}>
-                      {notifications.length === 0 ? (
-                        <p className="text-xs p-4 text-center" style={{ color: textEmpty }}>
-                          Sin notificaciones
-                        </p>
-                      ) : (
-                        notifications.map((n) => (
-                          <button
-                            key={n.id}
-                            onClick={() => markRead(n.id)}
-                            className="w-full flex items-start gap-3 px-4 py-3 transition text-left"
+                      Marcar todas leídas
+                    </button>
+                  )}
+                </div>
+                <div className="overflow-y-auto flex-1" style={{ background: bg }}>
+                  {notifications.length === 0 ? (
+                    <p className="text-xs p-4 text-center" style={{ color: textEmpty }}>
+                      Sin notificaciones
+                    </p>
+                  ) : (
+                    notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => markRead(n.id)}
+                        className="w-full flex items-start gap-3 px-4 py-3 transition text-left"
+                        style={{
+                          background: !n.isRead ? bgUnread : bg,
+                          borderBottom: `1px solid ${borderItem}`,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = bgHover)}
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = !n.isRead ? bgUnread : bg)
+                        }
+                      >
+                        <span className="text-base mt-0.5">{NOTIF_ICONS[n.type] ?? "ℹ️"}</span>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className="text-xs"
                             style={{
-                              background: !n.isRead ? bgUnread : bg,
-                              borderBottom: `1px solid ${borderItem}`,
+                              color: !n.isRead ? textTitle : textTitleRead,
+                              fontWeight: !n.isRead ? 600 : 400,
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = bgHover)}
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = !n.isRead ? bgUnread : bg)
-                            }
                           >
-                            <span className="text-base mt-0.5">{NOTIF_ICONS[n.type] ?? "ℹ️"}</span>
-                            <div className="min-w-0 flex-1">
-                              <p
-                                className="text-xs"
-                                style={{
-                                  color: !n.isRead ? textTitle : textTitleRead,
-                                  fontWeight: !n.isRead ? 600 : 400,
-                                }}
-                              >
-                                {n.title}
-                              </p>
-                              {n.message && (
-                                <p
-                                  className="text-[10px] mt-0.5 truncate"
-                                  style={{ color: textMsg }}
-                                >
-                                  {n.message}
-                                </p>
-                              )}
-                              <p className="text-[9px] mt-1" style={{ color: textTime }}>
-                                {new Date(n.createdAt).toLocaleString("es-AR", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </p>
-                            </div>
-                            {!n.isRead && (
-                              <span
-                                className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                                style={{ background: accentColor }}
-                              />
-                            )}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
+                            {n.title}
+                          </p>
+                          {n.message && (
+                            <p
+                              className="text-[10px] mt-0.5 truncate"
+                              style={{ color: textMsg }}
+                            >
+                              {n.message}
+                            </p>
+                          )}
+                          <p className="text-[9px] mt-1" style={{ color: textTime }}>
+                            {new Date(n.createdAt).toLocaleString("es-AR", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        {!n.isRead && (
+                          <span
+                            className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                            style={{ background: accentColor }}
+                          />
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {authStore.user && (
           <Link
             to="/profile"
-            className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 pl-2 sm:pl-3 border-l border-slate-700/50 hover:bg-slate-800/40 p-1.5 rounded-xl transition-colors group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className={`flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 pl-2 sm:pl-3 p-1.5 rounded-xl transition-colors group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 border-l ${
+              isLight
+                ? "border-slate-200 hover:bg-slate-100"
+                : "border-slate-700/50 hover:bg-slate-800/40"
+            }`}
             aria-label="Ir a mi perfil"
           >
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-slate-200 leading-tight group-hover:text-white transition-colors">
+              <p className={`text-sm font-medium leading-tight transition-colors ${
+                isLight ? "text-slate-700 group-hover:text-slate-900" : "text-slate-200 group-hover:text-white"
+              }`}>
                 {authStore.user.fullName}
               </p>
-              <p className="text-[10px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors">
+              <p className={`text-[10px] font-medium transition-colors ${
+                isLight ? "text-slate-400 group-hover:text-slate-500" : "text-slate-500 group-hover:text-slate-400"
+              }`}>
                 {authStore.user.roles?.[0]}
               </p>
             </div>

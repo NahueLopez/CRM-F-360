@@ -40,7 +40,7 @@ const AdminCompaniesPage: React.FC = () => {
         <>
             <div className="space-y-6">
                 {/* Page header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
                         <h2 className={`text-2xl font-bold tracking-tight ${isLight ? "text-slate-800" : "text-white"}`}>Empresas</h2>
                         <p className="text-sm text-slate-500 mt-1">
@@ -49,7 +49,7 @@ const AdminCompaniesPage: React.FC = () => {
                     </div>
                     <button
                         onClick={handleNewClick}
-                        className="px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all shadow-sm active:scale-[0.97]"
+                        className="px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all shadow-sm active:scale-[0.97] w-full sm:w-auto"
                         style={{ backgroundColor: prefs.accentColor }}
                     >
                         + Nueva Empresa
@@ -58,7 +58,7 @@ const AdminCompaniesPage: React.FC = () => {
 
                 {/* Stats bar */}
                 {!isLoading && workspaces.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className={`p-4 rounded-xl border ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-slate-800/40 border-slate-700/50"}`}>
                             <p className={`text-2xl font-bold ${isLight ? "text-slate-800" : "text-white"}`}>{workspaces.length}</p>
                             <p className="text-xs text-slate-500 mt-1">Empresas totales</p>
@@ -86,7 +86,7 @@ const AdminCompaniesPage: React.FC = () => {
                         onAction={handleNewClick}
                     />
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {workspaces.map((w) => (
                             <div
                                 key={w.id}

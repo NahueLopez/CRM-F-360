@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import type { Company } from "./types";
 import type { ActivityLog } from "../activities/types";
+import type { Contact } from "../contacts/types";
 import { activityService } from "../activities/activityService";
+import { contactService } from "../contacts/contactService";
 import { downloadCsvFromData } from "../../shared/utils/exportService";
 import { useToast } from "../../shared/context/ToastContext";
 import {
@@ -65,6 +67,21 @@ const CompaniesPage: React.FC = () => {
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
 
+  // Contacts inside company panel
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactForm, setContactForm] = useState({ fullName: "", email: "", phone: "", position: "", notes: "" });
+  const [savingContact, setSavingContact] = useState(false);
+
+  const loadContacts = useCallback(async (companyId: number) => {
+    try {
+      const data = await contactService.getByCompany(companyId);
+      setContacts(data);
+    } catch {
+      setContacts([]);
+    }
+  }, []);
+
   const loadActivities = useCallback(async (companyId: number) => {
     try {
       const data = await activityService.getByCompany(companyId);
@@ -75,8 +92,39 @@ const CompaniesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selected) loadActivities(selected.id);
-  }, [selected, loadActivities]);
+    if (selected) {
+      loadActivities(selected.id);
+      loadContacts(selected.id);
+    }
+  }, [selected, loadActivities, loadContacts]);
+
+  const handleCreateContact = async () => {
+    if (!selected || !contactForm.fullName.trim()) return;
+    setSavingContact(true);
+    try {
+      await contactService.create({ companyId: selected.id, ...contactForm });
+      setContactForm({ fullName: "", email: "", phone: "", position: "", notes: "" });
+      setShowContactForm(false);
+      loadContacts(selected.id);
+      addToast("success", "Contacto creado");
+    } catch {
+      addToast("error", "Error al crear contacto");
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleDeleteContact = async (contactId: number) => {
+    const ok = await confirm({ title: "Eliminar contacto", message: "¿Eliminar este contacto?", variant: "danger" });
+    if (!ok) return;
+    try {
+      await contactService.remove(contactId);
+      if (selected) loadContacts(selected.id);
+      addToast("success", "Contacto eliminado");
+    } catch {
+      addToast("error", "Error al eliminar");
+    }
+  };
 
   const handleNewClick = () => {
     setEditing(null);
@@ -129,10 +177,10 @@ const CompaniesPage: React.FC = () => {
 
   return (
     <>
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left - main content */}
-        <div className={`space-y-5 ${selected ? "flex-1 max-w-[55%]" : "w-full"}`}>
-          <div className="flex items-center justify-between">
+        <div className={`space-y-5 ${selected ? "flex-1 lg:max-w-[55%]" : "w-full"}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-bold tracking-tight">Empresas</h3>
               <p className="text-sm text-slate-500 mt-0.5">
@@ -146,10 +194,18 @@ const CompaniesPage: React.FC = () => {
                     downloadCsvFromData(
                       companies,
                       [
-                        { key: "name", header: "Nombre" },
+                        { key: "commercialAgent", header: "Comercial" },
+                        { key: "name", header: "Empresa" },
+                        { key: "clientName", header: "Cliente" },
+                        { key: "status", header: "Estado" },
+                        { key: "website", header: "Web" },
+                        { key: "socialMedia", header: "Redes" },
+                        { key: "email", header: "Mail" },
+                        { key: "phone", header: "Número" },
+                        { key: "followUp", header: "Seguimiento" },
+                        { key: "location", header: "Ubicación" },
                         { key: "cuit", header: "CUIT" },
-                        { key: "email", header: "Email" },
-                        { key: "phone", header: "Teléfono" },
+                        { key: "industry", header: "Rubro" },
                         { key: "notes", header: "Notas" },
                       ],
                       `empresas_${new Date().toISOString().slice(0, 10)}.csv`,
@@ -225,7 +281,7 @@ const CompaniesPage: React.FC = () => {
                   <div
                     key={c.id}
                     onClick={() => setSelected(c)}
-                    className={`group flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all
+                    className={`group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border cursor-pointer transition-all gap-2 sm:gap-0
                       ${selected?.id === c.id
                         ? "bg-indigo-950/30 border-indigo-500/40"
                         : "bg-slate-800/30 border-slate-700/40 hover:bg-slate-800/60 hover:border-slate-700/60"
@@ -240,12 +296,24 @@ const CompaniesPage: React.FC = () => {
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate text-slate-200">{c.name}</p>
                         <p className="text-xs text-slate-500 truncate">
-                          {c.cuit ? `${c.cuit} · ` : ""}
+                          {c.clientName ? `${c.clientName} · ` : ""}
                           {c.email ?? "Sin email"}
                         </p>
                       </div>
+                      {c.status && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                          c.status === "Cliente activo" ? "bg-emerald-500/15 text-emerald-400" :
+                          c.status === "Prospecto" ? "bg-sky-500/15 text-sky-400" :
+                          c.status === "En negociación" ? "bg-amber-500/15 text-amber-400" :
+                          c.status === "Contactado" ? "bg-indigo-500/15 text-indigo-400" :
+                          c.status === "Perdido" ? "bg-red-500/15 text-red-400" :
+                          "bg-slate-500/15 text-slate-400"
+                        }`}>
+                          {c.status}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                       {c.phone && (
                         <span className="text-xs text-slate-600 tabular-nums hidden lg:inline">
                           {c.phone}
@@ -293,7 +361,7 @@ const CompaniesPage: React.FC = () => {
 
         {/* Right - detail panel */}
         {selected && (
-          <div className="w-[45%] shrink-0 bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto animate-page-in">
+          <div className="w-full lg:w-[45%] shrink-0 bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto animate-page-in">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-lg font-bold text-indigo-400">
@@ -326,27 +394,187 @@ const CompaniesPage: React.FC = () => {
             </div>
 
             <div className="space-y-2 text-sm">
+              {selected.status && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Estado</span>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                    selected.status === "Cliente activo" ? "bg-emerald-500/15 text-emerald-400" :
+                    selected.status === "Prospecto" ? "bg-sky-500/15 text-sky-400" :
+                    selected.status === "En negociación" ? "bg-amber-500/15 text-amber-400" :
+                    selected.status === "Contactado" ? "bg-indigo-500/15 text-indigo-400" :
+                    selected.status === "Perdido" ? "bg-red-500/15 text-red-400" :
+                    "bg-slate-500/15 text-slate-400"
+                  }`}>{selected.status}</span>
+                </div>
+              )}
+              {selected.clientName && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Cliente</span>
+                  <span className="text-slate-300">{selected.clientName}</span>
+                </div>
+              )}
+              {selected.commercialAgent && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Comercial</span>
+                  <span className="text-slate-300">{selected.commercialAgent}</span>
+                </div>
+              )}
               {selected.cuit && (
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-600 text-xs w-16">CUIT</span>
+                  <span className="text-slate-600 text-xs w-20">CUIT</span>
                   <span className="text-slate-300 tabular-nums">{selected.cuit}</span>
+                </div>
+              )}
+              {selected.industry && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Rubro</span>
+                  <span className="text-slate-300">{selected.industry}</span>
                 </div>
               )}
               {selected.email && (
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-600 text-xs w-16">Email</span>
+                  <span className="text-slate-600 text-xs w-20">Email</span>
                   <span className="text-indigo-400">{selected.email}</span>
                 </div>
               )}
               {selected.phone && (
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-600 text-xs w-16">Teléfono</span>
+                  <span className="text-slate-600 text-xs w-20">Teléfono</span>
                   <span className="text-slate-300 tabular-nums">{selected.phone}</span>
+                </div>
+              )}
+              {selected.website && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Web</span>
+                  <a href={selected.website} target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline truncate">{selected.website}</a>
+                </div>
+              )}
+              {selected.socialMedia && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">Redes</span>
+                  <span className="text-slate-300 truncate">{selected.socialMedia}</span>
+                </div>
+              )}
+              {selected.location && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 text-xs w-20">📍 Ubicación</span>
+                  <span className="text-slate-300">{selected.location}</span>
+                </div>
+              )}
+              {selected.followUp && (
+                <div className="mt-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-xs text-amber-300 leading-relaxed">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 block mb-1">📋 Seguimiento</span>
+                  {selected.followUp}
                 </div>
               )}
               {selected.notes && (
                 <div className="mt-2 p-3 rounded-lg bg-slate-800/50 text-xs text-slate-400 leading-relaxed">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">📝 Notas</span>
                   {selected.notes}
+                </div>
+              )}
+            </div>
+
+            {/* ── Contactos de la empresa ── */}
+            <div className="border-t border-slate-700/40 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  👥 Contactos ({contacts.length})
+                </h4>
+                {authStore.hasPermission("contacts.create") && (
+                  <button
+                    onClick={() => setShowContactForm(!showContactForm)}
+                    className="text-[10px] font-medium text-indigo-400 hover:text-indigo-300 transition"
+                  >
+                    {showContactForm ? "✕ Cerrar" : "+ Agregar"}
+                  </button>
+                )}
+              </div>
+
+              {/* Inline contact form */}
+              {showContactForm && (
+                <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-3 mb-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={contactForm.fullName}
+                      onChange={(e) => setContactForm(p => ({ ...p, fullName: e.target.value }))}
+                      placeholder="Nombre completo *"
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-900/50 border border-slate-700/40 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                    />
+                    <input
+                      value={contactForm.position}
+                      onChange={(e) => setContactForm(p => ({ ...p, position: e.target.value }))}
+                      placeholder="Cargo / Rol"
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-900/50 border border-slate-700/40 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                    />
+                    <input
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm(p => ({ ...p, email: e.target.value }))}
+                      placeholder="Email"
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-900/50 border border-slate-700/40 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                    />
+                    <input
+                      value={contactForm.phone}
+                      onChange={(e) => setContactForm(p => ({ ...p, phone: e.target.value }))}
+                      placeholder="Teléfono"
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-900/50 border border-slate-700/40 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                    />
+                  </div>
+                  <input
+                    value={contactForm.notes}
+                    onChange={(e) => setContactForm(p => ({ ...p, notes: e.target.value }))}
+                    placeholder="Notas"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900/50 border border-slate-700/40 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-colors"
+                  />
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      onClick={() => { setShowContactForm(false); setContactForm({ fullName: "", email: "", phone: "", position: "", notes: "" }); }}
+                      className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleCreateContact}
+                      disabled={savingContact || !contactForm.fullName.trim()}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-medium text-white transition disabled:opacity-40"
+                    >
+                      {savingContact ? "Guardando..." : "Crear contacto"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Contacts list */}
+              {contacts.length === 0 ? (
+                <p className="text-xs text-slate-600 text-center py-3">Sin contactos registrados</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {contacts.map((ct) => (
+                    <div key={ct.id} className="group flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/30 border border-slate-700/20 hover:border-slate-600/40 transition">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-violet-500/15 border border-violet-500/20 flex items-center justify-center text-[10px] font-bold text-violet-400 shrink-0">
+                          {ct.fullName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-slate-200 truncate">
+                            {ct.fullName}
+                            {ct.position && <span className="text-slate-500 font-normal"> · {ct.position}</span>}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {ct.email || ct.phone || "Sin datos de contacto"}
+                          </p>
+                        </div>
+                      </div>
+                      {authStore.hasPermission("contacts.delete") && (
+                        <button
+                          onClick={() => handleDeleteContact(ct.id)}
+                          className="opacity-0 group-hover:opacity-100 text-[10px] text-red-400/60 hover:text-red-400 transition px-1.5 py-0.5 rounded"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

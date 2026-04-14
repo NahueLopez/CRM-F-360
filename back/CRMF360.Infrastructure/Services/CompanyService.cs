@@ -31,7 +31,9 @@ public class CompanyService : ICompanyService
             var pattern = $"%{p.Search}%";
             query = query.Where(c => EF.Functions.ILike(c.Name, pattern)
                 || (c.Cuit != null && c.Cuit.Contains(p.Search))
-                || (c.Email != null && EF.Functions.ILike(c.Email, pattern)));
+                || (c.Email != null && EF.Functions.ILike(c.Email, pattern))
+                || (c.ClientName != null && EF.Functions.ILike(c.ClientName, pattern))
+                || (c.CommercialAgent != null && EF.Functions.ILike(c.CommercialAgent, pattern)));
         }
 
         // Sort
@@ -39,6 +41,8 @@ public class CompanyService : ICompanyService
         {
             "name" => p.Descending ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
             "createdat" => p.Descending ? query.OrderByDescending(c => c.CreatedAt) : query.OrderBy(c => c.CreatedAt),
+            "status" => p.Descending ? query.OrderByDescending(c => c.Status) : query.OrderBy(c => c.Status),
+            "commercial" => p.Descending ? query.OrderByDescending(c => c.CommercialAgent) : query.OrderBy(c => c.CommercialAgent),
             _ => query.OrderBy(c => c.Name),
         };
 
@@ -78,6 +82,12 @@ public class CompanyService : ICompanyService
             Industry = dto.Industry,
             Website = dto.Website,
             Notes = dto.Notes,
+            ClientName = dto.ClientName,
+            CommercialAgent = dto.CommercialAgent,
+            Status = dto.Status,
+            SocialMedia = dto.SocialMedia,
+            FollowUp = dto.FollowUp,
+            Location = dto.Location,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -99,6 +109,12 @@ public class CompanyService : ICompanyService
         entity.Industry = dto.Industry;
         entity.Website = dto.Website;
         entity.Notes = dto.Notes;
+        entity.ClientName = dto.ClientName;
+        entity.CommercialAgent = dto.CommercialAgent;
+        entity.Status = dto.Status;
+        entity.SocialMedia = dto.SocialMedia;
+        entity.FollowUp = dto.FollowUp;
+        entity.Location = dto.Location;
         entity.Active = dto.Active;
 
         await _db.SaveChangesAsync(ct);
@@ -126,6 +142,12 @@ public class CompanyService : ICompanyService
         Industry = c.Industry,
         Website = c.Website,
         Notes = c.Notes,
+        ClientName = c.ClientName,
+        CommercialAgent = c.CommercialAgent,
+        Status = c.Status,
+        SocialMedia = c.SocialMedia,
+        FollowUp = c.FollowUp,
+        Location = c.Location,
         Active = c.Active,
         CreatedAt = c.CreatedAt,
     };

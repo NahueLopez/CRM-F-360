@@ -12,6 +12,15 @@ public class Company : ISoftDeletable, ITenantEntity, IConcurrencyAware
     public string? Industry { get; set; }
     public string? Website { get; set; }
     public string? Notes { get; set; }
+
+    // ── New CRM fields ──
+    public string? ClientName { get; set; }
+    public string? CommercialAgent { get; set; }
+    public string? Status { get; set; }
+    public string? SocialMedia { get; set; }
+    public string? FollowUp { get; set; }
+    public string? Location { get; set; }
+
     public bool Active { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

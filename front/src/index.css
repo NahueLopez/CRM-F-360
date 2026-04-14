@@ -1510,6 +1510,18 @@ summary {
   animation: page-in 0.25s ease-out;
 }
 
+/* Workspace switcher dropdown animation */
+@keyframes workspace-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Global table row hover */
 table tbody tr {
   transition: background-color 0.15s ease;

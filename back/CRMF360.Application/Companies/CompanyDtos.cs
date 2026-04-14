@@ -12,6 +12,12 @@ public class CompanyDto
     public string? Industry { get; set; }
     public string? Website { get; set; }
     public string? Notes { get; set; }
+    public string? ClientName { get; set; }
+    public string? CommercialAgent { get; set; }
+    public string? Status { get; set; }
+    public string? SocialMedia { get; set; }
+    public string? FollowUp { get; set; }
+    public string? Location { get; set; }
     public bool Active { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -39,6 +45,23 @@ public class CreateCompanyDto
     public string? Website { get; set; }
 
     public string? Notes { get; set; }
+
+    [MaxLength(200)]
+    public string? ClientName { get; set; }
+
+    [MaxLength(200)]
+    public string? CommercialAgent { get; set; }
+
+    [MaxLength(50)]
+    public string? Status { get; set; }
+
+    [MaxLength(500)]
+    public string? SocialMedia { get; set; }
+
+    public string? FollowUp { get; set; }
+
+    [MaxLength(500)]
+    public string? Location { get; set; }
 }
 
 public class UpdateCompanyDto
@@ -64,5 +87,23 @@ public class UpdateCompanyDto
     public string? Website { get; set; }
 
     public string? Notes { get; set; }
+
+    [MaxLength(200)]
+    public string? ClientName { get; set; }
+
+    [MaxLength(200)]
+    public string? CommercialAgent { get; set; }
+
+    [MaxLength(50)]
+    public string? Status { get; set; }
+
+    [MaxLength(500)]
+    public string? SocialMedia { get; set; }
+
+    public string? FollowUp { get; set; }
+
+    [MaxLength(500)]
+    public string? Location { get; set; }
+
     public bool Active { get; set; }
 }

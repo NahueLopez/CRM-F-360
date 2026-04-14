@@ -9,6 +9,8 @@ import {
 } from "../../shared/hooks/useRoomQuery";
 import { useToast } from "../../shared/context/ToastContext";
 import { authStore } from "../../shared/auth/authStore";
+import { useConfirm } from "../../shared/ui/useConfirm";
+import ConfirmModal from "../../shared/ui/ConfirmModal";
 import type { Task } from "../tasks/types";
 import type { Project } from "../projects/types";
 import type { CreateReservationDto } from "../rooms/types";
@@ -45,6 +47,7 @@ const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
 
 const CalendarPage: React.FC = () => {
   const { addToast } = useToast();
+  const { confirm: confirmAction, confirmProps } = useConfirm();
   const isManager = authStore.hasAnyRole("Admin", "Manager");
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -184,7 +187,13 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleCancelReservation = async (id: number) => {
-    if (!confirm("¿Cancelar esta reserva?")) return;
+    const ok = await confirmAction({
+      title: "Cancelar reserva",
+      message: "¿Estás seguro de cancelar esta reserva?",
+      confirmLabel: "Sí, cancelar",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await deleteReservation.mutateAsync(id);
       addToast("success", "Reserva cancelada");
@@ -226,20 +235,20 @@ const CalendarPage: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold">Calendario</h3>
           <p className="text-sm text-slate-400">Tareas, hitos de proyecto y reservas de salas.</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Project filter */}
           <select
             value={selectedProjectId}
             onChange={(e) =>
               setSelectedProjectId(e.target.value === "all" ? "all" : Number(e.target.value))
             }
-            className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200"
+            className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200"
           >
             <option value="all">Todos los proyectos</option>
             {projects.map((p) => (
@@ -283,7 +292,7 @@ const CalendarPage: React.FC = () => {
       </div>
 
       {/* Main layout: calendar + side panel */}
-      <div className={`flex gap-4 ${selectedDay ? "" : ""}`}>
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Calendar grid */}
         <div
           className={`bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden transition-all ${selectedDay ? "flex-1" : "w-full"}`}
@@ -316,7 +325,7 @@ const CalendarPage: React.FC = () => {
                     setSelectedDay(dateKey === selectedDay ? null : dateKey);
                     setShowReserveForm(false);
                   }}
-                  className={`min-h-[100px] border-b border-r border-slate-700/30 p-1.5 cursor-pointer transition-all
+                  className={`min-h-[80px] sm:min-h-[100px] border-b border-r border-slate-700/30 p-1 sm:p-1.5 cursor-pointer transition-all
                   ${isCurrentMonth ? "bg-slate-900/20 hover:bg-slate-800/40" : "bg-slate-900/50"}
                   ${isToday ? "ring-1 ring-inset ring-indigo-500/50 bg-indigo-500/5" : ""}
                   ${isSelected ? "ring-2 ring-inset ring-indigo-500 bg-indigo-500/10" : ""}
@@ -382,7 +391,7 @@ const CalendarPage: React.FC = () => {
 
         {/* ── Side panel: Day detail ── */}
         {selectedDay && (
-          <div className="w-80 shrink-0 bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 space-y-4 self-start sticky top-4">
+          <div className="w-full lg:w-80 shrink-0 bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 space-y-4 self-start lg:sticky lg:top-4">
             {/* Panel header */}
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-slate-200 capitalize">
@@ -528,7 +537,7 @@ const CalendarPage: React.FC = () => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[10px] text-slate-400">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] text-slate-400">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-emerald-500/50" /> Inicio proyecto
         </span>
@@ -548,6 +557,8 @@ const CalendarPage: React.FC = () => {
           <span className="w-2 h-2 rounded-full bg-slate-500/80" /> Baja
         </span>
       </div>
+
+      <ConfirmModal {...confirmProps} />
     </div>
   );
 };

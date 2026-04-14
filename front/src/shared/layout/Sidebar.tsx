@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { authStore } from "../auth/authStore";
+import { useIsLight } from "../hooks/useIsLight";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 
 interface NavItem {
@@ -49,29 +50,17 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
 };
 
 /* ── NavMenu: nav with always-visible scroll arrows ── */
-const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
+const NavMenu: React.FC<{ items: NavItem[]; isLight: boolean }> = ({ items, isLight }) => {
   const ref = useRef<HTMLElement>(null);
-
-  const arrowBtn: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    width: "100%",
-    padding: "4px 0",
-    color: "#64748b",
-    cursor: "pointer",
-    background: "none",
-    border: "none",
-    fontSize: 12,
-  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Up arrow */}
       <button
         onClick={() => ref.current?.scrollBy({ top: -120, behavior: "smooth" })}
-        style={arrowBtn}
+        className={`flex items-center justify-center w-full py-1 transition-colors ${
+          isLight ? "text-slate-400 hover:text-slate-600" : "text-slate-600 hover:text-slate-400"
+        }`}
         tabIndex={-1}
         aria-label="Scroll up"
       >
@@ -92,9 +81,14 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isActive
-                ? "bg-indigo-500/10 text-white font-medium"
-                : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              `relative flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                isActive
+                  ? isLight
+                    ? "bg-indigo-50 text-slate-800 font-medium"
+                    : "bg-indigo-500/10 text-white font-medium"
+                  : isLight
+                    ? "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
               }`
             }
             aria-current={undefined}
@@ -115,7 +109,9 @@ const NavMenu: React.FC<{ items: NavItem[] }> = ({ items }) => {
       {/* Down arrow */}
       <button
         onClick={() => ref.current?.scrollBy({ top: 120, behavior: "smooth" })}
-        style={arrowBtn}
+        className={`flex items-center justify-center w-full py-1 transition-colors ${
+          isLight ? "text-slate-400 hover:text-slate-600" : "text-slate-600 hover:text-slate-400"
+        }`}
         tabIndex={-1}
         aria-label="Scroll down"
       >
@@ -131,6 +127,7 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const isLight = useIsLight();
 
   const items = allItems.filter(
     (item) => {
@@ -161,19 +158,26 @@ const Sidebar: React.FC = () => {
       .slice(0, 2)
       .toUpperCase() ?? "??";
 
-  // ... Inside header:
+  // Theme-aware classes
+  const sidebarBg = isLight
+    ? "bg-white/90 backdrop-blur-md border-slate-200"
+    : "bg-slate-950 border-slate-800";
+  const borderCls = isLight ? "border-slate-200" : "border-slate-800";
+
   const header = (
-    <div className="p-4 border-b border-slate-800">
+    <div className={`p-4 border-b ${borderCls}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="CRM F360 Logo" className="w-8 h-8 rounded-lg shadow-sm" />
-          <h1 className="text-xl font-bold tracking-tight">
+          <h1 className={`text-xl font-bold tracking-tight ${isLight ? "text-slate-800" : "text-white"}`}>
             CRM <span className="text-indigo-400">F360</span>
           </h1>
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden text-slate-400 hover:text-white text-xl p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className={`lg:hidden text-xl p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+            isLight ? "text-slate-400 hover:text-slate-600" : "text-slate-400 hover:text-white"
+          }`}
           aria-label="Cerrar menú"
         >
           ✕
@@ -184,7 +188,7 @@ const Sidebar: React.FC = () => {
   );
 
   const footer = authStore.user && (
-    <div className="p-4 border-t border-slate-800">
+    <div className={`p-4 border-t ${borderCls}`}>
       <button
         onClick={() => navigate("/profile")}
         className="flex items-center gap-3 w-full text-left group mb-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
@@ -194,17 +198,23 @@ const Sidebar: React.FC = () => {
           {initials}
         </div>
         <div className="min-w-0">
-          <span className="text-xs font-medium text-slate-300 group-hover:text-white transition block truncate">
+          <span className={`text-xs font-medium transition block truncate ${
+            isLight ? "text-slate-700 group-hover:text-slate-900" : "text-slate-300 group-hover:text-white"
+          }`}>
             {authStore.user.fullName}
           </span>
-          <span className="text-[10px] text-slate-500 group-hover:text-indigo-400 transition block">
+          <span className={`text-[10px] transition block ${
+            isLight ? "text-slate-400 group-hover:text-indigo-500" : "text-slate-500 group-hover:text-indigo-400"
+          }`}>
             Ver perfil →
           </span>
         </div>
       </button>
       <button
         onClick={handleLogout}
-        className="text-xs text-slate-500 hover:text-red-400 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className={`text-xs transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+          isLight ? "text-slate-400 hover:text-red-500" : "text-slate-500 hover:text-red-400"
+        }`}
         aria-label="Cerrar sesión"
       >
         Cerrar sesión
@@ -216,11 +226,11 @@ const Sidebar: React.FC = () => {
     <>
       {/* Desktop sidebar */}
       <aside
-        className="hidden lg:flex w-64 bg-slate-950 border-r border-slate-800 flex-col shrink-0 sticky top-0 h-screen overflow-hidden animate-sidebar-in"
+        className={`hidden lg:flex w-64 border-r flex-col shrink-0 sticky top-0 h-screen overflow-hidden animate-sidebar-in ${sidebarBg}`}
         aria-label="Barra lateral"
       >
         {header}
-        <NavMenu items={items} />
+        <NavMenu items={items} isLight={isLight} />
         {footer}
       </aside>
 
@@ -234,12 +244,12 @@ const Sidebar: React.FC = () => {
 
       {/* Mobile sidebar drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 border-r border-slate-800 flex flex-col 
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r flex flex-col 
                     transform transition-transform duration-300 ease-in-out lg:hidden
-                    ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+                    ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${sidebarBg}`}
       >
         {header}
-        <NavMenu items={items} />
+        <NavMenu items={items} isLight={isLight} />
         {footer}
       </aside>
     </>

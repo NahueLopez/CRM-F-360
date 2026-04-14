@@ -16,6 +16,12 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.Phone).HasMaxLength(50);
         builder.Property(c => c.Industry).HasMaxLength(100);
         builder.Property(c => c.Website).HasMaxLength(200);
+        builder.Property(c => c.ClientName).HasMaxLength(200);
+        builder.Property(c => c.CommercialAgent).HasMaxLength(200);
+        builder.Property(c => c.Status).HasMaxLength(50);
+        builder.Property(c => c.SocialMedia).HasMaxLength(500);
+        builder.Property(c => c.FollowUp).HasMaxLength(2000);
+        builder.Property(c => c.Location).HasMaxLength(500);
         builder.HasIndex(c => c.TenantId);
     }
 }

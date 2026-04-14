@@ -9,6 +9,12 @@ export const companySchema = z.object({
   industry: z.string().max(100).optional().or(z.literal("")),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   notes: z.string().max(2000, "Máximo 2000 caracteres").optional().or(z.literal("")),
+  clientName: z.string().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
+  commercialAgent: z.string().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
+  status: z.string().max(50).optional().or(z.literal("")),
+  socialMedia: z.string().max(500).optional().or(z.literal("")),
+  followUp: z.string().max(2000).optional().or(z.literal("")),
+  location: z.string().max(500).optional().or(z.literal("")),
 });
 export type CompanyFormData = z.infer<typeof companySchema>;
 

@@ -58,10 +58,10 @@ public class CompaniesController : ControllerBase
     {
         var companies = await _companyService.GetAllAsync(ct);
         var csv = new System.Text.StringBuilder();
-        csv.AppendLine("Id,Name,CUIT,Email,Phone,Active,CreatedAt");
+        csv.AppendLine("Comercial,Empresa,Cliente,Estado,Web,Redes,Mail,Numero,Seguimiento,Ubicacion,CUIT,Rubro,Notas,Activa,FechaCreacion");
         foreach (var c in companies)
         {
-            csv.AppendLine($"{c.Id},\"{Escape(c.Name)}\",\"{Escape(c.Cuit)}\",\"{Escape(c.Email)}\",\"{Escape(c.Phone)}\",{c.Active},{c.CreatedAt:yyyy-MM-dd}");
+            csv.AppendLine($"\"{Escape(c.CommercialAgent)}\",\"{Escape(c.Name)}\",\"{Escape(c.ClientName)}\",\"{Escape(c.Status)}\",\"{Escape(c.Website)}\",\"{Escape(c.SocialMedia)}\",\"{Escape(c.Email)}\",\"{Escape(c.Phone)}\",\"{Escape(c.FollowUp)}\",\"{Escape(c.Location)}\",\"{Escape(c.Cuit)}\",\"{Escape(c.Industry)}\",\"{Escape(c.Notes)}\",{c.Active},{c.CreatedAt:yyyy-MM-dd}");
         }
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
         return File(bytes, "text/csv", $"companies_{DateTime.UtcNow:yyyyMMdd}.csv");

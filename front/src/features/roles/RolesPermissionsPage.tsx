@@ -4,6 +4,7 @@ import type { Permission, RoleWithPermissions } from "./rolesService";
 import { useToast } from "../../shared/context/ToastContext";
 import { useConfirm } from "../../shared/ui/useConfirm";
 import ConfirmModal from "../../shared/ui/ConfirmModal";
+import { useIsLight } from "../../shared/hooks/useIsLight";
 
 // ── Module display config ──
 const MODULE_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
@@ -38,6 +39,7 @@ const PROTECTED_ROLES = ["Admin", "Manager", "User"];
 const RolesPermissionsPage = () => {
   const { addToast } = useToast();
   const { confirm, confirmProps } = useConfirm();
+  const isLight = useIsLight();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [roles, setRoles] = useState<RoleWithPermissions[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,14 +174,25 @@ const RolesPermissionsPage = () => {
     ? permissions.filter((p) => selectedRole.permissions.includes(p.name)).length
     : 0;
 
+  // ── Theme-aware classes ──
+  const cardCls = isLight
+    ? "bg-white border-slate-200 shadow-sm"
+    : "bg-slate-800/25 border-slate-700/30";
+  const cardHoverCls = isLight
+    ? "hover:border-slate-300"
+    : "hover:border-slate-600/40";
+  const headingCls = isLight ? "text-slate-800" : "text-white";
+  const subCls = isLight ? "text-slate-500" : "text-slate-500";
+  const borderSubtle = isLight ? "border-slate-100" : "border-slate-700/20";
+
   if (loading) return <PageSkeleton />;
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Roles y Permisos</h2>
-        <p className="text-sm text-slate-500 mt-1">
+        <h2 className={`text-2xl font-bold tracking-tight ${headingCls}`}>Roles y Permisos</h2>
+        <p className={`text-sm mt-1 ${subCls}`}>
           Seleccioná un rol y configurá qué puede hacer en cada módulo
         </p>
       </div>
@@ -196,13 +209,19 @@ const RolesPermissionsPage = () => {
               className={`group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isSelected
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                  : "bg-slate-800/40 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-slate-700/30"
+                  : isLight
+                    ? "bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-slate-200 shadow-sm"
+                    : "bg-slate-800/40 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-slate-700/30"
               }`}
             >
               <span>{role.name}</span>
               <span
                 className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${
-                  isSelected ? "bg-white/20 text-white" : "bg-slate-700/50 text-slate-500"
+                  isSelected
+                    ? "bg-white/20 text-white"
+                    : isLight
+                      ? "bg-slate-100 text-slate-400"
+                      : "bg-slate-700/50 text-slate-500"
                 }`}
               >
                 {permCount}/{totalPerms}
@@ -226,7 +245,11 @@ const RolesPermissionsPage = () => {
                 }
               }}
               placeholder="Nombre del rol..."
-              className="px-3 py-2 rounded-xl bg-slate-800/60 border border-indigo-500/50 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-40"
+              className={`px-3 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-40 ${
+                isLight
+                  ? "bg-white border-indigo-300 text-slate-800 placeholder:text-slate-400"
+                  : "bg-slate-800/60 border-indigo-500/50 text-white placeholder:text-slate-600"
+              }`}
             />
             <button
               onClick={handleCreate}
@@ -240,7 +263,11 @@ const RolesPermissionsPage = () => {
                 setShowNewRole(false);
                 setNewRoleName("");
               }}
-              className="px-3 py-2 rounded-xl bg-slate-700/50 text-slate-400 text-xs hover:bg-slate-700 transition"
+              className={`px-3 py-2 rounded-xl text-xs transition ${
+                isLight
+                  ? "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  : "bg-slate-700/50 text-slate-400 hover:bg-slate-700"
+              }`}
             >
               ✕
             </button>
@@ -248,7 +275,11 @@ const RolesPermissionsPage = () => {
         ) : (
           <button
             onClick={() => setShowNewRole(true)}
-            className="px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-700/50 text-slate-500 text-sm hover:border-indigo-500/50 hover:text-indigo-400 transition-all"
+            className={`px-4 py-2.5 rounded-xl border-2 border-dashed text-sm transition-all ${
+              isLight
+                ? "border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-500"
+                : "border-slate-700/50 text-slate-500 hover:border-indigo-500/50 hover:text-indigo-400"
+            }`}
           >
             + Nuevo rol
           </button>
@@ -259,22 +290,22 @@ const RolesPermissionsPage = () => {
       {selectedRole && (
         <>
           {/* Role info bar */}
-          <div className="flex items-center justify-between bg-slate-800/30 border border-slate-700/30 rounded-xl px-4 py-3">
+          <div className={`flex items-center justify-between border rounded-xl px-4 py-3 ${cardCls}`}>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold">
                   {selectedRole.name.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">{selectedRole.name}</h3>
-                  <p className="text-[11px] text-slate-500">
+                  <h3 className={`text-sm font-semibold ${headingCls}`}>{selectedRole.name}</h3>
+                  <p className={`text-[11px] ${subCls}`}>
                     {activePerms} de {totalPerms} permisos activos
                   </p>
                 </div>
               </div>
 
               {/* Progress bar */}
-              <div className="w-32 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+              <div className={`w-32 h-1.5 rounded-full overflow-hidden ${isLight ? "bg-slate-200" : "bg-slate-700/50"}`}>
                 <div
                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
                   style={{ width: `${totalPerms ? (activePerms / totalPerms) * 100 : 0}%` }}
@@ -286,7 +317,11 @@ const RolesPermissionsPage = () => {
               {!PROTECTED_ROLES.includes(selectedRole.name) && (
                 <button
                   onClick={handleDelete}
-                  className="px-3 py-1.5 rounded-lg text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition"
+                  className={`px-3 py-1.5 rounded-lg text-xs transition ${
+                    isLight
+                      ? "text-red-400 hover:text-red-500 hover:bg-red-50"
+                      : "text-red-400/70 hover:text-red-400 hover:bg-red-500/10"
+                  }`}
                 >
                   🗑 Eliminar rol
                 </button>
@@ -321,13 +356,15 @@ const RolesPermissionsPage = () => {
               return (
                 <div
                   key={module}
-                  className="bg-slate-800/25 border border-slate-700/30 rounded-xl overflow-hidden hover:border-slate-600/40 transition-colors"
+                  className={`border rounded-xl overflow-hidden transition-colors ${cardCls} ${cardHoverCls}`}
                 >
                   {/* Module header */}
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-700/20">
+                  <div className={`flex items-center justify-between px-4 py-2.5 border-b ${borderSubtle}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-base">{config.icon}</span>
-                      <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${
+                        isLight ? "text-slate-600" : "text-slate-300"
+                      }`}>
                         {config.label}
                       </span>
                     </div>
@@ -337,7 +374,9 @@ const RolesPermissionsPage = () => {
                           stats.allChecked
                             ? "bg-emerald-500/20 text-emerald-400"
                             : stats.noneChecked
-                              ? "bg-slate-700/50 text-slate-500"
+                              ? isLight
+                                ? "bg-slate-100 text-slate-400"
+                                : "bg-slate-700/50 text-slate-500"
                               : "bg-amber-500/20 text-amber-400"
                         }`}
                       >
@@ -349,7 +388,9 @@ const RolesPermissionsPage = () => {
                           stats.allChecked
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : stats.noneChecked
-                              ? "border-slate-600 hover:border-slate-500"
+                              ? isLight
+                                ? "border-slate-300 hover:border-slate-400"
+                                : "border-slate-600 hover:border-slate-500"
                               : "bg-emerald-500/30 border-emerald-500/60 text-white"
                         }`}
                         title={stats.allChecked ? "Desmarcar todo" : "Marcar todo"}
@@ -370,14 +411,22 @@ const RolesPermissionsPage = () => {
                           onClick={() => togglePermission(perm.name)}
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all ${
                             isActive
-                              ? "bg-emerald-500/10 text-emerald-300"
-                              : "text-slate-500 hover:bg-slate-700/30 hover:text-slate-400"
+                              ? isLight
+                                ? "bg-emerald-50 text-emerald-600"
+                                : "bg-emerald-500/10 text-emerald-300"
+                              : isLight
+                                ? "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                                : "text-slate-500 hover:bg-slate-700/30 hover:text-slate-400"
                           }`}
                         >
                           <span>{ACTION_LABELS[action] || action}</span>
                           <div
                             className={`w-8 h-4 rounded-full relative transition-all ${
-                              isActive ? "bg-emerald-500" : "bg-slate-700"
+                              isActive
+                                ? "bg-emerald-500"
+                                : isLight
+                                  ? "bg-slate-200"
+                                  : "bg-slate-700"
                             }`}
                           >
                             <div
